@@ -1,0 +1,209 @@
+<UserControl x:Class="PRO.Desktop.Views.OpportunityView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        mc:Ignorable="d"
+        d:DesignHeight="700" d:DesignWidth="1100"
+        Background="{StaticResource ContentBackgroundBrush}">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- 标题+切换 -->
+        <Grid Grid.Row="0">
+            <StackPanel>
+                <TextBlock Text="商机管理" Style="{StaticResource PageTitleStyle}"/>
+                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                    <TextBlock Text="总额:" FontSize="12" Foreground="{StaticResource TertiaryLabelBrush}"/>
+                    <TextBlock Text="{Binding TotalExpected, StringFormat=¥{0:N0}}" FontWeight="Bold" FontSize="12" Foreground="{StaticResource AccentBrush}" Margin="4,0,12,0"/>
+                    <TextBlock Text="成交:" FontSize="12" Foreground="{StaticResource TertiaryLabelBrush}"/>
+                    <TextBlock Text="{Binding WonAmount, StringFormat=¥{0:N0}}" FontWeight="Bold" FontSize="12" Foreground="#27AE60" Margin="4,0,0,0"/>
+                    <TextBlock Text="{Binding WonCount, StringFormat=({0}个)}" FontSize="12" Foreground="{StaticResource TertiaryLabelBrush}" Margin="2,0,0,0"/>
+                </StackPanel>
+            </StackPanel>
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Content="列表/看板" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding ToggleViewCommand}" Padding="12,6" FontSize="11"/>
+                <Button Content="+ 新商机" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding NewOpportunityCommand}"
+                        Padding="16,6" Margin="8,0"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- 搜索+筛选 -->
+        <Grid Grid.Row="1" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBox Grid.Column="0" Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}"
+                     Style="{StaticResource ModernTextBoxStyle}" MaxWidth="300"
+                     materialDesign:HintAssist.Hint="搜索..."/>
+            <Button Grid.Column="1" Content="搜索" Style="{StaticResource SecondaryButtonStyle}"
+                    Command="{Binding SearchCommand}" Padding="14,6" Margin="8,0"/>
+            <ComboBox Grid.Column="2" ItemsSource="{Binding FilterStage}" Width="120"
+                      materialDesign:HintAssist.Hint="阶段筛选"/>
+        </Grid>
+
+        <!-- 看板/列表 -->
+        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+            <StackPanel>
+            <Grid Visibility="{Binding IsBoardView, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 试用 -->
+                <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0,0,4,0">
+                    <StackPanel>
+                        <TextBlock Text="试用" FontWeight="SemiBold" FontSize="13" Foreground="#F39C12" Margin="0,0,0,8"/>
+                        <ItemsControl ItemsSource="{Binding StageTrial}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="6" Background="{StaticResource ContentBackgroundBrush}"
+                                            BorderBrush="{StaticResource FillBrush}" BorderThickness="1"
+                                            Padding="10,8" Margin="0,0,0,6" Cursor="Hand"
+                                            MouseLeftButtonDown="Card_MouseDown">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="12"/>
+                                            <TextBlock Text="{Binding CustomerName}" FontSize="11" Foreground="{StaticResource TertiaryLabelBrush}"/>
+                                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                <TextBlock Text="{Binding ExpectedAmount, StringFormat=¥{0:N0}}" FontSize="12" Foreground="{StaticResource AccentBrush}"/>
+                                                <TextBlock Text="{Binding DeveloperName, StringFormat='  | '+{0}}" FontSize="11" Foreground="{StaticResource TertiaryLabelBrush}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- 沟通 -->
+                <Border Grid.Column="1" Style="{StaticResource CardStyle}" Margin="4,0">
+                    <StackPanel>
+                        <TextBlock Text="沟通" FontWeight="SemiBold" FontSize="13" Foreground="#3498DB" Margin="0,0,0,8"/>
+                        <ItemsControl ItemsSource="{Binding StageComms}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="6" Background="{StaticResource ContentBackgroundBrush}"
+                                            BorderBrush="{StaticResource FillBrush}" BorderThickness="1"
+                                            Padding="10,8" Margin="0,0,0,6" Cursor="Hand"
+                                            MouseLeftButtonDown="Card_MouseDown">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="12"/>
+                                            <TextBlock Text="{Binding CustomerName}" FontSize="11" Foreground="{StaticResource TertiaryLabelBrush}"/>
+                                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                <TextBlock Text="{Binding ExpectedAmount, StringFormat=¥{0:N0}}" FontSize="12" Foreground="{StaticResource AccentBrush}"/>
+                                                <TextBlock Text="{Binding DeveloperName, StringFormat='  | '+{0}}" FontSize="11" Foreground="{StaticResource TertiaryLabelBrush}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- 报价 -->
+                <Border Grid.Column="2" Style="{StaticResource CardStyle}" Margin="4,0">
+                    <StackPanel>
+                        <TextBlock Text="报价/谈判" FontWeight="SemiBold" FontSize="13" Foreground="#9B59B6" Margin="0,0,0,8"/>
+                        <ItemsControl ItemsSource="{Binding StageQuote}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="6" Background="{StaticResource ContentBackgroundBrush}"
+                                            BorderBrush="{StaticResource FillBrush}" BorderThickness="1"
+                                            Padding="10,8" Margin="0,0,0,6" Cursor="Hand"
+                                            MouseLeftButtonDown="Card_MouseDown">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="12"/>
+                                            <TextBlock Text="{Binding CustomerName}" FontSize="11" Foreground="{StaticResource TertiaryLabelBrush}"/>
+                                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                <TextBlock Text="{Binding ExpectedAmount, StringFormat=¥{0:N0}}" FontSize="12" Foreground="{StaticResource AccentBrush}"/>
+                                                <TextBlock Text="{Binding DeveloperName, StringFormat='  | '+{0}}" FontSize="11" Foreground="{StaticResource TertiaryLabelBrush}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- 成交 -->
+                <Border Grid.Column="3" Style="{StaticResource CardStyle}" Margin="4,0">
+                    <StackPanel>
+                        <TextBlock Text="成交" FontWeight="SemiBold" FontSize="13" Foreground="#27AE60" Margin="0,0,0,8"/>
+                        <ItemsControl ItemsSource="{Binding StageWon}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="6" Background="{StaticResource ContentBackgroundBrush}"
+                                            BorderBrush="{StaticResource FillBrush}" BorderThickness="1"
+                                            Padding="10,8" Margin="0,0,0,6" Cursor="Hand"
+                                            MouseLeftButtonDown="Card_MouseDown">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="12"/>
+                                            <TextBlock Text="{Binding CustomerName}" FontSize="11" Foreground="{StaticResource TertiaryLabelBrush}"/>
+                                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                <TextBlock Text="{Binding ExpectedAmount, StringFormat=¥{0:N0}}" FontSize="12" Foreground="{StaticResource AccentBrush}"/>
+                                                <TextBlock Text="{Binding DeveloperName, StringFormat='  | '+{0}}" FontSize="11" Foreground="{StaticResource TertiaryLabelBrush}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- 流失 -->
+                <Border Grid.Column="4" Style="{StaticResource CardStyle}" Margin="4,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="流失" FontWeight="SemiBold" FontSize="13" Foreground="#E74C3C" Margin="0,0,0,8"/>
+                        <ItemsControl ItemsSource="{Binding StageLost}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="6" Background="{StaticResource ContentBackgroundBrush}"
+                                            BorderBrush="{StaticResource FillBrush}" BorderThickness="1"
+                                            Padding="10,8" Margin="0,0,0,6" Cursor="Hand"
+                                            MouseLeftButtonDown="Card_MouseDown">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="12"/>
+                                            <TextBlock Text="{Binding CustomerName}" FontSize="11" Foreground="{StaticResource TertiaryLabelBrush}"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- 列表视图 -->
+            <DataGrid ItemsSource="{Binding Opportunities}" Style="{StaticResource DataGridStyle}"
+                      AutoGenerateColumns="False" IsReadOnly="True" RowHeight="38"
+                      SelectedItem="{Binding SelectedOpportunity}"
+                      Visibility="{Binding IsBoardView, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="商机" Binding="{Binding Title}" Width="*"/>
+                    <DataGridTextColumn Header="客户" Binding="{Binding CustomerName}" Width="120"/>
+                    <DataGridTextColumn Header="阶段" Binding="{Binding StageName}" Width="60"/>
+                    <DataGridTextColumn Header="预计金额" Binding="{Binding ExpectedAmount, StringFormat=¥{0:N0}}" Width="80"/>
+                    <DataGridTextColumn Header="预计日期" Binding="{Binding ExpectedCloseDate, StringFormat={}{0:MM-dd}}" Width="70"/>
+                    <DataGridTextColumn Header="客户担当" Binding="{Binding CustomerManagerName}" Width="120"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

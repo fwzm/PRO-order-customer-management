@@ -1,0 +1,21 @@
+# Build artifacts
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+
+# Frontend dependencies
+node_modules/
+
+# Publish outputs and runtime logs
+publish/
+logs/
+*.log
+*.pdb
+
+# Local/user files
+*.user
+*.suo
+.vs/
+
+# Keep appsettings template-safe. Override real secrets with environment variables in deployment.

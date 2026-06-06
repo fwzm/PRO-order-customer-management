@@ -1,0 +1,513 @@
+<UserControl x:Class="PRO.Desktop.Views.SystemSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="900"
+             Background="{StaticResource BackgroundBrush}">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
+        <StackPanel>
+            <TextBlock Text="系统设置" Style="{StaticResource PageTitleStyle}" Margin="0,0,0,16"/>
+
+            <TabControl Style="{StaticResource MaterialDesignNavigationRailTabControl}">
+
+                <!-- ==================== 应用设置 ==================== -->
+                <TabItem Header="应用设置">
+                    <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0" Padding="20">
+                        <StackPanel MaxWidth="600">
+                            <TextBlock Text="应用设置" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,16"/>
+
+                            <StackPanel Margin="0,0,0,16">
+                                <TextBlock Text="关闭应用行为" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton Content="最小化至托盘"
+                                                 IsChecked="{Binding CloseBehavior, Converter={StaticResource CloseBehaviorConverter}, ConverterParameter=0}"
+                                                 Margin="0,0,24,0"/>
+                                    <RadioButton Content="关闭即退出"
+                                                 IsChecked="{Binding CloseBehavior, Converter={StaticResource CloseBehaviorConverter}, ConverterParameter=1}"/>
+                                </StackPanel>
+                                <TextBlock Text="默认情况下，关闭应用时不退出程序，自动最小化保存到系统托盘"
+                                           FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,16">
+                                <TextBlock Text="通知设置" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <CheckBox Content="启用桌面通知" IsChecked="{Binding EnableNotification}" Margin="0,0,0,8"/>
+                                <CheckBox Content="启用提示音" IsChecked="{Binding EnableSound}"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,16">
+                                <TextBlock Text="数据同步" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <CheckBox Content="启动时自动同步" IsChecked="{Binding AutoSyncOnStartup}" Margin="0,0,0,8"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="同步间隔：" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <ComboBox SelectedIndex="1" Width="100"
+                                              SelectionChanged="SyncInterval_SelectionChanged">
+                                        <ComboBoxItem Content="15分钟" Tag="15"/>
+                                        <ComboBoxItem Content="30分钟" Tag="30"/>
+                                        <ComboBoxItem Content="1小时" Tag="60"/>
+                                        <ComboBoxItem Content="2小时" Tag="120"/>
+                                    </ComboBox>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <Button Content="保存设置" Style="{StaticResource PrimaryButtonStyle}"
+                                    Command="{Binding SaveSettingsCommand}" HorizontalAlignment="Left"
+                                    IsEnabled="{Binding CanEditSettings}"/>
+                        </StackPanel>
+                    </Border>
+                </TabItem>
+
+                <!-- ==================== 字段管理 ==================== -->
+                <TabItem Header="字段管理">
+                    <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0" Padding="20">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Text="字段管理" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,12"/>
+
+                            <TabControl Grid.Row="1" Style="{StaticResource MaterialDesignNavigationRailTabControl}">
+
+                                <!-- 商圈管理 -->
+                                <TabItem Header="商圈管理">
+                                    <Grid Margin="0,12,0,0">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Text="商圈列表" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+
+                                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
+                                            <TextBox Text="{Binding FieldMgr.NewDistrictName, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBoxStyle}" Width="150"
+                                                     materialDesign:HintAssist.Hint="商圈名称"/>
+                                            <ComboBox Text="{Binding FieldMgr.NewDistrictCity, UpdateSourceTrigger=PropertyChanged}"
+                                                      IsEditable="True" Width="140" Margin="8,0"
+                                                      materialDesign:HintAssist.Hint="选择/输入城市"
+                                                      ItemsSource="{Binding FieldMgr.CityList}"
+                                                      Style="{StaticResource AppleComboBoxStyle}"/>
+                                            <ToggleButton Content="启用" IsChecked="{Binding FieldMgr.NewDistrictIsActive}"
+                                                          Style="{StaticResource MaterialDesignSwitchToggleButton}" Margin="8,0"
+                                                          VerticalAlignment="Center"/>
+                                            <Button Content="新增" Style="{StaticResource PrimaryButtonStyle}"
+                                                    Command="{Binding FieldMgr.AddDistrictCommand}" Padding="16,7" Margin="12,0,0,0"/>
+                                        </StackPanel>
+
+                                        <DataGrid Grid.Row="2" ItemsSource="{Binding FieldMgr.BusinessDistricts}"
+                                                  Style="{StaticResource DataGridStyle}" AutoGenerateColumns="False" RowHeight="38">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="商圈名称" Binding="{Binding Name}" Width="*"/>
+                                                <DataGridTextColumn Header="城市" Binding="{Binding City}" Width="120"/>
+                                                <DataGridTemplateColumn Header="状态" Width="80">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="{Binding Status, Converter={StaticResource DistrictStatusTextConverter}}"
+                                                                       Foreground="{Binding Status, Converter={StaticResource DistrictStatusColorConverter}}"
+                                                                       VerticalAlignment="Center"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTextColumn Header="创建时间" Binding="{Binding CreatedAt, StringFormat=yyyy-MM-dd}" Width="100"/>
+                                                <DataGridTemplateColumn Header="操作" Width="140">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <Button Content="编辑" Padding="6,2" FontSize="11"
+                                                                        Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,4,0"
+                                                                        Command="{Binding DataContext.FieldMgr.EditDistrictCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                                        CommandParameter="{Binding}"/>
+                                                                <Button Content="删除" Padding="6,2" FontSize="11"
+                                                                        Foreground="{StaticResource ErrorBrush}"
+                                                                        Style="{StaticResource PlainButtonStyle}"
+                                                                        Command="{Binding DataContext.FieldMgr.DeleteDistrictCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                                        CommandParameter="{Binding}"/>
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </Grid>
+                                </TabItem>
+
+                                <!-- 标签管理 -->
+                                <TabItem Header="标签管理">
+                                    <Grid Margin="0,12,0,0">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Text="客户标签列表" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+
+                                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
+                                            <TextBox Text="{Binding FieldMgr.NewTagName, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBoxStyle}" Width="150"
+                                                     materialDesign:HintAssist.Hint="标签名称"/>
+                                            <TextBox Text="{Binding FieldMgr.NewTagColor, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBoxStyle}" Width="120" Margin="8,0"
+                                                     materialDesign:HintAssist.Hint="颜色(#RRGGBB)"/>
+                                            <Button Content="新增" Style="{StaticResource PrimaryButtonStyle}"
+                                                    Command="{Binding FieldMgr.AddTagCommand}" Padding="16,7" Margin="12,0,0,0"/>
+                                        </StackPanel>
+
+                                        <DataGrid Grid.Row="2" ItemsSource="{Binding FieldMgr.CustomerTags}"
+                                                  Style="{StaticResource DataGridStyle}" AutoGenerateColumns="False" RowHeight="38">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="标签名称" Binding="{Binding Name}" Width="*"/>
+                                                <DataGridTemplateColumn Header="颜色" Width="80">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <Border Width="20" Height="20" CornerRadius="4"
+                                                                    Background="{Binding Color, Converter={StaticResource ColorStringToBrushConverter}}"
+                                                                    HorizontalAlignment="Center"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTextColumn Header="创建时间" Binding="{Binding CreatedAt, StringFormat=yyyy-MM-dd}" Width="100"/>
+                                                <DataGridTemplateColumn Header="操作" Width="140">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <Button Content="编辑" Padding="6,2" FontSize="11"
+                                                                        Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,4,0"
+                                                                        Command="{Binding DataContext.FieldMgr.EditTagCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                                        CommandParameter="{Binding}"/>
+                                                                <Button Content="删除" Padding="6,2" FontSize="11"
+                                                                        Foreground="{StaticResource ErrorBrush}"
+                                                                        Style="{StaticResource PlainButtonStyle}"
+                                                                        Command="{Binding DataContext.FieldMgr.DeleteTagCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                                        CommandParameter="{Binding}"/>
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </Grid>
+                                </TabItem>
+
+                                <!-- 产品分类管理 -->
+                                <TabItem Header="产品分类">
+                                    <Grid Margin="0,12,0,0">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Text="产品分类列表" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+
+                                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
+                                            <TextBox Text="{Binding FieldMgr.NewCategoryName, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBoxStyle}" Width="160"
+                                                     materialDesign:HintAssist.Hint="分类名称"/>
+                                            <TextBox Text="{Binding FieldMgr.NewCategorySortOrder, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBoxStyle}" Width="80" Margin="8,0"
+                                                     materialDesign:HintAssist.Hint="排序"/>
+                                            <Button Content="新增" Style="{StaticResource PrimaryButtonStyle}"
+                                                    Command="{Binding FieldMgr.AddCategoryCommand}" Padding="16,7" Margin="12,0,0,0"/>
+                                        </StackPanel>
+
+                                        <DataGrid Grid.Row="2" ItemsSource="{Binding FieldMgr.ProductCategories}"
+                                                  Style="{StaticResource DataGridStyle}" AutoGenerateColumns="False" RowHeight="38">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="分类名称" Binding="{Binding Name}" Width="*"/>
+                                                <DataGridTextColumn Header="排序" Binding="{Binding SortOrder}" Width="60"/>
+                                                <DataGridTextColumn Header="创建时间" Binding="{Binding CreatedAt, StringFormat=yyyy-MM-dd}" Width="100"/>
+                                                <DataGridTemplateColumn Header="操作" Width="140">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <Button Content="编辑" Padding="6,2" FontSize="11"
+                                                                        Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,4,0"
+                                                                        Command="{Binding DataContext.FieldMgr.EditCategoryCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                                        CommandParameter="{Binding}"/>
+                                                                <Button Content="删除" Padding="6,2" FontSize="11"
+                                                                        Foreground="{StaticResource ErrorBrush}"
+                                                                        Style="{StaticResource PlainButtonStyle}"
+                                                                        Command="{Binding DataContext.FieldMgr.DeleteCategoryCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                                        CommandParameter="{Binding}"/>
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </Grid>
+                                </TabItem>
+
+                            </TabControl>
+                        </Grid>
+                    </Border>
+                </TabItem>
+
+                <!-- ==================== 企业微信 ==================== -->
+                <TabItem Header="企业微信">
+                    <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0" Padding="20"
+                            Visibility="{Binding IsHeadquartersAdmin, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <StackPanel>
+                            <TextBlock Text="企业微信配置" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,16"/>
+
+                            <CheckBox Content="启用企业微信功能" IsChecked="{Binding HeadquartersAdminVM.IsWeChatEnabled}" Margin="0,0,0,16"/>
+
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="企业ID：" VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1" Style="{StaticResource ModernTextBoxStyle}"
+                                         Text="{Binding HeadquartersAdminVM.WeChatCorpId, UpdateSourceTrigger=PropertyChanged}"
+                                         IsReadOnly="{Binding HeadquartersAdminVM.IsWeChatHardcoded}"
+                                         IsEnabled="{Binding HeadquartersAdminVM.IsWeChatEnabled}"/>
+                            </Grid>
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="应用Secret：" VerticalAlignment="Center"/>
+                                <PasswordBox Grid.Column="1" materialDesign:HintAssist.Hint="输入应用Secret"
+                                              IsEnabled="{Binding HeadquartersAdminVM.IsWeChatEnabled}"
+                                              materialDesign:PasswordBoxAssist.Password="{Binding HeadquartersAdminVM.WeChatCorpSecret, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            </Grid>
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="应用ID：" VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1" Style="{StaticResource ModernTextBoxStyle}"
+                                         Text="{Binding HeadquartersAdminVM.WeChatAgentId, UpdateSourceTrigger=PropertyChanged}"
+                                         IsReadOnly="{Binding HeadquartersAdminVM.IsWeChatHardcoded}"
+                                         IsEnabled="{Binding HeadquartersAdminVM.IsWeChatEnabled}"/>
+                            </Grid>
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="默认Webhook：" VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1" Style="{StaticResource ModernTextBoxStyle}"
+                                         Text="{Binding HeadquartersAdminVM.WeChatWebhookUrl, UpdateSourceTrigger=PropertyChanged}"
+                                         IsEnabled="{Binding HeadquartersAdminVM.IsWeChatEnabled}"/>
+                            </Grid>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,16">
+                                <Button Content="保存配置" Style="{StaticResource PrimaryButtonStyle}"
+                                        Command="{Binding HeadquartersAdminVM.SaveWeChatConfigCommand}" Margin="0,0,8,0"/>
+                                <Button Content="测试连接" Style="{StaticResource SecondaryButtonStyle}"
+                                        Command="{Binding HeadquartersAdminVM.TestWeChatConnectionCommand}"
+                                        IsEnabled="{Binding HeadquartersAdminVM.IsWeChatEnabled}" Margin="0,0,8,0"/>
+                                <TextBlock Text="{Binding HeadquartersAdminVM.WeChatStatus}" VerticalAlignment="Center"
+                                           Foreground="{Binding HeadquartersAdminVM.IsWeChatConnected, Converter={StaticResource BoolToStatusColorConverter}}"/>
+                            </StackPanel>
+
+                            <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                                    CornerRadius="4" Padding="16" Background="{StaticResource BackgroundBrush}">
+                                <StackPanel>
+                                    <TextBlock Text="组织架构同步" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <TextBlock Text="将企业微信通讯录同步到本地系统"
+                                               Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,12"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Content="立即同步组织架构" Style="{StaticResource SecondaryButtonStyle}"
+                                                Command="{Binding HeadquartersAdminVM.SyncOrganizationCommand}"
+                                                IsEnabled="{Binding HeadquartersAdminVM.IsWeChatConnected}" Margin="0,0,8,0"/>
+                                        <Button Content="同步企业微信联系人" Style="{StaticResource PrimaryButtonStyle}"
+                                                Command="{Binding HeadquartersAdminVM.PullWeChatCustomersCommand}"
+                                                IsEnabled="{Binding HeadquartersAdminVM.IsWeChatConnected}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </TabItem>
+
+                <!-- ==================== Webhook ==================== -->
+                <TabItem Header="Webhook">
+                    <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0" Padding="20"
+                            Visibility="{Binding IsHeadquartersAdmin, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+
+                            <Grid Margin="0,0,0,16">
+                                <TextBlock Text="Webhook管理" FontSize="16" FontWeight="SemiBold"/>
+                                <Button Content="新增Webhook" Style="{StaticResource PrimaryButtonStyle}"
+                                        HorizontalAlignment="Right" Padding="16,8"
+                                        Command="{Binding HeadquartersAdminVM.NewWebhookCommand}"/>
+                            </Grid>
+
+                            <DataGrid Grid.Row="1" Style="{StaticResource DataGridStyle}" IsReadOnly="True" MaxHeight="300"
+                                      ItemsSource="{Binding HeadquartersAdminVM.Webhooks}"
+                                      SelectedItem="{Binding HeadquartersAdminVM.SelectedWebhook}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="120"/>
+                                    <DataGridTextColumn Header="URL" Binding="{Binding WebhookUrl}" Width="*"/>
+                                    <DataGridTextColumn Header="触发条件" Binding="{Binding TriggerCondition}" Width="120"/>
+                                    <DataGridTextColumn Header="最后测试" Binding="{Binding LastTestTime, StringFormat=yyyy-MM-dd HH:mm}" Width="140"/>
+                                    <DataGridTemplateColumn Header="状态" Width="80">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding IsEnabled, Converter={StaticResource BoolToEnabledConverter}}"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="操作" Width="150">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Button Content="编辑" Padding="6,2" FontSize="11" Margin="0,0,4,0"
+                                                            Style="{StaticResource SecondaryButtonStyle}"
+                                                            Command="{Binding DataContext.HeadquartersAdminVM.EditWebhookCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"/>
+                                                    <Button Content="测试" Padding="6,2" FontSize="11" Margin="0,0,4,0"
+                                                            Style="{StaticResource SecondaryButtonStyle}"
+                                                            Command="{Binding DataContext.HeadquartersAdminVM.TestWebhookCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"/>
+                                                    <Button Content="删除" Padding="6,2" FontSize="11"
+                                                            Foreground="{StaticResource ErrorBrush}"
+                                                            Style="{StaticResource PlainButtonStyle}"
+                                                            Command="{Binding DataContext.HeadquartersAdminVM.DeleteWebhookCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <Border Grid.Row="2" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                                    CornerRadius="4" Margin="0,16,0,0" Padding="16" Background="{StaticResource BackgroundBrush}"
+                                    Visibility="{Binding HeadquartersAdminVM.IsEditingWebhook, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <StackPanel>
+                                    <TextBlock Text="Webhook 配置" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="100"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="名称：" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="1" Style="{StaticResource ModernTextBoxStyle}" Text="{Binding HeadquartersAdminVM.NewWebhookName, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </Grid>
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="100"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="URL地址：" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="1" Style="{StaticResource ModernTextBoxStyle}" Text="{Binding HeadquartersAdminVM.NewWebhookUrl, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </Grid>
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="100"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="触发条件：" VerticalAlignment="Center"/>
+                                        <ComboBox Grid.Column="1" Width="200" HorizontalAlignment="Left"
+                                                  SelectedValue="{Binding HeadquartersAdminVM.NewWebhookTrigger}" SelectedValuePath="Tag">
+                                            <ComboBoxItem Content="全部事件" Tag=""/>
+                                            <ComboBoxItem Content="订单创建" Tag="order_created"/>
+                                            <ComboBoxItem Content="订单已分配" Tag="order_assigned"/>
+                                            <ComboBoxItem Content="订单配送中" Tag="order_delivering"/>
+                                            <ComboBoxItem Content="订单已完成" Tag="order_completed"/>
+                                            <ComboBoxItem Content="订单已取消" Tag="order_cancelled"/>
+                                            <ComboBoxItem Content="客户新增" Tag="customer_created"/>
+                                            <ComboBoxItem Content="客户更新" Tag="customer_updated"/>
+                                            <ComboBoxItem Content="结算完成" Tag="settlement_created"/>
+                                            <ComboBoxItem Content="排班变动" Tag="workschedule_changed"/>
+                                            <ComboBoxItem Content="同步完成" Tag="sync_completed"/>
+                                        </ComboBox>
+                                    </Grid>
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="100"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="备注：" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="1" Style="{StaticResource ModernTextBoxStyle}" Text="{Binding HeadquartersAdminVM.NewWebhookRemark, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </Grid>
+                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                        <Button Content="保存" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding HeadquartersAdminVM.SaveWebhookCommand}" Margin="0,0,8,0"/>
+                                        <Button Content="取消" Style="{StaticResource SecondaryButtonStyle}" Command="{Binding HeadquartersAdminVM.CancelWebhookEditCommand}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </TabItem>
+
+                <!-- ==================== 数据备份 ==================== -->
+                <TabItem Header="数据备份">
+                    <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0" Padding="20"
+                            Visibility="{Binding IsHeadquartersAdmin, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,16">
+                                <TextBlock Text="数据备份与恢复" FontSize="16" FontWeight="SemiBold"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Content="手动备份" Style="{StaticResource SecondaryButtonStyle}"
+                                            Command="{Binding HeadquartersAdminVM.CreateBackupCommand}" Margin="0,0,8,0"/>
+                                    <Button Content="清理过期备份" Style="{StaticResource SecondaryButtonStyle}"
+                                            Command="{Binding HeadquartersAdminVM.CleanupBackupCommand}"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="系统每30分钟自动备份一次，保留30天备份记录"
+                                       Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,16"/>
+                            <DataGrid Style="{StaticResource DataGridStyle}" IsReadOnly="True" MaxHeight="300"
+                                      ItemsSource="{Binding HeadquartersAdminVM.BackupRecords}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="文件名" Binding="{Binding FileName}" Width="*"/>
+                                    <DataGridTextColumn Header="类型" Binding="{Binding BackupType}" Width="80"/>
+                                    <DataGridTextColumn Header="大小" Binding="{Binding FileSizeStr}" Width="100"/>
+                                    <DataGridTextColumn Header="备份时间" Binding="{Binding BackupTime, StringFormat=yyyy-MM-dd HH:mm}" Width="140"/>
+                                    <DataGridTextColumn Header="过期时间" Binding="{Binding ExpireTime, StringFormat=yyyy-MM-dd}" Width="120"/>
+                                    <DataGridTemplateColumn Header="操作" Width="120">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Button Content="恢复" Padding="6,2" FontSize="11" Margin="0,0,4,0"
+                                                            Style="{StaticResource SecondaryButtonStyle}"
+                                                            Command="{Binding DataContext.HeadquartersAdminVM.RestoreBackupCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding Id}"/>
+                                                    <Button Content="删除" Padding="6,2" FontSize="11"
+                                                            Foreground="{StaticResource ErrorBrush}" Style="{StaticResource PlainButtonStyle}"
+                                                            Command="{Binding DataContext.HeadquartersAdminVM.DeleteBackupCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding Id}"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </Border>
+                </TabItem>
+
+                <!-- ==================== 同步配置 ==================== -->
+                <TabItem Header="同步配置">
+                    <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0" Padding="20"
+                            Visibility="{Binding IsHeadquartersAdmin, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <StackPanel>
+                            <TextBlock Text="同步配置" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16"/>
+                            <CheckBox Content="启用自动同步" IsChecked="{Binding HeadquartersAdminVM.SyncConfig.AutoSyncEnabled}" Margin="0,0,0,12"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Button Content="保存" Style="{StaticResource PrimaryButtonStyle}"
+                                        Command="{Binding HeadquartersAdminVM.SaveSyncConfigCommand}" Margin="0,0,8,0"/>
+                                <Button Content="立即同步" Style="{StaticResource SecondaryButtonStyle}"
+                                        Command="{Binding HeadquartersAdminVM.SyncNowCommand}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </TabItem>
+
+                <!-- ==================== 操作日志 ==================== -->
+                <TabItem Header="操作日志">
+                    <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0" Padding="20"
+                            Visibility="{Binding IsHeadquartersAdmin, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <StackPanel>
+                            <TextBlock Text="操作日志" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16"/>
+                            <DataGrid Style="{StaticResource DataGridStyle}" IsReadOnly="True" MaxHeight="400"
+                                      ItemsSource="{Binding HeadquartersAdminVM.OperationLogs}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="操作人" Binding="{Binding OperatorName}" Width="100"/>
+                                    <DataGridTextColumn Header="工号" Binding="{Binding OperatorNo}" Width="80"/>
+                                    <DataGridTextColumn Header="模块" Binding="{Binding Module}" Width="80"/>
+                                    <DataGridTextColumn Header="操作" Binding="{Binding OperationType}" Width="100"/>
+                                    <DataGridTextColumn Header="内容" Binding="{Binding Content}" Width="*"/>
+                                    <DataGridTextColumn Header="结果" Binding="{Binding Result}" Width="80"/>
+                                    <DataGridTextColumn Header="时间" Binding="{Binding OperatedAt, StringFormat=yyyy-MM-dd HH:mm}" Width="140"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </Border>
+                </TabItem>
+
+            </TabControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
