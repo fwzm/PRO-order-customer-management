@@ -38,18 +38,29 @@ if %errorlevel% neq 0 (
 echo      发布成功
 
 :: 移除调试文件以减小体积
-echo [4/5] 移除调试符号文件...
+echo [4/6] 移除调试符号文件...
 if exist "%PUBLISH_DIR%\*.pdb" (
     del /s /q "%PUBLISH_DIR%\*.pdb" >nul 2>&1
 )
 echo      清理完成
 
+:: 生成交付压缩包
+echo [5/6] 生成交付压缩包...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%scripts\package-delivery.ps1" -SkipPublish
+if %errorlevel% neq 0 (
+    echo [失败] 打包错误！
+    pause
+    exit /b 1
+)
+echo      打包完成
+
 :: 完成
-echo [5/5] 完成！
+echo [6/6] 完成！
 echo.
 echo ====================================
 echo   发布完成！
 echo   路径: %PUBLISH_DIR%\PRO.exe
+echo   压缩包: %ROOT%artifacts\
 echo   类型: 独立部署（无需 .NET 运行时）
 echo   大小:
 for %%f in ("%PUBLISH_DIR%\PRO.exe") do echo       %%~zf 字节

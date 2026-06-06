@@ -19,6 +19,12 @@ public partial class MainWindow : Window
         DataContext = _viewModel;
     }
 
+    /// <summary>显示全局加载覆盖层</summary>
+    public void ShowLoading(string? text = null) => LoadingCtrl.Show(text);
+
+    /// <summary>隐藏全局加载覆盖层</summary>
+    public void HideLoading() => LoadingCtrl.Hide();
+
     // ======== 标签栏 ========
 
     private void TabBorder_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)

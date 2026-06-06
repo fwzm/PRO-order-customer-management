@@ -54,7 +54,7 @@ public partial class CustomerDetailViewModel : ViewModelBase
             CustomerManagerName = c.CustomerManager?.Name ?? "未分配";
             CustomerCreatorName = c.Creator?.Name ?? "";
 
-            var orders = await _db.Orders.Where(o => o.CustomerId == _customerId).OrderByDescending(o => o.CreatedAt).ToListAsync();
+            var orders = await _db.Orders.AsNoTracking().Where(o => o.CustomerId == _customerId).OrderByDescending(o => o.CreatedAt).ToListAsync();
             TotalOrders = orders.Count; TotalAmount = orders.Sum(o => o.TotalAmount);
             TotalReceivable = orders.Where(o => o.PaymentStatus != PaymentStatus.Paid).Sum(o => o.TotalAmount - o.ReceivedAmount);
             RecentOrders = new ObservableCollection<OrderSummary>(orders.Take(10).Select(o => new OrderSummary
@@ -63,13 +63,13 @@ public partial class CustomerDetailViewModel : ViewModelBase
             if (orders.Count >= 2)
             { var intervals = new List<double>(); for (int i = 0; i < orders.Count - 1; i++) { var d = (orders[i].CreatedAt - orders[i + 1].CreatedAt).TotalDays; if (d > 0 && d < 365) intervals.Add(d); } AvgInterval = intervals.Any() ? intervals.Average() : 0; }
 
-            var visits = await _db.VisitRecords.Include(v => v.Visitor).Where(v => v.CustomerId == _customerId).OrderByDescending(v => v.VisitDate).Take(10).ToListAsync();
+            var visits = await _db.VisitRecords.AsNoTracking().Include(v => v.Visitor).Where(v => v.CustomerId == _customerId).OrderByDescending(v => v.VisitDate).Take(10).ToListAsync();
             RecentVisits = new ObservableCollection<VisitRecordItem>(visits.Select(v => new VisitRecordItem { Id = v.Id, VisitDate = v.VisitDate, VisitType = v.VisitType, Purpose = v.Purpose, Content = v.Content, CustomerDemand = v.CustomerDemand, NextAction = v.NextAction, VisitorName = v.Visitor?.Name }));
 
-            var opps = await _db.Opportunities.Where(o => o.CustomerId == _customerId).OrderByDescending(o => o.CreatedAt).ToListAsync();
+            var opps = await _db.Opportunities.AsNoTracking().Where(o => o.CustomerId == _customerId).OrderByDescending(o => o.CreatedAt).ToListAsync();
             Opportunities = new ObservableCollection<OpportunityItem>(opps.Select(o => new OpportunityItem { Id = o.Id, Title = o.Title, Stage = o.Stage, ExpectedAmount = o.ExpectedAmount, CreatedAt = o.CreatedAt }));
 
-            var prices = await _db.CustomerPrices.Include(p => p.Product).Where(p => p.CustomerId == _customerId).ToListAsync();
+            var prices = await _db.CustomerPrices.AsNoTracking().Include(p => p.Product).Where(p => p.CustomerId == _customerId).ToListAsync();
             CustomerPrices = new ObservableCollection<CustomerPriceItem>(prices.Select(p => new CustomerPriceItem { ProductName = p.Product?.Name ?? "", Price = p.Price }));
 
             // 预测
@@ -79,7 +79,7 @@ public partial class CustomerDetailViewModel : ViewModelBase
             // 流失风险
             if (orders.Any()) { var last = orders.First().CreatedAt; if ((DateTime.Now - last).TotalDays > AvgInterval * 2 && AvgInterval > 0) ChurnRisk = "高"; else if ((DateTime.Now - last).TotalDays > AvgInterval * 1.5) ChurnRisk = "中"; }
 
-            var emps = await _db.Employees.Where(e => e.BranchId == c.BranchId && e.Status == EmployeeStatus.Active).OrderBy(e => e.Name).ToListAsync();
+            var emps = await _db.Employees.AsNoTracking().Where(e => e.BranchId == c.BranchId && e.Status == EmployeeStatus.Active).OrderBy(e => e.Name).ToListAsync();
             EmployeeList = new ObservableCollection<EmployeeItem>(emps.Select(e => new EmployeeItem { Id = e.Id, Name = e.Name }));
             SelectedManager = EmployeeList.FirstOrDefault(e => e.Id == c.CustomerManagerId);
         }

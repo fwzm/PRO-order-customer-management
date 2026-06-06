@@ -41,6 +41,7 @@ public partial class VisitRecordViewModel : ViewModelBase
         try
         {
             var list = await _db.VisitRecords
+                .AsNoTracking()
                 .Include(v => v.Visitor)
                 .Where(v => v.CustomerId == _customerId)
                 .OrderByDescending(v => v.VisitDate)

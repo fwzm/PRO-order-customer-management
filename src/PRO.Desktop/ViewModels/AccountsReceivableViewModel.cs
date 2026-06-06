@@ -34,6 +34,7 @@ public partial class AccountsReceivableViewModel : ViewModelBase
         {
             var branchId = CurrentSession.CurrentBranchId;
             var orders = await _db.Orders
+                .AsNoTracking()
                 .Include(o => o.Customer!).ThenInclude(c => c.CustomerManager)
                 .Where(o => o.BranchId == branchId && o.PaymentStatus != PaymentStatus.Paid && o.Status != OrderStatus.Cancelled)
                 .OrderBy(o => o.CreatedAt)

@@ -100,6 +100,7 @@ public partial class PredictionDashboardViewModel : ViewModelBase
 
             // 产品销量预测
             var products = await _dbContext.Products
+                .AsNoTracking()
                 .Where(p => p.Status == Domain.Enums.ProductStatus.Active)
                 .OrderBy(p => p.Name)
                 .Take(20)

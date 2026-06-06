@@ -60,7 +60,7 @@ public partial class OrderListViewModel : PagedViewModelBase
         try
         {
             var branchId = CurrentSession.CurrentBranchId;
-            var query = _dbContext.Orders
+            var query = _dbContext.Orders.AsNoTracking()
                 .Include(o => o.Customer)
                 .Include(o => o.Branch)
                 .Include(o => o.DeliveryPerson)
@@ -384,6 +384,7 @@ public partial class OrderListViewModel : PagedViewModelBase
         {
             var branchId = CurrentSession.CurrentBranchId;
             var orders = await _dbContext.Orders
+                .AsNoTracking()
                 .Include(o => o.Customer)
                 .Include(o => o.DeliveryPerson)
                 .Include(o => o.Items).ThenInclude(i => i.Product)
@@ -459,6 +460,7 @@ public partial class OrderListViewModel : PagedViewModelBase
         {
             var branchId = CurrentSession.CurrentBranchId;
             var orders = await _dbContext.Orders
+                .AsNoTracking()
                 .Include(o => o.Customer)
                 .Where(o => o.BranchId == branchId && 
                     o.Status == OrderStatus.Assigned && 
@@ -739,7 +741,7 @@ public partial class OrderEditViewModel : ViewModelBase
     private async Task<string> GenerateOrderNoAsync()
     {
         var branchId = CurrentSession.CurrentBranchId;
-        var branch = await _dbContext.Branches.FindAsync(branchId);
+        var branch = await _dbContext.Branches.AsNoTracking().FirstOrDefaultAsync(b => b.Id == branchId);
         var branchCode = branch?.Code ?? "0000";
         if (branchCode.Length != 4)
             branchCode = branchCode.PadLeft(4, '0').Substring(0, 4);
@@ -748,6 +750,7 @@ public partial class OrderEditViewModel : ViewModelBase
         var prefix = $"D{datePart}{branchCode}";
 
         var maxNo = await _dbContext.Orders
+            .AsNoTracking()
             .Where(o => o.OrderNo.StartsWith(prefix))
             .MaxAsync(o => (string?)o.OrderNo) ?? "";
 
@@ -766,6 +769,7 @@ public partial class OrderEditViewModel : ViewModelBase
     {
         var branchId = CurrentSession.CurrentBranchId;
         var customers = await _dbContext.Customers
+            .AsNoTracking()
             .Where(c => c.BranchId == branchId && c.Status == CustomerStatus.Active)
             .ToListAsync();
 
@@ -782,6 +786,7 @@ public partial class OrderEditViewModel : ViewModelBase
     private async Task LoadProductsAsync()
     {
         var products = await _dbContext.Products
+            .AsNoTracking()
             .Where(p => p.Status == ProductStatus.Active)
             .ToListAsync();
 
@@ -802,6 +807,7 @@ public partial class OrderEditViewModel : ViewModelBase
     {
         var branchId = CurrentSession.CurrentBranchId;
         var persons = await _dbContext.DeliveryPersons
+            .AsNoTracking()
             .Where(d => d.BranchId == branchId && d.Status == DeliveryPersonStatus.Available)
             .ToListAsync();
 
@@ -833,6 +839,7 @@ public partial class OrderEditViewModel : ViewModelBase
         if (!_orderId.HasValue) return;
 
         var order = await _dbContext.Orders
+            .AsNoTracking()
             .Include(o => o.Customer)
             .Include(o => o.Items).ThenInclude(i => i.Product)
             .Include(o => o.DeliveryPerson)
@@ -1144,6 +1151,7 @@ public partial class OrderEditViewModel : ViewModelBase
     {
         // 获取订单原有的明细（用于计算库存差异）
         var originalItems = await _dbContext.OrderItems
+            .AsNoTracking()
             .Where(i => i.OrderId == orderId)
             .ToListAsync();
 

@@ -54,7 +54,7 @@ public partial class CustomerListViewModel : PagedViewModelBase
         try
         {
             var branchId = CurrentSession.CurrentBranchId;
-            var query = _dbContext.Customers
+            var query = _dbContext.Customers.AsNoTracking()
                 .Include(c => c.Branch)
                 .Include(c => c.ParentCustomer)
                 .Include(c => c.CustomerManager)
@@ -101,6 +101,7 @@ public partial class CustomerListViewModel : PagedViewModelBase
             // 计算订单统计
             var customerIds = items.Select(c => c.Id).ToList();
             var orderStats = await _dbContext.Orders
+                .AsNoTracking()
                 .Where(o => customerIds.Contains(o.CustomerId))
                 .GroupBy(o => o.CustomerId)
                 .Select(g => new { CustomerId = g.Key, Count = g.Count(), Total = g.Sum(o => o.TotalAmount) })
@@ -256,6 +257,7 @@ public partial class CustomerListViewModel : PagedViewModelBase
         {
             var branchId = CurrentSession.CurrentBranchId;
             var duplicates = await _dbContext.Customers
+                .AsNoTracking()
                 .Where(c => c.BranchId == branchId && c.Status != CustomerStatus.Deleted)
                 .Where(c => c.Name.Contains(SearchKeyword) || 
                     (c.Phone != null && c.Phone.Contains(SearchKeyword)))
@@ -341,7 +343,7 @@ public partial class CustomerListViewModel : PagedViewModelBase
         try
         {
             var branchId = CurrentSession.CurrentBranchId;
-            var customers = await _dbContext.Customers
+            var customers = await _dbContext.Customers.AsNoTracking()
                 .Include(c => c.Branch)
                 .Include(c => c.ParentCustomer)
                 .Where(c => c.BranchId == branchId && c.Status != CustomerStatus.Deleted)
@@ -381,8 +383,8 @@ public partial class CustomerListViewModel : PagedViewModelBase
                 var row = 2;
                 foreach (var c in customers)
                 {
-                    var orderCount = await _dbContext.Orders.CountAsync(o => o.CustomerId == c.Id);
-                    var totalAmount = await _dbContext.Orders.Where(o => o.CustomerId == c.Id).SumAsync(o => o.TotalAmount);
+                    var orderCount = await _dbContext.Orders.AsNoTracking().CountAsync(o => o.CustomerId == c.Id);
+                    var totalAmount = await _dbContext.Orders.AsNoTracking().Where(o => o.CustomerId == c.Id).SumAsync(o => o.TotalAmount);
 
                     worksheet.Cell(row, 1).Value = c.Name;
                     worksheet.Cell(row, 2).Value = c.CustomerType == CustomerType.Major ? "大客户" : "细分客户";
@@ -577,6 +579,7 @@ public partial class CustomerEditViewModel : ViewModelBase
         try
         {
             var list = await _dbContext.BusinessDistricts
+                .AsNoTracking()
                 .Where(b => b.Status == "Active" && (b.BranchId == null || b.BranchId == BranchId))
                 .OrderBy(b => b.Name)
                 .ToListAsync();
@@ -588,6 +591,7 @@ public partial class CustomerEditViewModel : ViewModelBase
     private async Task LoadMajorCustomersAsync()
     {
         var customers = await _dbContext.Customers
+            .AsNoTracking()
             .Where(c => c.BranchId == BranchId && c.CustomerType == CustomerType.Major && c.Status == CustomerStatus.Active)
             .ToListAsync();
 
@@ -774,7 +778,7 @@ public partial class CustomerEditViewModel : ViewModelBase
     /// </summary>
     private async Task<string> GenerateCustomerNoAsync(int branchId)
     {
-        var branch = await _dbContext.Branches.FindAsync(branchId);
+        var branch = await _dbContext.Branches.AsNoTracking().FirstOrDefaultAsync(b => b.Id == branchId);
         var branchCode = branch?.Code ?? "0000";
         if (branchCode.Length != 4)
             branchCode = branchCode.PadLeft(4, '0').Substring(0, 4);
@@ -783,6 +787,7 @@ public partial class CustomerEditViewModel : ViewModelBase
         var prefix = $"K{datePart}{branchCode}";
 
         var maxNo = await _dbContext.Customers
+            .AsNoTracking()
             .Where(c => c.CustomerNo.StartsWith(prefix))
             .MaxAsync(c => (string?)c.CustomerNo) ?? "";
 
@@ -810,7 +815,7 @@ public partial class CustomerEditViewModel : ViewModelBase
             if (entity == null || string.IsNullOrEmpty(entity.WeChatExternalUserId)) return;
 
             // 找企业微信配置
-            var configEntity = await _dbContext.WeChatConfigs.FirstOrDefaultAsync();
+            var configEntity = await _dbContext.WeChatConfigs.AsNoTracking().FirstOrDefaultAsync();
             if (configEntity == null || string.IsNullOrEmpty(configEntity.AppSecret)) return;
 
             var encryption = App.Services.GetService(typeof(PRO.Application.Interfaces.IEncryptionService))
@@ -829,6 +834,7 @@ public partial class CustomerEditViewModel : ViewModelBase
 
             // 找有企业微信的员工
             var employee = await _dbContext.Employees
+                .AsNoTracking()
                 .Where(e => !string.IsNullOrEmpty(e.WeChatUserId))
                 .Select(e => e.WeChatUserId)
                 .FirstOrDefaultAsync();

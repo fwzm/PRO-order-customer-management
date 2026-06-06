@@ -61,11 +61,11 @@ public partial class WeChatScrmViewModel : ViewModelBase
         IsCustomersTab = true;
         try
         {
-            CustomerCount = await _db.WeChatCustomers.CountAsync();
-            TagCount = await _db.CustomerTags.CountAsync();
-            UnassignedCount = await _db.WeChatCustomers.CountAsync(w => w.Status == "Unidentifiable");
+            CustomerCount = await _db.WeChatCustomers.AsNoTracking().CountAsync();
+            TagCount = await _db.CustomerTags.AsNoTracking().CountAsync();
+            UnassignedCount = await _db.WeChatCustomers.AsNoTracking().CountAsync(w => w.Status == "Unidentifiable");
             await LoadCustomersAsync();
-            var employees = await _db.Employees.Where(e => e.Status == EmployeeStatus.Active && !string.IsNullOrEmpty(e.WeChatUserId)).OrderBy(e => e.Name).ToListAsync();
+            var employees = await _db.Employees.AsNoTracking().Where(e => e.Status == EmployeeStatus.Active && !string.IsNullOrEmpty(e.WeChatUserId)).OrderBy(e => e.Name).ToListAsync();
             TakeoverEmployees = new ObservableCollection<EmployeeItem>(employees.Select(e => new EmployeeItem { Id = e.Id, Name = e.Name }));
         }
         catch (Exception ex) { Log.Error(ex, "SCRM 初始化失败"); }
@@ -76,7 +76,7 @@ public partial class WeChatScrmViewModel : ViewModelBase
         IsLoading = true;
         try
         {
-            var list = await _db.WeChatCustomers.Include(w => w.LinkedCustomer).Include(w => w.AssignedBranch).OrderByDescending(w => w.CreatedAt).ToListAsync();
+            var list = await _db.WeChatCustomers.AsNoTracking().Include(w => w.LinkedCustomer).Include(w => w.AssignedBranch).OrderByDescending(w => w.CreatedAt).ToListAsync();
             Customers = new ObservableCollection<WeChatCustomerItem>(list.Select(w => new WeChatCustomerItem
             {
                 Id = w.Id, Name = w.Name, AddUserName = w.AddUserName, AddUserDepartmentName = w.AddUserDepartmentName,
@@ -100,7 +100,7 @@ public partial class WeChatScrmViewModel : ViewModelBase
     {
         try
         {
-            Tags = new ObservableCollection<WeChatTagDisplay>((await _db.CustomerTags.OrderBy(t => t.Name).ToListAsync())
+            Tags = new ObservableCollection<WeChatTagDisplay>((await _db.CustomerTags.AsNoTracking().OrderBy(t => t.Name).ToListAsync())
                 .Select(t => new WeChatTagDisplay { Id = t.Id, Name = t.Name, Color = t.Color }));
         }
         catch (Exception ex) { Log.Error(ex, "SCRM 标签加载失败"); }
@@ -245,7 +245,7 @@ public partial class WeChatScrmViewModel : ViewModelBase
             if (result.Success && result.Data != null)
             {
                 var externalIds = result.Data;
-                var customers = await _db.WeChatCustomers.Where(w => externalIds.Contains(w.ExternalUserId)).ToListAsync();
+                var customers = await _db.WeChatCustomers.AsNoTracking().Where(w => externalIds.Contains(w.ExternalUserId)).ToListAsync();
                 UnassignedCustomers = new ObservableCollection<UnassignedCustomerItem>(customers.Select(c => new UnassignedCustomerItem
                 { CustomerName = c.Name, ExternalUserId = c.ExternalUserId }));
                 UnassignedCount = UnassignedCustomers.Count;

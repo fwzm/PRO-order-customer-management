@@ -75,7 +75,7 @@ public partial class ProductListViewModel : PagedViewModelBase
 
     private async Task LoadCategoriesAsync()
     {
-        var categories = await _dbContext.ProductCategories.ToListAsync();
+        var categories = await _dbContext.ProductCategories.AsNoTracking().ToListAsync();
         Categories = new ObservableCollection<ProductCategoryDto>(
             categories.Select(c => new ProductCategoryDto { Id = c.Id, Name = c.Name }));
     }
@@ -85,7 +85,7 @@ public partial class ProductListViewModel : PagedViewModelBase
         IsLoading = true;
         try
         {
-            var query = _dbContext.Products.Include(p => p.Category).AsQueryable();
+            var query = _dbContext.Products.AsNoTracking().Include(p => p.Category).AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(SearchKeyword))
             {
@@ -167,6 +167,7 @@ public partial class ProductListViewModel : PagedViewModelBase
         try
         {
             var products = await _dbContext.Products
+                .AsNoTracking()
                 .Include(p => p.Category)
                 .ToListAsync();
 
@@ -254,7 +255,7 @@ public partial class DeliveryPersonListViewModel : PagedViewModelBase
         try
         {
             var branchId = CurrentSession.CurrentBranchId;
-            var query = _dbContext.DeliveryPersons.Include(d => d.Branch).AsQueryable();
+            var query = _dbContext.DeliveryPersons.AsNoTracking().Include(d => d.Branch).AsQueryable();
 
             if (!CurrentSession.Current.IsHeadquartersAdmin)
             {
@@ -342,6 +343,7 @@ public partial class DeliveryPersonListViewModel : PagedViewModelBase
     {
         var branchId = CurrentSession.CurrentBranchId;
         var orders = await _dbContext.Orders
+            .AsNoTracking()
             .Include(o => o.Customer)
             .Where(o => o.BranchId == branchId && o.Status == OrderStatus.Pending)
             .OrderBy(o => o.CreatedAt)
@@ -398,6 +400,7 @@ public partial class DeliveryPersonListViewModel : PagedViewModelBase
         {
             var branchId = CurrentSession.CurrentBranchId;
             var orders = await _dbContext.Orders
+                .AsNoTracking()
                 .Include(o => o.Customer)
                 .Where(o => o.BranchId == branchId && 
                     o.Status == OrderStatus.Assigned && 
@@ -511,7 +514,7 @@ public partial class SettlementListViewModel : PagedViewModelBase
 
     private async Task LoadBranchesAsync()
     {
-        var branches = await _dbContext.Branches.ToListAsync();
+        var branches = await _dbContext.Branches.AsNoTracking().ToListAsync();
         Branches = new ObservableCollection<BranchListItem>(
             branches.Select(b => new BranchListItem { Id = b.Id, Name = b.Name }));
     }
@@ -523,6 +526,7 @@ public partial class SettlementListViewModel : PagedViewModelBase
         {
             var branchId = CurrentSession.CurrentBranchId;
             var query = _dbContext.Settlements
+                .AsNoTracking()
                 .Include(s => s.Branch)
                 .Include(s => s.ConfirmedBy)
                 .Where(s => s.CreatedAt >= FilterStartDate && s.CreatedAt <= FilterEndDate.AddDays(1));
@@ -805,6 +809,7 @@ public partial class SettlementListViewModel : PagedViewModelBase
         try
         {
             var settlements = await _dbContext.Settlements
+                .AsNoTracking()
                 .Where(s => s.CreatedAt >= FilterStartDate && s.CreatedAt <= FilterEndDate.AddDays(1))
                 .Where(s => !string.IsNullOrEmpty(s.PdfPath))
                 .ToListAsync();
@@ -933,6 +938,7 @@ public partial class WorkScheduleViewModel : ViewModelBase
     {
         var branchId = CurrentSession.CurrentBranchId;
         var query = _dbContext.Employees
+            .AsNoTracking()
             .Include(e => e.Department)
             .Include(e => e.Role)
             .Where(e => e.BranchId == branchId && e.Status == EmployeeStatus.Active);
@@ -971,6 +977,7 @@ public partial class WorkScheduleViewModel : ViewModelBase
             var endDate = startDate.AddMonths(1).AddDays(-1);
 
             var schedules = await _dbContext.WorkSchedules
+                .AsNoTracking()
                 .Where(s => s.EmployeeId == employeeId && s.ScheduleDate >= startDate && s.ScheduleDate <= endDate)
                 .ToListAsync();
 
@@ -1006,12 +1013,14 @@ public partial class WorkScheduleViewModel : ViewModelBase
         {
             var branchId = CurrentSession.CurrentBranchId;
             var employees = await _dbContext.Employees
+                .AsNoTracking()
                 .Where(e => e.BranchId == branchId && e.Status == EmployeeStatus.Active)
                 .OrderBy(e => e.Name)
                 .ToListAsync();
 
             var weekEnd = WeekStartDate.AddDays(7);
             var schedules = await _dbContext.WorkSchedules
+                .AsNoTracking()
                 .Where(s => employees.Select(e => e.Id).Contains(s.EmployeeId)
                     && s.ScheduleDate >= WeekStartDate && s.ScheduleDate < weekEnd)
                 .ToListAsync();
@@ -1081,9 +1090,11 @@ public partial class WorkScheduleViewModel : ViewModelBase
 
 
         var schedule = await _dbContext.WorkSchedules
+            .AsNoTracking()
             .FirstOrDefaultAsync(s => s.EmployeeId == employeeId && s.ScheduleDate.Date == date.Value.Date);
 
         var plans = await _dbContext.WorkPlans
+            .AsNoTracking()
             .Include(p => p.Customer)
             .Where(p => p.EmployeeId == employeeId && p.PlanDate.Date == date.Value.Date)
             .ToListAsync();
@@ -1129,6 +1140,7 @@ public partial class WorkScheduleViewModel : ViewModelBase
     {
         var employeeId = CurrentSession.CurrentEmployeeId;
         var drafts = await _dbContext.PlanDrafts
+            .AsNoTracking()
             .Where(d => d.EmployeeId == employeeId)
             .OrderByDescending(d => d.CreatedAt)
             .ToListAsync();
@@ -1492,7 +1504,7 @@ public partial class SystemSettingsViewModel : ViewModelBase
 
     private async Task LoadSettingsAsync()
     {
-        var settings = await _dbContext.LocalSettings.ToListAsync();
+        var settings = await _dbContext.LocalSettings.AsNoTracking().ToListAsync();
 
         var closeBehavior = settings.FirstOrDefault(s => s.SettingKey == "CloseBehavior");
         CloseBehavior = closeBehavior != null ? (CloseBehavior)int.Parse(closeBehavior.SettingValue) : CloseBehavior.MinimizeToTray;
@@ -1879,6 +1891,7 @@ public partial class HeadquartersAdminViewModel : ViewModelBase
         try
         {
             var logs = await _dbContext.OperationLogs
+                .AsNoTracking()
                 .OrderByDescending(l => l.OperatedAt)
                 .Take(200)
                 .Select(l => new OperationLogDto
@@ -2089,6 +2102,7 @@ public partial class HeadquartersAdminViewModel : ViewModelBase
         try
         {
             var result = await _dbContext.Webhooks
+                .AsNoTracking()
                 .OrderByDescending(w => w.CreatedAt)
                 .Take(50)
                 .ToListAsync();
@@ -2272,7 +2286,7 @@ public partial class HeadquartersAdminViewModel : ViewModelBase
 
     private async Task LoadBranchesAsync()
     {
-        var branches = await _dbContext.Branches.ToListAsync();
+        var branches = await _dbContext.Branches.AsNoTracking().ToListAsync();
         Branches = new ObservableCollection<BranchListItem>(branches.Select(b => new BranchListItem
         {
             Id = b.Id,
@@ -2287,6 +2301,7 @@ public partial class HeadquartersAdminViewModel : ViewModelBase
     private async Task LoadEmployeesAsync()
     {
         var employees = await _dbContext.Employees
+            .AsNoTracking()
             .Include(e => e.Branch)
             .Include(e => e.Department)
             .Include(e => e.Role)
@@ -2308,6 +2323,7 @@ public partial class HeadquartersAdminViewModel : ViewModelBase
     private async Task LoadBackupRecordsAsync()
     {
         var records = await _dbContext.BackupRecords
+            .AsNoTracking()
             .OrderByDescending(r => r.BackupTime)
             .Take(30)
             .ToListAsync();
@@ -2327,6 +2343,7 @@ public partial class HeadquartersAdminViewModel : ViewModelBase
     private async Task LoadSyncConfigAsync()
     {
         var settings = await _dbContext.LocalSettings
+            .AsNoTracking()
             .Where(s => s.SettingKey == "HeadquartersAutoSyncEnabled"
                 || s.SettingKey == "HeadquartersSyncIntervalMinutes"
                 || s.SettingKey == "HeadquartersConflictResolution")
@@ -2398,6 +2415,7 @@ public partial class HeadquartersAdminViewModel : ViewModelBase
             await LoadOperationLogsAsync();
 
             var pendingCount = await _dbContext.OperationLogs
+                .AsNoTracking()
                 .CountAsync(o => o.SyncStatus == SyncStatus.Pending);
 
             SyncResult = pendingCount > 0

@@ -308,7 +308,10 @@
                 </DockPanel>
             </Border>
 
-            <materialDesign:TransitioningContent Grid.Row="1" Content="{Binding SelectedTab.ViewModel}" Margin="0"/>
+            <Grid Grid.Row="1">
+                <materialDesign:TransitioningContent Content="{Binding SelectedTab.ViewModel}" Margin="0"/>
+                <controls:LoadingOverlay x:Name="LoadingCtrl" Panel.ZIndex="100"/>
+            </Grid>
         </Grid>
     </Grid>
 </Window>

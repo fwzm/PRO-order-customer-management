@@ -44,6 +44,7 @@ public partial class InventoryViewModel : ViewModelBase
         {
             var branchId = CurrentSession.CurrentBranchId;
             var list = await _db.Set<Warehouse>()
+                .AsNoTracking()
                 .Where(w => w.BranchId == branchId)
                 .OrderBy(w => w.Name)
                 .ToListAsync();
@@ -61,7 +62,7 @@ public partial class InventoryViewModel : ViewModelBase
         try
         {
             var branchId = CurrentSession.CurrentBranchId;
-            var query = _db.Products.Where(p => p.Status == Domain.Enums.ProductStatus.Active);
+            var query = _db.Products.AsNoTracking().Where(p => p.Status == Domain.Enums.ProductStatus.Active);
             if (SelectedWarehouse != null)
             {
                 query = query.Where(p => p.WarehouseId == SelectedWarehouse.Id);
@@ -73,6 +74,7 @@ public partial class InventoryViewModel : ViewModelBase
             var products = await query.ToListAsync();
 
             var warehouseMap = await _db.Set<Warehouse>()
+                .AsNoTracking()
                 .Where(w => w.BranchId == branchId)
                 .ToDictionaryAsync(w => w.Id, w => w.Name);
 

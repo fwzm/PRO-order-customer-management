@@ -113,6 +113,7 @@ public partial class DashboardViewModel : ViewModelBase
 
             // 最近订单
             var recentOrdersQuery = await _dbContext.Orders
+                .AsNoTracking()
                 .Include(o => o.Customer)
                 .Where(o => o.BranchId == branchId && o.Status != OrderStatus.Draft)
                 .OrderByDescending(o => o.CreatedAt)

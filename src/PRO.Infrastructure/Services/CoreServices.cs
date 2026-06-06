@@ -26,6 +26,7 @@ public class AuthService : IAuthService
         try
         {
             var employee = await _dbContext.Employees
+                .AsNoTracking()
                 .Include(e => e.Role)
                 .Include(e => e.Branch)
                 .Include(e => e.Department)
@@ -38,6 +39,7 @@ public class AuthService : IAuthService
                 return ApiResponse<LoginResponse>.Fail("密码错误");
 
             var permissions = await _dbContext.RolePermissions
+                .AsNoTracking()
                 .Include(rp => rp.Permission)
                 .Where(rp => rp.RoleId == employee.RoleId && rp.IsAllowed && rp.Permission != null)
                 .Select(rp => rp.Permission!.Code)
@@ -139,6 +141,7 @@ public class AuthService : IAuthService
     public async Task<ApiResponse<bool>> ValidateSessionAsync(int employeeId)
     {
         var employee = await _dbContext.Employees
+            .AsNoTracking()
             .FirstOrDefaultAsync(e => e.Id == employeeId && e.Status == EmployeeStatus.Active);
         return ApiResponse<bool>.Ok(employee != null);
     }
@@ -156,11 +159,12 @@ public class OperationLogService : IOperationLogService
         _dbContext = dbContext;
     }
 
-    public async Task<ApiResponse<PRO.Application.Interfaces.PagedResult<OperationLogDto>>> GetListAsync(PagedRequest request, int? moduleId = null)
+    public async Task<ApiResponse<PagedResult<OperationLogDto>>> GetListAsync(PagedRequest request, int? moduleId = null)
     {
         try
         {
             var query = _dbContext.OperationLogs
+                .AsNoTracking()
                 .Include(l => l.Operator)
                 .AsQueryable();
 
@@ -184,7 +188,7 @@ public class OperationLogService : IOperationLogService
                 })
                 .ToListAsync();
 
-            return ApiResponse<PRO.Application.Interfaces.PagedResult<OperationLogDto>>.Ok(new PRO.Application.Interfaces.PagedResult<OperationLogDto>
+            return ApiResponse<PagedResult<OperationLogDto>>.Ok(new PagedResult<OperationLogDto>
             {
                 Items = items,
                 TotalCount = totalCount,
@@ -194,7 +198,7 @@ public class OperationLogService : IOperationLogService
         }
         catch (Exception ex)
         {
-            return ApiResponse<PRO.Application.Interfaces.PagedResult<OperationLogDto>>.Fail($"查询日志失败: {ex.Message}");
+            return ApiResponse<PagedResult<OperationLogDto>>.Fail($"查询日志失败: {ex.Message}");
         }
     }
 

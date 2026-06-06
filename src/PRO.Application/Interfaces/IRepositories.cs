@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using PRO.Application.DTOs;
 using PRO.Domain.Entities;
 using PRO.Domain.Enums;
 
@@ -16,17 +17,7 @@ public interface IRepository<T> where T : class
     Task<int> SaveChangesAsync();
 }
 
-// 分页结果
-public class PagedResult<T>
-{
-    public List<T> Items { get; set; } = new();
-    public int TotalCount { get; set; }
-    public int PageIndex { get; set; }
-    public int PageSize { get; set; }
-    public int TotalPages => PageSize > 0 ? (int)Math.Ceiling(TotalCount * 1.0 / PageSize) : 0;
-    public bool HasPrevious => PageIndex > 1;
-    public bool HasNext => PageIndex < TotalPages;
-}
+// 注: PagedResult<T> 已定义在 PRO.Application.DTOs 命名空间，此处不再重复定义
 
 // ==================== 组织架构仓储 ====================
 

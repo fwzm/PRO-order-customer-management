@@ -208,8 +208,9 @@ public class ProDbContext : DbContext
             entity.ToTable("Customers");
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.CustomerNo).IsUnique();
+            entity.HasIndex(e => new { e.BranchId, e.Status, e.CustomerType }); // 复合索引：客户列表筛选
+            entity.HasIndex(e => new { e.BranchId, e.Status, e.CreatedAt }); // 复合索引：客户列表分页排序
             entity.HasIndex(e => e.Phone);
-            entity.HasIndex(e => e.BranchId);
             entity.HasIndex(e => e.ParentCustomerId);
             entity.HasIndex(e => e.WeChatExternalUserId);
             entity.HasOne(e => e.Branch).WithMany(b => b.Customers).HasForeignKey(e => e.BranchId);
@@ -242,10 +243,11 @@ public class ProDbContext : DbContext
             entity.ToTable("Orders");
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.OrderNo).IsUnique();
-            entity.HasIndex(e => e.CustomerId);
-            entity.HasIndex(e => e.BranchId);
-            entity.HasIndex(e => e.Status);
-            entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => new { e.BranchId, e.Status, e.CreatedAt }); // 复合索引：订单列表筛选
+            entity.HasIndex(e => new { e.CustomerId, e.CreatedAt }); // 复合索引：客户订单历史
+            entity.HasIndex(e => new { e.BranchId, e.PaymentStatus, e.CreatedAt }); // 复合索引：应收账款/收款状态查询
+            entity.HasIndex(e => new { e.Status, e.BranchId }); // 复合索引：状态+分公司查询
+            entity.HasIndex(e => e.SettlementId);
             entity.HasOne(e => e.Customer).WithMany(c => c.Orders).HasForeignKey(e => e.CustomerId);
             entity.HasOne(e => e.Branch).WithMany(b => b.Orders).HasForeignKey(e => e.BranchId);
             entity.HasOne(e => e.Creator).WithMany(c => c.CreatedOrders).HasForeignKey(e => e.CreatedById);
@@ -291,6 +293,7 @@ public class ProDbContext : DbContext
             entity.HasIndex(e => e.SettlementNo).IsUnique();
             entity.HasIndex(e => e.BranchId);
             entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => new { e.BranchId, e.CreatedAt }); // 复合索引：结算列表查询
             entity.HasOne(e => e.Branch).WithMany().HasForeignKey(e => e.BranchId);
             entity.HasOne(e => e.ConfirmedBy).WithMany().HasForeignKey(e => e.ConfirmedById);
         });
@@ -332,9 +335,8 @@ public class ProDbContext : DbContext
         {
             entity.ToTable("OperationLogs");
             entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.SyncStatus, e.OperatedAt }); // 复合索引：同步状态+时间
             entity.HasIndex(e => e.OperatorId);
-            entity.HasIndex(e => e.OperatedAt);
-            entity.HasIndex(e => e.SyncStatus);
         });
 
         // SyncRecord

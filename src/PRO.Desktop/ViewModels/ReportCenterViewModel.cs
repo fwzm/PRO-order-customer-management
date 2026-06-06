@@ -25,7 +25,7 @@ public partial class ReportCenterViewModel : ViewModelBase
             var branchId = CurrentSession.CurrentBranchId;
 
             var sixMoAgo = DateTime.Now.AddMonths(-6);
-            var orders = await _db.Orders.Where(o => o.BranchId == branchId && o.CreatedAt >= sixMoAgo && o.Status != OrderStatus.Cancelled).ToListAsync();
+            var orders = await _db.Orders.AsNoTracking().Where(o => o.BranchId == branchId && o.CreatedAt >= sixMoAgo && o.Status != OrderStatus.Cancelled).ToListAsync();
             var monthly = orders.GroupBy(o => new { o.CreatedAt.Year, o.CreatedAt.Month }).OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month).ToList();
             var labels = monthly.Any() ? monthly.Select(g => $"{g.Key.Month}月").ToArray() : new[] { "暂无数据" };
 
@@ -35,8 +35,8 @@ public partial class ReportCenterViewModel : ViewModelBase
             };
             XAxes = new[] { new Axis { Labels = labels } };
 
-            var recentOrders = await _db.Orders.Where(o => o.BranchId == branchId && o.CreatedAt >= sixMoAgo).Select(o => o.Id).ToListAsync();
-            var items = await _db.OrderItems.Where(i => recentOrders.Contains(i.OrderId)).Include(i => i.Product).GroupBy(i => i.Product!.Name).Select(g => new { Name = g.Key, Qty = g.Sum(i => i.Quantity) }).OrderByDescending(g => g.Qty).Take(10).ToListAsync();
+            var recentOrders = await _db.Orders.AsNoTracking().Where(o => o.BranchId == branchId && o.CreatedAt >= sixMoAgo).Select(o => o.Id).ToListAsync();
+            var items = await _db.OrderItems.AsNoTracking().Where(i => recentOrders.Contains(i.OrderId)).Include(i => i.Product).GroupBy(i => i.Product!.Name).Select(g => new { Name = g.Key, Qty = g.Sum(i => i.Quantity) }).OrderByDescending(g => g.Qty).Take(10).ToListAsync();
             var productLabels = items.Any() ? items.Select(i => i.Name.Length > 6 ? i.Name[..6] + ".." : i.Name).ToArray() : new[] { "暂无数据" };
             ProductXAxes = new[] { new Axis { Labels = productLabels } };
             ProductSeries = new ObservableCollection<ISeries>

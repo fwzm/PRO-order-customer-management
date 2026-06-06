@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using PRO.Application.DTOs;
 using PRO.Domain.Entities;
 using PRO.Domain.Enums;
 using PRO.Infrastructure.Persistence;
@@ -25,12 +26,12 @@ public class Repository<T> : IRepository<T> where T : class
 
     public virtual async Task<List<T>> GetAllAsync()
     {
-        return await _dbSet.ToListAsync();
+        return await _dbSet.AsNoTracking().ToListAsync();
     }
 
     public virtual async Task<List<T>> FindAsync(Expression<Func<T, bool>> predicate)
     {
-        return await _dbSet.Where(predicate).ToListAsync();
+        return await _dbSet.AsNoTracking().Where(predicate).ToListAsync();
     }
 
     public virtual async Task<T> AddAsync(T entity)
@@ -66,12 +67,12 @@ public class BranchRepository : Repository<Branch>, IBranchRepository
 
     public async Task<Branch?> GetByCodeAsync(string code)
     {
-        return await _dbSet.FirstOrDefaultAsync(b => b.Code == code);
+        return await _dbSet.AsNoTracking().FirstOrDefaultAsync(b => b.Code == code);
     }
 
     public async Task<List<Branch>> GetActiveListAsync()
     {
-        return await _dbSet.Where(b => b.Status == EntityStatus.Active).ToListAsync();
+        return await _dbSet.AsNoTracking().Where(b => b.Status == EntityStatus.Active).ToListAsync();
     }
 }
 
@@ -81,34 +82,34 @@ public class EmployeeRepository : Repository<Employee>, IEmployeeRepository
 
     public async Task<Employee?> GetByEmployeeNoAsync(string employeeNo)
     {
-        return await _dbSet.Include(e => e.Role).Include(e => e.Branch).Include(e => e.Department)
+        return await _dbSet.AsNoTracking().Include(e => e.Role).Include(e => e.Branch).Include(e => e.Department)
             .FirstOrDefaultAsync(e => e.EmployeeNo == employeeNo);
     }
 
     public async Task<Employee?> GetByIdWithDetailsAsync(int id)
     {
-        return await _dbSet.Include(e => e.Role).Include(e => e.Branch).Include(e => e.Department)
+        return await _dbSet.AsNoTracking().Include(e => e.Role).Include(e => e.Branch).Include(e => e.Department)
             .FirstOrDefaultAsync(e => e.Id == id);
     }
 
     public async Task<List<Employee>> GetByBranchIdAsync(int branchId)
     {
-        return await _dbSet.Where(e => e.BranchId == branchId && e.Status == EmployeeStatus.Active).ToListAsync();
+        return await _dbSet.AsNoTracking().Where(e => e.BranchId == branchId && e.Status == EmployeeStatus.Active).ToListAsync();
     }
 
     public async Task<List<Employee>> GetByDepartmentIdAsync(int departmentId)
     {
-        return await _dbSet.Where(e => e.DepartmentId == departmentId && e.Status == EmployeeStatus.Active).ToListAsync();
+        return await _dbSet.AsNoTracking().Where(e => e.DepartmentId == departmentId && e.Status == EmployeeStatus.Active).ToListAsync();
     }
 
     public async Task<List<Employee>> GetByRoleIdAsync(int roleId)
     {
-        return await _dbSet.Where(e => e.RoleId == roleId).ToListAsync();
+        return await _dbSet.AsNoTracking().Where(e => e.RoleId == roleId).ToListAsync();
     }
 
     public async Task<PagedResult<Employee>> GetPagedAsync(int pageIndex, int pageSize, string? keyword, int? branchId)
     {
-        var query = _dbSet.Include(e => e.Role).Include(e => e.Branch).Include(e => e.Department).AsQueryable();
+        var query = _dbSet.AsNoTracking().Include(e => e.Role).Include(e => e.Branch).Include(e => e.Department).AsQueryable();
         
         if (!string.IsNullOrWhiteSpace(keyword))
             query = query.Where(e => e.Name.Contains(keyword) || e.EmployeeNo.Contains(keyword));
@@ -132,13 +133,13 @@ public class DepartmentRepository : Repository<Department>, IDepartmentRepositor
 
     public async Task<List<Department>> GetTreeByBranchIdAsync(int branchId)
     {
-        return await _dbSet.Where(d => d.BranchId == branchId && d.Status == EntityStatus.Active)
+        return await _dbSet.AsNoTracking().Where(d => d.BranchId == branchId && d.Status == EntityStatus.Active)
             .OrderBy(d => d.SortOrder).ToListAsync();
     }
 
     public async Task<List<Department>> GetChildrenAsync(int parentId)
     {
-        return await _dbSet.Where(d => d.ParentId == parentId && d.Status == EntityStatus.Active)
+        return await _dbSet.AsNoTracking().Where(d => d.ParentId == parentId && d.Status == EntityStatus.Active)
             .OrderBy(d => d.SortOrder).ToListAsync();
     }
 }
@@ -151,24 +152,24 @@ public class CustomerRepository : Repository<Customer>, ICustomerRepository
 
     public async Task<List<Customer>> GetByBranchIdAsync(int branchId)
     {
-        return await _dbSet.Where(c => c.BranchId == branchId && c.Status == CustomerStatus.Active).ToListAsync();
+        return await _dbSet.AsNoTracking().Where(c => c.BranchId == branchId && c.Status == CustomerStatus.Active).ToListAsync();
     }
 
     public async Task<List<Customer>> GetSubCustomersAsync(int parentCustomerId)
     {
-        return await _dbSet.Where(c => c.ParentCustomerId == parentCustomerId && c.Status != CustomerStatus.Deleted).ToListAsync();
+        return await _dbSet.AsNoTracking().Where(c => c.ParentCustomerId == parentCustomerId && c.Status != CustomerStatus.Deleted).ToListAsync();
     }
 
     public async Task<List<Customer>> GetMajorCustomersAsync(int branchId)
     {
-        return await _dbSet.Where(c => c.BranchId == branchId && c.CustomerType == CustomerType.Major && c.Status == CustomerStatus.Active)
+        return await _dbSet.AsNoTracking().Where(c => c.BranchId == branchId && c.CustomerType == CustomerType.Major && c.Status == CustomerStatus.Active)
             .ToListAsync();
     }
 
     public async Task<List<Customer>> FindDuplicatesAsync(string? phone, string? name, string? address, string? legalPerson)
     {
         // 构建多个独立查重条件，使用 OR 逻辑
-        var query = _dbSet.Where(c => c.Status == CustomerStatus.Active);
+        var query = _dbSet.AsNoTracking().Where(c => c.Status == CustomerStatus.Active);
         
         // 用于构建 OR 条件的表达式
         Expression<Func<Customer, bool>>? combinedPredicate = null;
@@ -241,7 +242,7 @@ public class CustomerRepository : Repository<Customer>, ICustomerRepository
 
     public async Task<PagedResult<Customer>> GetPagedAsync(int pageIndex, int pageSize, string? keyword, int? branchId, CustomerType? customerType)
     {
-        var query = _dbSet.Include(c => c.Branch).AsQueryable();
+        var query = _dbSet.AsNoTracking().Include(c => c.Branch).AsQueryable();
         
         if (!string.IsNullOrWhiteSpace(keyword))
             query = query.Where(c => c.Name.Contains(keyword) || (c.Phone != null && c.Phone.Contains(keyword)));
@@ -268,7 +269,7 @@ public class OrderRepository : Repository<Order>, IOrderRepository
 
     public async Task<Order?> GetByIdWithDetailsAsync(int id)
     {
-        return await _dbSet.Include(o => o.Customer).Include(o => o.Branch).Include(o => o.DeliveryPerson)
+        return await _dbSet.AsNoTracking().Include(o => o.Customer).Include(o => o.Branch).Include(o => o.DeliveryPerson)
             .Include(o => o.Creator).Include(o => o.Items).ThenInclude(i => i.Product)
             .Include(o => o.ModificationRecords).ThenInclude(r => r.ModifiedBy)
             .FirstOrDefaultAsync(o => o.Id == id);
@@ -276,30 +277,30 @@ public class OrderRepository : Repository<Order>, IOrderRepository
 
     public async Task<Order?> GetByOrderNoAsync(string orderNo)
     {
-        return await _dbSet.FirstOrDefaultAsync(o => o.OrderNo == orderNo);
+        return await _dbSet.AsNoTracking().FirstOrDefaultAsync(o => o.OrderNo == orderNo);
     }
 
     public async Task<List<Order>> GetByCustomerIdAsync(int customerId)
     {
-        return await _dbSet.Where(o => o.CustomerId == customerId).OrderByDescending(o => o.CreatedAt).ToListAsync();
+        return await _dbSet.AsNoTracking().Where(o => o.CustomerId == customerId).OrderByDescending(o => o.CreatedAt).ToListAsync();
     }
 
     public async Task<List<Order>> GetPendingOrdersAsync(int branchId)
     {
-        return await _dbSet.Include(o => o.Customer).Where(o => o.BranchId == branchId && o.Status == OrderStatus.Pending)
+        return await _dbSet.AsNoTracking().Include(o => o.Customer).Where(o => o.BranchId == branchId && o.Status == OrderStatus.Pending)
             .OrderBy(o => o.CreatedAt).ToListAsync();
     }
 
     public async Task<List<Order>> GetByDateRangeAsync(int branchId, DateTime startDate, DateTime endDate)
     {
-        return await _dbSet.Include(o => o.Items).ThenInclude(i => i.Product)
+        return await _dbSet.AsNoTracking().Include(o => o.Items).ThenInclude(i => i.Product)
             .Where(o => o.BranchId == branchId && o.CreatedAt >= startDate && o.CreatedAt <= endDate && o.SettlementId == null)
             .OrderBy(o => o.CreatedAt).ToListAsync();
     }
 
     public async Task<PagedResult<Order>> GetPagedAsync(int pageIndex, int pageSize, string? keyword, int? branchId, OrderStatus? status, PaymentStatus? paymentStatus)
     {
-        var query = _dbSet.Include(o => o.Customer).Include(o => o.Branch).Include(o => o.DeliveryPerson).Include(o => o.Creator).AsQueryable();
+        var query = _dbSet.AsNoTracking().Include(o => o.Customer).Include(o => o.Branch).Include(o => o.DeliveryPerson).Include(o => o.Creator).AsQueryable();
         
         if (!string.IsNullOrWhiteSpace(keyword))
             query = query.Where(o => o.OrderNo.Contains(keyword) || (o.Customer != null && o.Customer.Name.Contains(keyword)));
@@ -329,22 +330,22 @@ public class ProductRepository : Repository<Product>, IProductRepository
 
     public async Task<Product?> GetBySkuAsync(string sku)
     {
-        return await _dbSet.FirstOrDefaultAsync(p => p.SKU == sku);
+        return await _dbSet.AsNoTracking().FirstOrDefaultAsync(p => p.SKU == sku);
     }
 
     public async Task<List<Product>> GetByCategoryIdAsync(int categoryId)
     {
-        return await _dbSet.Where(p => p.CategoryId == categoryId && p.Status == ProductStatus.Active).ToListAsync();
+        return await _dbSet.AsNoTracking().Where(p => p.CategoryId == categoryId && p.Status == ProductStatus.Active).ToListAsync();
     }
 
     public async Task<List<Product>> GetActiveListAsync()
     {
-        return await _dbSet.Where(p => p.Status == ProductStatus.Active).ToListAsync();
+        return await _dbSet.AsNoTracking().Where(p => p.Status == ProductStatus.Active).ToListAsync();
     }
 
     public async Task<PagedResult<Product>> GetPagedAsync(int pageIndex, int pageSize, string? keyword, int? categoryId, ProductStatus? status)
     {
-        var query = _dbSet.Include(p => p.Category).AsQueryable();
+        var query = _dbSet.AsNoTracking().Include(p => p.Category).AsQueryable();
         
         if (!string.IsNullOrWhiteSpace(keyword))
             query = query.Where(p => p.Name.Contains(keyword) || p.SKU.Contains(keyword));
@@ -371,18 +372,18 @@ public class DeliveryPersonRepository : Repository<DeliveryPerson>, IDeliveryPer
 
     public async Task<List<DeliveryPerson>> GetByBranchIdAsync(int branchId)
     {
-        return await _dbSet.Where(d => d.BranchId == branchId).ToListAsync();
+        return await _dbSet.AsNoTracking().Where(d => d.BranchId == branchId).ToListAsync();
     }
 
     public async Task<List<DeliveryPerson>> GetAvailableAsync(int branchId)
     {
-        return await _dbSet.Where(d => d.BranchId == branchId && d.Status == DeliveryPersonStatus.Available && d.CurrentLoad < d.MaxLoad)
+        return await _dbSet.AsNoTracking().Where(d => d.BranchId == branchId && d.Status == DeliveryPersonStatus.Available && d.CurrentLoad < d.MaxLoad)
             .OrderByDescending(d => d.MaxLoad - d.CurrentLoad).ToListAsync();
     }
 
     public async Task<PagedResult<DeliveryPerson>> GetPagedAsync(int pageIndex, int pageSize, string? keyword, int? branchId, DeliveryPersonStatus? status)
     {
-        var query = _dbSet.Include(d => d.Branch).AsQueryable();
+        var query = _dbSet.AsNoTracking().Include(d => d.Branch).AsQueryable();
         
         if (!string.IsNullOrWhiteSpace(keyword))
             query = query.Where(d => d.Name.Contains(keyword) || d.Phone.Contains(keyword));

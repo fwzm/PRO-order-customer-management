@@ -84,9 +84,14 @@ public partial class WeChatService : IWeChatService
     private async Task<JObject?> CallApiWithRetryAsync(string path, string method = "GET", object? body = null)
     {
         var token = await GetAccessTokenAsync();
-        if (string.IsNullOrEmpty(token)) return null;
+        if (string.IsNullOrEmpty(token))
+        {
+            Serilog.Log.Warning("企业微信 API 调用失败: 未配置或未获取到 Access Token");
+            return null;
+        }
 
         var client = _httpClientFactory.CreateClient();
+        client.Timeout = TimeSpan.FromSeconds(30);
         var url = $"{ApiBaseUrl}{path}?access_token={token}";
 
         try
@@ -110,6 +115,7 @@ public partial class WeChatService : IWeChatService
             // Token过期，刷新后重试一次
             if (errcode == 42001)
             {
+                Serilog.Log.Information("企业微信 Token 已过期，正在刷新...");
                 token = await GetAccessTokenAsync(forceRefresh: true);
                 if (string.IsNullOrEmpty(token)) return null;
 
@@ -128,10 +134,25 @@ public partial class WeChatService : IWeChatService
                 result = JObject.Parse(responseJson);
             }
 
+            // 记录API错误
+            var finalErrcode = result["errcode"]?.Value<int>() ?? -1;
+            if (finalErrcode != 0)
+            {
+                var errmsg = result["errmsg"]?.ToString() ?? "未知错误";
+                Serilog.Log.Warning("企业微信 API 返回错误: {Path} errcode={ErrCode}, errmsg={ErrMsg}",
+                    path, finalErrcode, errmsg);
+            }
+
             return result;
         }
-        catch
+        catch (TaskCanceledException)
         {
+            Serilog.Log.Warning("企业微信 API 请求超时: {Path}", path);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Warning(ex, "企业微信 API 请求异常: {Path}", path);
             return null;
         }
     }

@@ -27,6 +27,8 @@ public partial class App : System.Windows.Application
     private static IServiceProvider? _serviceProvider;
     public static IServiceProvider Services => _serviceProvider!;
     public static Action<string, string?, bool>? ShowToast { get; set; }
+    public static Action<string?>? ShowLoading { get; set; }
+    public static Action? HideLoading { get; set; }
 
     private TaskbarIcon? _trayIcon;
     private DispatcherTimer? _autoBackupTimer;
@@ -376,6 +378,13 @@ public partial class App : System.Windows.Application
 
         // 业务服务
         services.AddScoped<AppInterfaces.IAuthService, AuthService>();
+        services.AddScoped<AppInterfaces.IBranchService, BranchService>();
+        services.AddScoped<AppInterfaces.IEmployeeService, EmployeeService>();
+        services.AddScoped<AppInterfaces.ICustomerService, CustomerService>();
+        services.AddScoped<AppInterfaces.IOrderService, OrderService>();
+        services.AddScoped<AppInterfaces.IProductService, ProductService>();
+        services.AddScoped<AppInterfaces.IDeliveryPersonService, DeliveryPersonService>();
+        services.AddScoped<AppInterfaces.ISettlementService, SettlementService>();
         services.AddScoped<AppInterfaces.IOperationLogService, OperationLogService>();
 
         // 视图模型

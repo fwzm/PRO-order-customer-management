@@ -83,6 +83,7 @@ public partial class WeChatCustomerViewModel : ViewModelBase
         try
         {
             var query = _dbContext.WeChatCustomers
+                .AsNoTracking()
                 .Include(w => w.LinkedCustomer)
                 .Include(w => w.AssignedBranch)
                 .AsQueryable();
@@ -125,9 +126,9 @@ public partial class WeChatCustomerViewModel : ViewModelBase
                 }));
 
             // 更新计数
-            UnlinkedCount = await _dbContext.WeChatCustomers.CountAsync(w => w.Status == "Unlinked");
-            LinkedCount = await _dbContext.WeChatCustomers.CountAsync(w => w.Status == "Linked");
-            UnidentifiableCount = await _dbContext.WeChatCustomers.CountAsync(w => w.Status == "Unidentifiable");
+            UnlinkedCount = await _dbContext.WeChatCustomers.AsNoTracking().CountAsync(w => w.Status == "Unlinked");
+            LinkedCount = await _dbContext.WeChatCustomers.AsNoTracking().CountAsync(w => w.Status == "Linked");
+            UnidentifiableCount = await _dbContext.WeChatCustomers.AsNoTracking().CountAsync(w => w.Status == "Unidentifiable");
         }
         catch (Exception ex)
         {
@@ -150,6 +151,7 @@ public partial class WeChatCustomerViewModel : ViewModelBase
         try
         {
             var list = await _dbContext.Branches
+                .AsNoTracking()
                 .Where(b => b.Status == EntityStatus.Active)
                 .OrderBy(b => b.Name)
                 .ToListAsync();
