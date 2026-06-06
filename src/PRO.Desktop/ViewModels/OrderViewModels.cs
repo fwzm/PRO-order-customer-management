@@ -1,10 +1,12 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PRO.Application.DTOs;
+using PRO.Application.Interfaces;
 using PRO.Domain.Entities;
 using PRO.Domain.Enums;
 using PRO.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.IO;
@@ -18,6 +20,7 @@ namespace PRO.Desktop.ViewModels;
 public partial class OrderListViewModel : PagedViewModelBase
 {
     private readonly ProDbContext _dbContext;
+    private readonly IOrderService _orderService;
 
     [ObservableProperty]
     private ObservableCollection<OrderListItem> _orders = new();
@@ -50,6 +53,8 @@ public partial class OrderListViewModel : PagedViewModelBase
     {
         _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext 
             ?? throw new InvalidOperationException("无法获取数据库上下文");
+        _orderService = App.Services.GetService(typeof(IOrderService)) as IOrderService
+            ?? throw new InvalidOperationException("无法获取订单服务");
         
         RunInBackground(LoadDataAsync(), "订单列表加载失败");
     }
@@ -59,88 +64,45 @@ public partial class OrderListViewModel : PagedViewModelBase
         IsLoading = true;
         try
         {
-            var branchId = CurrentSession.CurrentBranchId;
-            var query = _dbContext.Orders.AsNoTracking()
-                .Include(o => o.Customer)
-                .Include(o => o.Branch)
-                .Include(o => o.DeliveryPerson)
-                .Include(o => o.Creator)
-                .AsQueryable();
-
-            // 数据隔离
-            if (!CurrentSession.Current.IsHeadquartersAdmin)
+            int? branchId = CurrentSession.Current.IsHeadquartersAdmin ? null : (int?)CurrentSession.CurrentBranchId;
+            var request = new PagedRequest
             {
-                query = query.Where(o => o.BranchId == branchId);
+                PageIndex = PageIndex,
+                PageSize = PageSize,
+                Keyword = SearchKeyword
+            };
+
+            // 草稿模式：单独筛选草稿
+            var statusFilter = ShowOnlyDrafts ? OrderStatus.Draft : FilterStatus;
+
+            var result = await _orderService.GetListAsync(request,
+                branchId: branchId,
+                status: statusFilter,
+                paymentStatus: ShowOnlyDrafts ? null : FilterPaymentStatus);
+
+            if (result.Success && result.Data != null)
+            {
+                var items = result.Data.Items.AsEnumerable();
+
+                // 日期范围过滤（服务端不支持，客户端过滤）
+                if (!ShowOnlyDrafts)
+                {
+                    if (FilterStartDate.HasValue)
+                        items = items.Where(o => o.CreatedAt >= FilterStartDate.Value);
+                    if (FilterEndDate.HasValue)
+                        items = items.Where(o => o.CreatedAt < FilterEndDate.Value);
+                }
+
+                var filteredItems = items.ToList();
+                TotalCount = ShowOnlyDrafts ? result.Data.TotalCount : filteredItems.Count;
+
+                Orders = new ObservableCollection<OrderListItem>(filteredItems.Select(o =>
+                {
+                    o.PaymentStatusName = GetPaymentStatusName(o.PaymentStatus);
+                    o.StatusName = GetStatusName(o.Status);
+                    return o;
+                }));
             }
-
-            // 关键词搜索
-            if (!string.IsNullOrWhiteSpace(SearchKeyword))
-            {
-                query = query.Where(o => o.OrderNo.Contains(SearchKeyword) || 
-                    (o.Customer != null && o.Customer.Name.Contains(SearchKeyword)));
-            }
-
-            // 状态筛选
-            if (FilterStatus.HasValue)
-            {
-                query = query.Where(o => o.Status == FilterStatus.Value);
-            }
-
-            // 收款状态筛选
-            if (FilterPaymentStatus.HasValue)
-            {
-                query = query.Where(o => o.PaymentStatus == FilterPaymentStatus.Value);
-            }
-
-            if (FilterStartDate.HasValue)
-            {
-                query = query.Where(o => o.CreatedAt >= FilterStartDate.Value);
-            }
-
-            if (FilterEndDate.HasValue)
-            {
-                query = query.Where(o => o.CreatedAt < FilterEndDate.Value);
-            }
-
-            // 排除草稿（草稿单独显示）
-            if (ShowOnlyDrafts)
-            {
-                query = query.Where(o => o.Status == OrderStatus.Draft);
-            }
-            else
-            {
-                query = query.Where(o => o.Status != OrderStatus.Draft);
-            }
-
-            TotalCount = await query.CountAsync();
-
-            var items = await query.OrderByDescending(o => o.CreatedAt)
-                .Skip((PageIndex - 1) * PageSize)
-                .Take(PageSize)
-                .ToListAsync();
-
-            Orders = new ObservableCollection<OrderListItem>(items.Select(o => new OrderListItem
-            {
-                Id = o.Id,
-                OrderNo = o.OrderNo,
-                CustomerId = o.CustomerId,
-                CustomerName = o.Customer?.Name ?? "未知",
-                BranchId = o.BranchId,
-                BranchName = o.Branch?.Name ?? "",
-                TotalAmount = o.TotalAmount,
-                ReceivedAmount = o.ReceivedAmount,
-                PaymentStatus = o.PaymentStatus,
-                PaymentStatusName = GetPaymentStatusName(o.PaymentStatus),
-                Status = o.Status,
-                StatusName = GetStatusName(o.Status),
-                DeliveryPersonName = o.DeliveryPerson?.Name,
-                DeliveryAddress = o.DeliveryAddress,
-                DeliveryLongitude = o.DeliveryLongitude,
-                DeliveryLatitude = o.DeliveryLatitude,
-                DeliveryTime = o.DeliveryTime,
-                CreatedAt = o.CreatedAt,
-                CreatedByName = o.Creator?.Name ?? ""
-            }));
         }
         catch (Exception ex)
         {

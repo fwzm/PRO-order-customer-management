@@ -129,7 +129,7 @@ public interface ISettlementService
 public interface IWorkScheduleService
 {
     Task<ApiResponse<PagedResult<WorkScheduleListItem>>> GetListAsync(PagedRequest request, int? employeeId = null);
-    Task<ApiResponse<CalendarScheduleItem>> GetCalendarAsync(EmployeeScheduleCalendarRequest request);
+    Task<ApiResponse<List<CalendarScheduleItem>>> GetCalendarAsync(EmployeeScheduleCalendarRequest request);
     Task<ApiResponse<int>> CreateAsync(CreateWorkScheduleRequest request, int createdById);
     Task<ApiResponse<bool>> BatchCreateAsync(BatchCreateWorkScheduleRequest request, int createdById);
     Task<ApiResponse<bool>> UpdateAsync(int id, CreateWorkScheduleRequest request, int modifiedById);

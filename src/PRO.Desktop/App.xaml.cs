@@ -110,6 +110,8 @@ public partial class App : System.Windows.Application
                 mainViewModel.InitializeAfterLogin();
 
                 App.ShowToast = (msg, title, success) => _mainWindow?.Dispatcher.Invoke(() => _mainWindow.ToastCtrl.Show(msg, title, success));
+                App.ShowLoading = (text) => _mainWindow?.Dispatcher.Invoke(() => _mainWindow.ShowLoading(text));
+                App.HideLoading = () => _mainWindow?.Dispatcher.Invoke(() => _mainWindow.HideLoading());
 
                 // 检查新版本（异步，不阻塞登录流程）
                 _ = CheckNewVersionAsync();
@@ -385,6 +387,9 @@ public partial class App : System.Windows.Application
         services.AddScoped<AppInterfaces.IProductService, ProductService>();
         services.AddScoped<AppInterfaces.IDeliveryPersonService, DeliveryPersonService>();
         services.AddScoped<AppInterfaces.ISettlementService, SettlementService>();
+        services.AddScoped<AppInterfaces.IWorkScheduleService, WorkScheduleService>();
+        services.AddScoped<AppInterfaces.IWorkPlanService, WorkPlanService>();
+        services.AddScoped<AppInterfaces.IPlanDraftService, PlanDraftService>();
         services.AddScoped<AppInterfaces.IOperationLogService, OperationLogService>();
 
         // 视图模型

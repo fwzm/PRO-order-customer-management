@@ -1,10 +1,12 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PRO.Application.DTOs;
+using PRO.Application.Interfaces;
 using PRO.Domain.Entities;
 using PRO.Domain.Enums;
 using PRO.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using System.Collections.ObjectModel;
 
@@ -434,6 +436,7 @@ public partial class DepartmentTreeViewModel : ViewModelBase
 public partial class EmployeeListViewModel : ViewModelBase
 {
     private readonly ProDbContext _dbContext;
+    private readonly IEmployeeService _employeeService;
 
     [ObservableProperty]
     private ObservableCollection<EmployeeListItem> _employees = new();
@@ -448,6 +451,7 @@ public partial class EmployeeListViewModel : ViewModelBase
     {
         _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext 
             ?? throw new InvalidOperationException("无法获取数据库上下文");
+        _employeeService = App.Services.GetRequiredService<IEmployeeService>();
         
         _ = LoadEmployeesAsync();
     }
@@ -456,32 +460,28 @@ public partial class EmployeeListViewModel : ViewModelBase
     {
         try
         {
-            var branchId = CurrentSession.CurrentBranchId;
-            var query = _dbContext.Employees
-                .Include(e => e.Department)
-                .Include(e => e.Role)
-                .Where(e => e.BranchId == branchId && e.Status == EmployeeStatus.Active);
-
-            if (!string.IsNullOrWhiteSpace(SearchKeyword))
+            var request = new PagedRequest
             {
-                query = query.Where(e => e.Name.Contains(SearchKeyword) || e.EmployeeNo.Contains(SearchKeyword));
+                PageIndex = 1,
+                PageSize = 200,
+                Keyword = SearchKeyword
+            };
+
+            var result = await _employeeService.GetListAsync(request);
+            if (result.Success && result.Data != null)
+            {
+                // 客户端过滤当前分公司
+                var branchId = CurrentSession.CurrentBranchId;
+                var filtered = result.Data.Items
+                    .Where(e => e.BranchId == branchId && e.Status == EmployeeStatus.Active)
+                    .Select(e =>
+                    {
+                        e.StatusName = e.Status == EmployeeStatus.Active ? "在职" : "离职";
+                        return e;
+                    })
+                    .ToList();
+                Employees = new ObservableCollection<EmployeeListItem>(filtered);
             }
-
-            var employees = await query.ToListAsync();
-
-            Employees = new ObservableCollection<EmployeeListItem>(employees.Select(e => new EmployeeListItem
-            {
-                Id = e.Id,
-                Name = e.Name,
-                EmployeeNo = e.EmployeeNo,
-                DepartmentName = e.Department?.Name ?? "",
-                DepartmentId = e.DepartmentId,
-                BranchName = "",
-                BranchId = e.BranchId,
-                RoleName = e.Role?.Name ?? "",
-                Status = e.Status,
-                StatusName = e.Status == EmployeeStatus.Active ? "在职" : "离职"
-            }));
         }
         catch (Exception ex) { Log.Error(ex, "员工列表加载失败"); }
     }

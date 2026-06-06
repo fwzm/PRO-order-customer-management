@@ -25,6 +25,7 @@ namespace PRO.Desktop.ViewModels;
 public partial class ProductListViewModel : PagedViewModelBase
 {
     private readonly ProDbContext _dbContext;
+    private readonly IProductService _productService;
 
     [ObservableProperty]
     private ObservableCollection<ProductListItem> _products = new();
@@ -59,6 +60,8 @@ public partial class ProductListViewModel : PagedViewModelBase
     {
         _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext 
             ?? throw new InvalidOperationException("无法获取数据库上下文");
+        _productService = App.Services.GetService(typeof(IProductService)) as IProductService
+            ?? throw new InvalidOperationException("无法获取产品服务");
         
         _ = InitAsync();
     }
@@ -75,9 +78,9 @@ public partial class ProductListViewModel : PagedViewModelBase
 
     private async Task LoadCategoriesAsync()
     {
-        var categories = await _dbContext.ProductCategories.AsNoTracking().ToListAsync();
-        Categories = new ObservableCollection<ProductCategoryDto>(
-            categories.Select(c => new ProductCategoryDto { Id = c.Id, Name = c.Name }));
+        var result = await _productService.GetCategoriesAsync();
+        if (result.Success && result.Data != null)
+            Categories = new ObservableCollection<ProductCategoryDto>(result.Data);
     }
 
     protected override async Task LoadDataAsync()
@@ -85,44 +88,22 @@ public partial class ProductListViewModel : PagedViewModelBase
         IsLoading = true;
         try
         {
-            var query = _dbContext.Products.AsNoTracking().Include(p => p.Category).AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(SearchKeyword))
+            var request = new PagedRequest
             {
-                query = query.Where(p => p.Name.Contains(SearchKeyword) || p.SKU.Contains(SearchKeyword));
+                PageIndex = PageIndex,
+                PageSize = PageSize,
+                Keyword = SearchKeyword
+            };
+
+            var result = await _productService.GetListAsync(request, 
+                categoryId: FilterCategoryId.HasValue && FilterCategoryId.Value > 0 ? FilterCategoryId : null,
+                status: FilterStatus);
+
+            if (result.Success && result.Data != null)
+            {
+                TotalCount = result.Data.TotalCount;
+                Products = new ObservableCollection<ProductListItem>(result.Data.Items);
             }
-
-            if (FilterStatus.HasValue)
-            {
-                query = query.Where(p => p.Status == FilterStatus.Value);
-            }
-
-            if (FilterCategoryId.HasValue && FilterCategoryId.Value > 0)
-            {
-                query = query.Where(p => p.CategoryId == FilterCategoryId.Value);
-            }
-
-            TotalCount = await query.CountAsync();
-
-            var items = await query.OrderBy(p => p.SKU)
-                .Skip((PageIndex - 1) * PageSize)
-                .Take(PageSize)
-                .ToListAsync();
-
-            Products = new ObservableCollection<ProductListItem>(items.Select(p => new ProductListItem
-            {
-                Id = p.Id,
-                SKU = p.SKU,
-                Name = p.Name,
-                Specification = p.Specification,
-                AverageSalePrice = p.AverageSalePrice,
-                ReferencePrice = p.ReferencePrice,
-                Stock = p.Stock,
-                Unit = p.Unit,
-                CategoryName = p.Category?.Name,
-                Status = p.Status,
-                UpdatedAt = p.UpdatedAt
-            }));
         }
         catch (Exception ex)
         {
@@ -222,6 +203,7 @@ public partial class ProductListViewModel : PagedViewModelBase
 public partial class DeliveryPersonListViewModel : PagedViewModelBase
 {
     private readonly ProDbContext _dbContext;
+    private readonly IDeliveryPersonService _deliveryPersonService;
 
     [ObservableProperty]
     private ObservableCollection<DeliveryPersonListItem> _deliveryPersons = new();
@@ -239,6 +221,7 @@ public partial class DeliveryPersonListViewModel : PagedViewModelBase
     {
         _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext 
             ?? throw new InvalidOperationException("无法获取数据库上下文");
+        _deliveryPersonService = App.Services.GetRequiredService<IDeliveryPersonService>();
         
         _ = LoadDataAsync();
     }
@@ -254,52 +237,22 @@ public partial class DeliveryPersonListViewModel : PagedViewModelBase
         IsLoading = true;
         try
         {
-            var branchId = CurrentSession.CurrentBranchId;
-            var query = _dbContext.DeliveryPersons.AsNoTracking().Include(d => d.Branch).AsQueryable();
-
-            if (!CurrentSession.Current.IsHeadquartersAdmin)
+            var request = new PagedRequest
             {
-                query = query.Where(d => d.BranchId == branchId);
+                PageIndex = PageIndex,
+                PageSize = PageSize,
+                Keyword = SearchKeyword
+            };
+            int? branchId = CurrentSession.Current.IsHeadquartersAdmin ? null : CurrentSession.CurrentBranchId;
+            var result = await _deliveryPersonService.GetListAsync(request, branchId, FilterStatus);
+            if (!result.Success || result.Data == null)
+            {
+                ShowError(result.Message);
+                return;
             }
 
-            if (!string.IsNullOrWhiteSpace(SearchKeyword))
-            {
-                query = query.Where(d => d.Name.Contains(SearchKeyword) || d.Phone.Contains(SearchKeyword));
-            }
-
-            if (FilterStatus.HasValue)
-            {
-                query = query.Where(d => d.Status == FilterStatus.Value);
-            }
-
-            TotalCount = await query.CountAsync();
-
-            var items = await query.OrderBy(d => d.Name)
-                .Skip((PageIndex - 1) * PageSize)
-                .Take(PageSize)
-                .ToListAsync();
-
-            DeliveryPersons = new ObservableCollection<DeliveryPersonListItem>(items.Select(d => new DeliveryPersonListItem
-            {
-                Id = d.Id,
-                Name = d.Name,
-                Phone = d.Phone,
-                BranchId = d.BranchId,
-                BranchName = d.Branch?.Name ?? "",
-                ServiceArea = d.ServiceArea,
-                VehicleNumber = d.VehicleNumber,
-                WeChatId = d.WeChatId,
-                CurrentLoad = d.CurrentLoad,
-                MaxLoad = d.MaxLoad,
-                Status = d.Status,
-                StatusName = d.Status switch
-                {
-                    DeliveryPersonStatus.Available => "可用",
-                    DeliveryPersonStatus.Busy => "忙碌",
-                    DeliveryPersonStatus.Off => "休息",
-                    _ => "未知"
-                }
-            }));
+            TotalCount = result.Data.TotalCount;
+            DeliveryPersons = new ObservableCollection<DeliveryPersonListItem>(result.Data.Items);
         }
         catch (Exception ex)
         {
@@ -472,6 +425,8 @@ public partial class DeliveryPersonListViewModel : PagedViewModelBase
 public partial class SettlementListViewModel : PagedViewModelBase
 {
     private readonly ProDbContext _dbContext;
+    private readonly ISettlementService _settlementService;
+    private readonly IBranchService _branchService;
 
     [ObservableProperty]
     private ObservableCollection<SettlementListItem> _settlements = new();
@@ -498,6 +453,8 @@ public partial class SettlementListViewModel : PagedViewModelBase
     {
         _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext 
             ?? throw new InvalidOperationException("无法获取数据库上下文");
+        _settlementService = App.Services.GetRequiredService<ISettlementService>();
+        _branchService = App.Services.GetRequiredService<IBranchService>();
         
         _ = InitAsync();
     }
@@ -514,9 +471,9 @@ public partial class SettlementListViewModel : PagedViewModelBase
 
     private async Task LoadBranchesAsync()
     {
-        var branches = await _dbContext.Branches.AsNoTracking().ToListAsync();
-        Branches = new ObservableCollection<BranchListItem>(
-            branches.Select(b => new BranchListItem { Id = b.Id, Name = b.Name }));
+        var result = await _branchService.GetListAsync(new PagedRequest { PageIndex = 1, PageSize = 100 });
+        if (result.Success && result.Data != null)
+            Branches = new ObservableCollection<BranchListItem>(result.Data.Items);
     }
 
     protected override async Task LoadDataAsync()
@@ -524,46 +481,25 @@ public partial class SettlementListViewModel : PagedViewModelBase
         IsLoading = true;
         try
         {
-            var branchId = CurrentSession.CurrentBranchId;
-            var query = _dbContext.Settlements
-                .AsNoTracking()
-                .Include(s => s.Branch)
-                .Include(s => s.ConfirmedBy)
-                .Where(s => s.CreatedAt >= FilterStartDate && s.CreatedAt <= FilterEndDate.AddDays(1));
-
-            if (!CurrentSession.Current.IsHeadquartersAdmin)
+            int? branchId = CurrentSession.Current.IsHeadquartersAdmin ? SelectedBranchId : CurrentSession.CurrentBranchId;
+            var request = new PagedRequest
             {
-                query = query.Where(s => s.BranchId == branchId);
+                PageIndex = PageIndex,
+                PageSize = PageSize,
+                Keyword = null
+            };
+
+            var result = await _settlementService.GetListAsync(request, branchId: branchId);
+
+            if (result.Success && result.Data != null)
+            {
+                // 客户端日期过滤
+                var filtered = result.Data.Items
+                    .Where(s => s.CreatedAt >= FilterStartDate && s.CreatedAt <= FilterEndDate.AddDays(1))
+                    .ToList();
+                TotalCount = filtered.Count;
+                Settlements = new ObservableCollection<SettlementListItem>(filtered);
             }
-            else if (SelectedBranchId.HasValue)
-            {
-                query = query.Where(s => s.BranchId == SelectedBranchId.Value);
-            }
-
-            TotalCount = await query.CountAsync();
-
-            var items = await query.OrderByDescending(s => s.CreatedAt)
-                .Skip((PageIndex - 1) * PageSize)
-                .Take(PageSize)
-                .ToListAsync();
-
-            Settlements = new ObservableCollection<SettlementListItem>(items.Select(s => new SettlementListItem
-            {
-                Id = s.Id,
-                SettlementNo = s.SettlementNo,
-                StartDate = s.StartDate,
-                EndDate = s.EndDate,
-                BranchId = s.BranchId,
-                BranchName = s.Branch?.Name ?? "",
-                ConfirmedByName = s.ConfirmedBy?.Name ?? "",
-                OrderCount = s.OrderCount,
-                TotalAmount = s.TotalAmount,
-                ReceivedAmount = s.ReceivedAmount,
-                UnpaidAmount = s.UnpaidAmount,
-                Status = s.Status,
-                PdfPath = s.PdfPath,
-                CreatedAt = s.CreatedAt
-            }));
         }
         catch (Exception ex)
         {
@@ -864,6 +800,9 @@ public partial class SettlementListViewModel : PagedViewModelBase
 public partial class WorkScheduleViewModel : ViewModelBase
 {
     private readonly ProDbContext _dbContext;
+    private readonly IWorkScheduleService _workScheduleService;
+    private readonly IWorkPlanService _workPlanService;
+    private readonly IPlanDraftService _planDraftService;
 
     [ObservableProperty]
     private DateTime _selectedDate = DateTime.Now;
@@ -902,6 +841,9 @@ public partial class WorkScheduleViewModel : ViewModelBase
     {
         _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext 
             ?? throw new InvalidOperationException("无法获取数据库上下文");
+        _workScheduleService = App.Services.GetRequiredService<IWorkScheduleService>();
+        _workPlanService = App.Services.GetRequiredService<IWorkPlanService>();
+        _planDraftService = App.Services.GetRequiredService<IPlanDraftService>();
         
         _selectedMonth = DateTime.Now.Month;
         _selectedYear = DateTime.Now.Year;
@@ -976,24 +918,31 @@ public partial class WorkScheduleViewModel : ViewModelBase
             var startDate = new DateTime(SelectedYear, SelectedMonth, 1);
             var endDate = startDate.AddMonths(1).AddDays(-1);
 
-            var schedules = await _dbContext.WorkSchedules
-                .AsNoTracking()
-                .Where(s => s.EmployeeId == employeeId && s.ScheduleDate >= startDate && s.ScheduleDate <= endDate)
-                .ToListAsync();
+            var result = await _workScheduleService.GetCalendarAsync(new EmployeeScheduleCalendarRequest
+            {
+                EmployeeId = employeeId,
+                StartDate = startDate,
+                EndDate = endDate
+            });
+
+            if (!result.Success || result.Data == null)
+            {
+                ShowError(result.Message);
+                return;
+            }
 
             CalendarItems.Clear();
-            for (var date = startDate; date <= endDate; date = date.AddDays(1))
+            foreach (var item in result.Data)
             {
-                var schedule = schedules.FirstOrDefault(s => s.ScheduleDate.Date == date.Date);
                 CalendarItems.Add(new CalendarScheduleItem
                 {
-                    Date = date,
-                    IsWorkday = schedule != null,
-                    WorkStartTime = schedule?.WorkStartTime.ToString(@"hh\:mm"),
-                    WorkEndTime = schedule?.WorkEndTime.ToString(@"hh\:mm"),
-                    TotalWorkMinutes = schedule?.TotalWorkMinutes ?? 0,
-                    ScheduleType = schedule?.ScheduleType ?? "Rest",
-                    HasChanged = schedule?.HasChanged ?? false
+                    Date = item.Date,
+                    IsWorkday = item.IsWorkday,
+                    WorkStartTime = item.WorkStartTime,
+                    WorkEndTime = item.WorkEndTime,
+                    TotalWorkMinutes = item.TotalWorkMinutes,
+                    ScheduleType = item.ScheduleType,
+                    HasChanged = item.HasChanged
                 });
             }
         }
@@ -1089,21 +1038,20 @@ public partial class WorkScheduleViewModel : ViewModelBase
         var employeeId = SelectedEmployee?.Id ?? CurrentSession.CurrentEmployeeId;
 
 
-        var schedule = await _dbContext.WorkSchedules
-            .AsNoTracking()
-            .FirstOrDefaultAsync(s => s.EmployeeId == employeeId && s.ScheduleDate.Date == date.Value.Date);
+        var result = await _workPlanService.GetDailyPlanAsync(employeeId, date.Value.Date);
+        if (!result.Success || result.Data == null)
+        {
+            ShowError(result.Message);
+            return;
+        }
 
-        var plans = await _dbContext.WorkPlans
-            .AsNoTracking()
-            .Include(p => p.Customer)
-            .Where(p => p.EmployeeId == employeeId && p.PlanDate.Date == date.Value.Date)
-            .ToListAsync();
-
+        var daily = result.Data;
+        var schedule = daily.Schedule;
         CurrentDailyPlan = new DailyPlanView
         {
             Date = date.Value,
             EmployeeId = employeeId,
-            EmployeeName = SelectedEmployee?.Name ?? "",
+            EmployeeName = daily.EmployeeName,
             Schedule = schedule != null ? new WorkScheduleListItem
             {
                 Id = schedule.Id,
@@ -1117,35 +1065,23 @@ public partial class WorkScheduleViewModel : ViewModelBase
                 ScheduleType = schedule.ScheduleType,
                 HasChanged = schedule.HasChanged
             } : null,
-            Plans = plans.Select(p => new WorkPlanDto
-            {
-                Id = p.Id,
-                EmployeeId = p.EmployeeId,
-                PlanDate = p.PlanDate,
-                StartTime = p.StartTime,
-                EndTime = p.EndTime,
-                DurationMinutes = p.DurationMinutes,
-                Content = p.Content,
-                CustomerId = p.CustomerId,
-                CustomerName = p.Customer?.Name,
-                PlanType = p.PlanType,
-                ExecutionStatus = p.ExecutionStatus
-            }).ToList(),
-            TotalWorkMinutes = schedule?.TotalWorkMinutes ?? 0,
-            TotalPlanMinutes = plans.Sum(p => p.DurationMinutes)
+            Plans = daily.Plans,
+            TotalWorkMinutes = daily.TotalWorkMinutes,
+            TotalPlanMinutes = daily.TotalPlanMinutes
         };
     }
 
     private async Task LoadDraftsAsync()
     {
         var employeeId = CurrentSession.CurrentEmployeeId;
-        var drafts = await _dbContext.PlanDrafts
-            .AsNoTracking()
-            .Where(d => d.EmployeeId == employeeId)
-            .OrderByDescending(d => d.CreatedAt)
-            .ToListAsync();
+        var result = await _planDraftService.GetListAsync(employeeId);
+        if (!result.Success || result.Data == null)
+        {
+            ShowError(result.Message);
+            return;
+        }
 
-        Drafts = new ObservableCollection<PlanDraftItem>(drafts.Select(d => new PlanDraftItem
+        Drafts = new ObservableCollection<PlanDraftItem>(result.Data.Select(d => new PlanDraftItem
         {
             Id = d.Id,
             Title = d.Content.Length > 50 ? d.Content.Substring(0, 50) + "..." : d.Content,
@@ -1163,32 +1099,22 @@ public partial class WorkScheduleViewModel : ViewModelBase
 
         try
         {
-            var existing = await _dbContext.WorkSchedules
-                .FirstOrDefaultAsync(s => s.EmployeeId == employeeId && s.ScheduleDate.Date == SelectedDate.Date);
+            var result = await _workScheduleService.CreateAsync(new CreateWorkScheduleRequest
+            {
+                EmployeeId = employeeId,
+                ScheduleDate = SelectedDate.Date,
+                WorkStartTime = new TimeSpan(9, 0, 0),
+                WorkEndTime = new TimeSpan(18, 0, 0),
+                ScheduleType = "Normal"
+            }, CurrentSession.CurrentEmployeeId);
 
-            if (existing == null)
+            if (!result.Success)
             {
-                _dbContext.WorkSchedules.Add(new WorkSchedule
-                {
-                    EmployeeId = employeeId,
-                    BranchId = CurrentSession.CurrentBranchId,
-                    ScheduleDate = SelectedDate.Date,
-                    WorkStartTime = new TimeSpan(9, 0, 0),
-                    WorkEndTime = new TimeSpan(18, 0, 0),
-                    TotalWorkMinutes = 480,
-                    ScheduleType = "Normal",
-                    HasChanged = true,
-                    CreatedById = CurrentSession.CurrentEmployeeId,
-                    CreatedAt = DateTime.Now
-                });
-                await _dbContext.SaveChangesAsync();
-                ShowSuccess("排班已创建");
-            }
-            else
-            {
-                ShowSuccess("该日期已有排班，请在右侧编辑");
+                ShowError(result.Message);
+                return;
             }
 
+            ShowSuccess("排班已创建");
             await LoadCalendarAsync();
             await LoadDailyPlanAsync(SelectedDate);
         }
@@ -1203,39 +1129,37 @@ public partial class WorkScheduleViewModel : ViewModelBase
         try
         {
             var schedule = CurrentDailyPlan.Schedule;
-            var existing = await _dbContext.WorkSchedules
-                .FirstOrDefaultAsync(s => s.EmployeeId == schedule.EmployeeId && s.ScheduleDate.Date == schedule.ScheduleDate.Date);
-
-            if (existing != null)
+            var request = new CreateWorkScheduleRequest
             {
-                existing.WorkStartTime = schedule.WorkStartTime;
-                existing.WorkEndTime = schedule.WorkEndTime;
-                existing.BreakStartTime = schedule.BreakStartTime;
-                existing.BreakEndTime = schedule.BreakEndTime;
-                existing.TotalWorkMinutes = schedule.TotalWorkMinutes;
-                existing.ScheduleType = schedule.ScheduleType;
-                existing.HasChanged = true;
+                EmployeeId = schedule.EmployeeId,
+                ScheduleDate = schedule.ScheduleDate,
+                WorkStartTime = schedule.WorkStartTime,
+                WorkEndTime = schedule.WorkEndTime,
+                BreakStartTime = schedule.BreakStartTime,
+                BreakEndTime = schedule.BreakEndTime,
+                ScheduleType = schedule.ScheduleType
+            };
+
+            bool success;
+            string message;
+            if (schedule.Id > 0)
+            {
+                var updateResult = await _workScheduleService.UpdateAsync(schedule.Id, request, CurrentSession.CurrentEmployeeId);
+                success = updateResult.Success; message = updateResult.Message;
             }
             else
             {
-                _dbContext.WorkSchedules.Add(new WorkSchedule
-                {
-                    EmployeeId = schedule.EmployeeId,
-                    ScheduleDate = schedule.ScheduleDate,
-                    WorkStartTime = schedule.WorkStartTime,
-                    WorkEndTime = schedule.WorkEndTime,
-                    BreakStartTime = schedule.BreakStartTime,
-                    BreakEndTime = schedule.BreakEndTime,
-                    TotalWorkMinutes = schedule.TotalWorkMinutes,
-                    ScheduleType = schedule.ScheduleType,
-                    HasChanged = false
-                });
+                var createResult = await _workScheduleService.CreateAsync(request, CurrentSession.CurrentEmployeeId);
+                success = createResult.Success; message = createResult.Message;
+            }
+            if (!success)
+            {
+                ShowError(message);
+                return;
             }
 
-            await _dbContext.SaveChangesAsync();
-
             // 通知员工排班变动（如果适用）
-            if (existing != null && schedule.EmployeeId != CurrentSession.CurrentEmployeeId)
+            if (schedule.Id > 0 && schedule.EmployeeId != CurrentSession.CurrentEmployeeId)
             {
                 await NotifyEmployeeScheduleChangeAsync(schedule.EmployeeId);
             }
@@ -1282,19 +1206,21 @@ public partial class WorkScheduleViewModel : ViewModelBase
 
         try
         {
-            _dbContext.WorkPlans.Add(new WorkPlan
+            var result = await _workPlanService.CreateAsync(new CreateWorkPlanRequest
             {
                 EmployeeId = employeeId,
                 PlanDate = SelectedDate.Date,
                 StartTime = new TimeSpan(9, 0, 0),
                 EndTime = new TimeSpan(10, 0, 0),
-                DurationMinutes = 60,
                 Content = "新工作计划",
-                PlanType = "Other",
-                ExecutionStatus = "Pending",
-                CreatedAt = DateTime.Now
+                PlanType = "Other"
             });
-            await _dbContext.SaveChangesAsync();
+            if (!result.Success)
+            {
+                ShowError(result.Message);
+                return;
+            }
+
             ShowSuccess("工作计划已创建");
 
             await LoadDailyPlanAsync(SelectedDate);
@@ -1307,16 +1233,20 @@ public partial class WorkScheduleViewModel : ViewModelBase
     {
         try
         {
-            var draft = new PlanDraft
+            var result = await _planDraftService.SaveAsync(new SavePlanDraftRequest
             {
                 EmployeeId = CurrentSession.CurrentEmployeeId,
+                PlanDate = SelectedDate.Date,
                 Content = $"标题:{title}\n{content}",
-                DraftType = "Personal",
-                CreatedAt = DateTime.Now
-            };
+                DraftType = "Personal"
+            }, CurrentSession.CurrentEmployeeId);
 
-            _dbContext.PlanDrafts.Add(draft);
-            await _dbContext.SaveChangesAsync();
+            if (!result.Success)
+            {
+                ShowError(result.Message);
+                return;
+            }
+
             ShowSuccess("草稿保存成功");
             await LoadDraftsAsync();
         }
@@ -1333,11 +1263,11 @@ public partial class WorkScheduleViewModel : ViewModelBase
 
         try
         {
-            var existing = await _dbContext.PlanDrafts.FindAsync(draft.Id);
-            if (existing != null)
+            var result = await _planDraftService.PublishAsync(draft.Id, CurrentSession.CurrentEmployeeId);
+            if (!result.Success)
             {
-                _dbContext.PlanDrafts.Remove(existing);
-                await _dbContext.SaveChangesAsync();
+                ShowError(result.Message);
+                return;
             }
 
             ShowSuccess("草稿已发布");
@@ -1356,11 +1286,11 @@ public partial class WorkScheduleViewModel : ViewModelBase
 
         try
         {
-            var existing = await _dbContext.PlanDrafts.FindAsync(draft.Id);
-            if (existing != null)
+            var result = await _planDraftService.DeleteAsync(draft.Id);
+            if (!result.Success)
             {
-                _dbContext.PlanDrafts.Remove(existing);
-                await _dbContext.SaveChangesAsync();
+                ShowError(result.Message);
+                return;
             }
 
             ShowSuccess("草稿已删除");

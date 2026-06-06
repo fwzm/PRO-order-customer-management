@@ -22,6 +22,14 @@ public abstract partial class ViewModelBase : ObservableObject
     [ObservableProperty]
     private string? _successMessage;
 
+    partial void OnIsLoadingChanged(bool value)
+    {
+        if (value)
+            App.ShowLoading?.Invoke(null);
+        else
+            App.HideLoading?.Invoke();
+    }
+
     protected void ShowError(string message)
     {
         ErrorMessage = message;

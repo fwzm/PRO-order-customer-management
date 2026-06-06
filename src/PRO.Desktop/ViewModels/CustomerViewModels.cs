@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PRO.Application.DTOs;
+using PRO.Application.Interfaces;
 using PRO.Domain.Entities;
 using PRO.Domain.Enums;
 using PRO.Infrastructure.Persistence;
@@ -15,12 +16,14 @@ using System.Text;
 using Microsoft.Win32;
 using ClosedXML.Excel;
 using Serilog;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace PRO.Desktop.ViewModels;
 
 public partial class CustomerListViewModel : PagedViewModelBase
 {
     private readonly ProDbContext _dbContext;
+    private readonly ICustomerService _customerService;
 
     [ObservableProperty]
     private ObservableCollection<CustomerListItem> _customers = new();
@@ -44,6 +47,8 @@ public partial class CustomerListViewModel : PagedViewModelBase
     {
         _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext 
             ?? throw new InvalidOperationException("无法获取数据库上下文");
+        _customerService = App.Services.GetService(typeof(ICustomerService)) as ICustomerService
+            ?? throw new InvalidOperationException("无法获取客户服务");
         
         _ = LoadDataAsync();
     }
@@ -53,84 +58,24 @@ public partial class CustomerListViewModel : PagedViewModelBase
         IsLoading = true;
         try
         {
-            var branchId = CurrentSession.CurrentBranchId;
-            var query = _dbContext.Customers.AsNoTracking()
-                .Include(c => c.Branch)
-                .Include(c => c.ParentCustomer)
-                .Include(c => c.CustomerManager)
-                .Include(c => c.Creator)
-                .AsQueryable();
-
-            // 数据隔离：只能查看本公司数据
-            if (!CurrentSession.Current.IsHeadquartersAdmin)
+            int? branchId = CurrentSession.Current.IsHeadquartersAdmin ? null : CurrentSession.CurrentBranchId;
+            var request = new PagedRequest
             {
-                query = query.Where(c => c.BranchId == branchId);
+                PageIndex = PageIndex,
+                PageSize = PageSize,
+                Keyword = SearchKeyword
+            };
+
+            var result = await _customerService.GetListAsync(request,
+                branchId: branchId,
+                customerType: FilterCustomerType,
+                showMajorOnly: ShowMajorOnly);
+
+            if (result.Success && result.Data != null)
+            {
+                TotalCount = result.Data.TotalCount;
+                Customers = new ObservableCollection<CustomerListItem>(result.Data.Items);
             }
-
-            // 筛选大客户
-            if (ShowMajorOnly)
-            {
-                query = query.Where(c => c.CustomerType == CustomerType.Major);
-            }
-
-            // 关键词搜索
-            if (!string.IsNullOrWhiteSpace(SearchKeyword))
-            {
-                query = query.Where(c => c.Name.Contains(SearchKeyword) || 
-                    (c.Phone != null && c.Phone.Contains(SearchKeyword)));
-            }
-
-            // 类型筛选
-            if (FilterCustomerType.HasValue)
-            {
-                query = query.Where(c => c.CustomerType == FilterCustomerType.Value);
-            }
-
-            // 排除已删除
-            query = query.Where(c => c.Status != CustomerStatus.Deleted);
-
-            // 总数
-            TotalCount = await query.CountAsync();
-
-            // 分页
-            var items = await query.OrderByDescending(c => c.CreatedAt)
-                .Skip((PageIndex - 1) * PageSize)
-                .Take(PageSize)
-                .ToListAsync();
-
-            // 计算订单统计
-            var customerIds = items.Select(c => c.Id).ToList();
-            var orderStats = await _dbContext.Orders
-                .AsNoTracking()
-                .Where(o => customerIds.Contains(o.CustomerId))
-                .GroupBy(o => o.CustomerId)
-                .Select(g => new { CustomerId = g.Key, Count = g.Count(), Total = g.Sum(o => o.TotalAmount) })
-                .ToDictionaryAsync(x => x.CustomerId, x => new { x.Count, x.Total });
-
-            Customers = new ObservableCollection<CustomerListItem>(items.Select(c =>
-            {
-                var stats = orderStats.GetValueOrDefault(c.Id);
-                return new CustomerListItem
-                {
-                    Id = c.Id,
-                    Name = c.Name,
-                    CustomerNo = c.CustomerNo,
-                    CustomerType = c.CustomerType,
-                    CustomerTypeName = c.CustomerType == CustomerType.Major ? "大客户" : "细分客户",
-                    Phone = c.Phone,
-                    Address = c.Address,
-                    ParentCustomerId = c.ParentCustomerId,
-                    ParentCustomerName = c.ParentCustomer?.Name,
-                    BranchId = c.BranchId,
-                    BranchName = c.Branch?.Name ?? "",
-                    Status = c.Status,
-                    OrderCount = stats?.Count ?? 0,
-                    TotalOrderAmount = stats?.Total ?? 0m,
-                    CreatedAt = c.CreatedAt,
-                    CustomerManagerName = c.CustomerManager?.Name,
-                    CreatorName = c.Creator?.Name
-                };
-            }));
 
             ShowDuplicateWarning = false;
             DuplicateCustomers.Clear();
@@ -197,24 +142,15 @@ public partial class CustomerListViewModel : PagedViewModelBase
         
         if (result != MessageBoxResult.Yes) return;
 
-        try
+        var deleteResult = await _customerService.DeleteAsync(customer.Id);
+        if (deleteResult.Success)
         {
-            entity ??= await _dbContext.Customers.FindAsync(customer.Id);
-            if (entity != null)
-            {
-                entity.Status = CustomerStatus.Deleted;
-                entity.UpdatedAt = DateTime.Now;
-                entity.LocalTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                entity.SyncStatus = SyncStatus.Pending;
-                await _dbContext.SaveChangesAsync();
-            }
-            
             ShowSuccess("删除成功");
             await LoadDataAsync();
         }
-        catch (Exception ex)
+        else
         {
-            ShowError($"删除失败: {ex.Message}");
+            ShowError(deleteResult.Message);
         }
     }
 
@@ -255,28 +191,24 @@ public partial class CustomerListViewModel : PagedViewModelBase
 
         try
         {
-            var branchId = CurrentSession.CurrentBranchId;
-            var duplicates = await _dbContext.Customers
-                .AsNoTracking()
-                .Where(c => c.BranchId == branchId && c.Status != CustomerStatus.Deleted)
-                .Where(c => c.Name.Contains(SearchKeyword) || 
-                    (c.Phone != null && c.Phone.Contains(SearchKeyword)))
-                .Take(50)
-                .ToListAsync();
+            var result = await _customerService.CheckDuplicatesAsync(
+                phone: SearchKeyword,
+                name: SearchKeyword,
+                address: null,
+                legalPerson: null);
 
-            if (duplicates.Count > 1)
+            if (result.Success && result.Data != null && result.Data.HasDuplicates)
             {
                 DuplicateCustomers = new ObservableCollection<CustomerListItem>(
-                    duplicates.Select(c => new CustomerListItem
+                    result.Data.Duplicates.Select(d => new CustomerListItem
                     {
-                        Id = c.Id,
-                        Name = c.Name,
-                        Phone = c.Phone,
-                        Address = c.Address,
-                        CreatedAt = c.CreatedAt
+                        Id = d.Id,
+                        Name = d.Name,
+                        Phone = d.Phone,
+                        Address = d.Address,
                     }));
                 ShowDuplicateWarning = true;
-                ShowError($"发现 {duplicates.Count} 个疑似重复客户");
+                ShowError($"发现 {result.Data.Duplicates.Count} 个疑似重复客户");
             }
         }
         catch (Exception ex)
@@ -304,23 +236,22 @@ public partial class CustomerListViewModel : PagedViewModelBase
         {
             var result = MessageBox.Show($"将「{sourceCustomer.Name}」合并至「{selected.Name}」？\n源客户订单将转移到目标客户。", "确认合并", MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (result != MessageBoxResult.Yes) return;
-            try
+            
+            var mergeResult = await _customerService.MergeCustomersAsync(new MergeCustomerRequest
             {
-                var entity = await _dbContext.Customers.FindAsync(sourceCustomer.Id);
-                if (entity != null)
-                {
-                    var orders = await _dbContext.Orders.Where(o => o.CustomerId == sourceCustomer.Id).ToListAsync();
-                    foreach (var o in orders) o.CustomerId = selected.Id;
-                    entity.Status = CustomerStatus.Merged;
-                    entity.Remark = $"已合并至 {selected.Name}";
-                    entity.UpdatedAt = DateTime.Now;
-                    entity.SyncStatus = SyncStatus.Pending;
-                    await _dbContext.SaveChangesAsync();
-                    ShowSuccess("合并成功");
-                    await LoadDataAsync();
-                }
+                MainCustomerId = selected.Id,
+                MergedCustomerIds = new List<int> { sourceCustomer.Id }
+            });
+            
+            if (mergeResult.Success)
+            {
+                ShowSuccess("合并成功");
+                await LoadDataAsync();
             }
-            catch (Exception ex) { ShowError($"合并失败: {ex.Message}"); }
+            else
+            {
+                ShowError($"合并失败: {mergeResult.Message}");
+            }
         }
     }
 

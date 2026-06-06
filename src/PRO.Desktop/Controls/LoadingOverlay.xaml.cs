@@ -10,6 +10,20 @@ namespace PRO.Desktop.Controls;
 /// </summary>
 public partial class LoadingOverlay : UserControl
 {
+    public static readonly DependencyProperty IsActiveProperty =
+        DependencyProperty.Register(
+            nameof(IsActive),
+            typeof(bool),
+            typeof(LoadingOverlay),
+            new PropertyMetadata(false, OnIsActiveChanged));
+
+    public static readonly DependencyProperty MessageProperty =
+        DependencyProperty.Register(
+            nameof(Message),
+            typeof(string),
+            typeof(LoadingOverlay),
+            new PropertyMetadata("加载中...", OnMessageChanged));
+
     private readonly DispatcherTimer _animationTimer;
     private double _currentAngle;
 
@@ -27,12 +41,24 @@ public partial class LoadingOverlay : UserControl
         };
     }
 
+    public bool IsActive
+    {
+        get => (bool)GetValue(IsActiveProperty);
+        set => SetValue(IsActiveProperty, value);
+    }
+
+    public string Message
+    {
+        get => (string)GetValue(MessageProperty);
+        set => SetValue(MessageProperty, value);
+    }
+
     /// <summary>
     /// 显示加载覆盖层
     /// </summary>
     public void Show(string? text = null)
     {
-        LoadingText.Text = text ?? "加载中...";
+        LoadingText.Text = text ?? Message ?? "加载中...";
         OverlayBorder.Visibility = Visibility.Visible;
         _animationTimer.Start();
     }
@@ -50,4 +76,20 @@ public partial class LoadingOverlay : UserControl
     /// 当前是否正在显示
     /// </summary>
     public bool IsShowing => OverlayBorder.Visibility == Visibility.Visible;
+
+    private static void OnIsActiveChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var overlay = (LoadingOverlay)d;
+        if ((bool)e.NewValue)
+            overlay.Show(overlay.Message);
+        else
+            overlay.Hide();
+    }
+
+    private static void OnMessageChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var overlay = (LoadingOverlay)d;
+        if (overlay.IsShowing)
+            overlay.LoadingText.Text = e.NewValue as string ?? "加载中...";
+    }
 }

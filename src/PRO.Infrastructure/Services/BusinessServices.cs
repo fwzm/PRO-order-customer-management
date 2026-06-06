@@ -47,28 +47,35 @@ public class CustomerService : ICustomerService
             var items = await query.OrderByDescending(c => c.CreatedAt)
                 .Skip((request.PageIndex - 1) * request.PageSize)
                 .Take(request.PageSize)
-                .Select(c => new CustomerListItem
-                {
-                    Id = c.Id,
-                    Name = c.Name,
-                    CustomerNo = c.CustomerNo,
-                    CustomerType = c.CustomerType,
-                    Phone = c.Phone,
-                    Address = c.FullAddress ?? c.Address,
-                    ParentCustomerId = c.ParentCustomerId,
-                    ParentCustomerName = c.ParentCustomer != null ? c.ParentCustomer.Name : null,
-                    BranchName = c.Branch != null ? c.Branch.Name : "",
-                    BranchId = c.BranchId,
-                    Status = c.Status,
-                    CreatedAt = c.CreatedAt,
-                    CustomerManagerName = c.CustomerManager != null ? c.CustomerManager.Name : null,
-                    CreatorName = c.Creator != null ? c.Creator.Name : null
-                })
                 .ToListAsync();
+
+            // 计算订单统计
+            var customerIds = items.Select(c => c.Id).ToList();
+            var orderStats = await _dbContext.Orders.AsNoTracking()
+                .Where(o => customerIds.Contains(o.CustomerId))
+                .GroupBy(o => o.CustomerId)
+                .Select(g => new { CustomerId = g.Key, Count = g.Count(), Total = g.Sum(o => o.TotalAmount) })
+                .ToDictionaryAsync(x => x.CustomerId, x => new { x.Count, x.Total });
+
+            var result = items.Select(c =>
+            {
+                var stats = orderStats.GetValueOrDefault(c.Id);
+                return new CustomerListItem
+                {
+                    Id = c.Id, Name = c.Name, CustomerNo = c.CustomerNo, CustomerType = c.CustomerType,
+                    CustomerTypeName = c.CustomerType == CustomerType.Major ? "大客户" : "细分客户",
+                    Phone = c.Phone, Address = c.FullAddress ?? c.Address,
+                    ParentCustomerId = c.ParentCustomerId, ParentCustomerName = c.ParentCustomer?.Name,
+                    BranchName = c.Branch?.Name ?? "", BranchId = c.BranchId, Status = c.Status,
+                    OrderCount = stats?.Count ?? 0, TotalOrderAmount = stats?.Total ?? 0m,
+                    CreatedAt = c.CreatedAt,
+                    CustomerManagerName = c.CustomerManager?.Name, CreatorName = c.Creator?.Name
+                };
+            }).ToList();
 
             return ApiResponse<PagedResult<CustomerListItem>>.Ok(new PagedResult<CustomerListItem>
             {
-                Items = items, TotalCount = totalCount, PageIndex = request.PageIndex, PageSize = request.PageSize
+                Items = result, TotalCount = totalCount, PageIndex = request.PageIndex, PageSize = request.PageSize
             });
         }
         catch (Exception ex)
@@ -735,7 +742,7 @@ public class SettlementService : ISettlementService
             if (settlement == null)
                 return ApiResponse<SettlementDetailDto>.Fail("结算单不存在");
 
-            var dto = new SettlementDetailDto
+            return ApiResponse<SettlementDetailDto>.Ok(new SettlementDetailDto
             {
                 Id = settlement.Id,
                 SettlementNo = settlement.SettlementNo,
@@ -763,9 +770,7 @@ public class SettlementService : ISettlementService
                     ReceivedAmount = o.ReceivedAmount,
                     PaymentStatus = o.PaymentStatus
                 }).ToList()
-            };
-
-            return ApiResponse<SettlementDetailDto>.Ok(dto);
+            });
         }
         catch (Exception ex)
         {
@@ -780,16 +785,12 @@ public class SettlementService : ISettlementService
             if (request.EndDate.Date < request.StartDate.Date)
                 return ApiResponse<SettlementPreviewDto>.Fail("结算结束日期不能早于开始日期");
 
-            var branch = await _dbContext.Branches.AsNoTracking()
-                .FirstOrDefaultAsync(b => b.Id == request.BranchId);
+            var branch = await _dbContext.Branches.AsNoTracking().FirstOrDefaultAsync(b => b.Id == request.BranchId);
             if (branch == null)
                 return ApiResponse<SettlementPreviewDto>.Fail("分公司不存在");
 
-            var orders = await BuildSettlementOrdersQuery(request)
-                .AsNoTracking()
-                .ToListAsync();
-
-            var preview = new SettlementPreviewDto
+            var orders = await BuildSettlementOrdersQuery(request).AsNoTracking().ToListAsync();
+            return ApiResponse<SettlementPreviewDto>.Ok(new SettlementPreviewDto
             {
                 BranchId = request.BranchId,
                 BranchName = branch.Name,
@@ -802,9 +803,7 @@ public class SettlementService : ISettlementService
                 PaidCount = orders.Count(o => o.PaymentStatus == PaymentStatus.Paid),
                 UnpaidCount = orders.Count(o => o.PaymentStatus != PaymentStatus.Paid && o.PaymentStatus != PaymentStatus.Legal),
                 LegalCount = orders.Count(o => o.PaymentStatus == PaymentStatus.Legal)
-            };
-
-            return ApiResponse<SettlementPreviewDto>.Ok(preview);
+            });
         }
         catch (Exception ex)
         {
@@ -824,7 +823,6 @@ public class SettlementService : ISettlementService
                 return ApiResponse<int>.Fail("没有可结算的订单");
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
             var now = DateTime.Now;
             var localTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             var settlement = new Settlement
@@ -1053,9 +1051,11 @@ public class DeliveryPersonService : IDeliveryPersonService
         var items = await query.OrderBy(d => d.Name).Skip((request.PageIndex - 1) * request.PageSize).Take(request.PageSize)
             .Select(d => new DeliveryPersonListItem
             {
-                Id = d.Id, Name = d.Name, Phone = d.Phone, BranchName = d.Branch != null ? d.Branch.Name : "",
-                ServiceArea = d.ServiceArea, VehicleNumber = d.VehicleNumber,
-                CurrentLoad = d.CurrentLoad, MaxLoad = d.MaxLoad, Status = d.Status
+                Id = d.Id, Name = d.Name, Phone = d.Phone,
+                BranchId = d.BranchId, BranchName = d.Branch != null ? d.Branch.Name : "",
+                ServiceArea = d.ServiceArea, VehicleNumber = d.VehicleNumber, WeChatId = d.WeChatId,
+                CurrentLoad = d.CurrentLoad, MaxLoad = d.MaxLoad, Status = d.Status,
+                StatusName = GetDeliveryPersonStatusName(d.Status)
             }).ToListAsync();
 
         return ApiResponse<PagedResult<DeliveryPersonListItem>>.Ok(new PagedResult<DeliveryPersonListItem>
@@ -1068,9 +1068,11 @@ public class DeliveryPersonService : IDeliveryPersonService
         if (d == null) return ApiResponse<DeliveryPersonListItem>.Fail("配送员不存在");
         return ApiResponse<DeliveryPersonListItem>.Ok(new DeliveryPersonListItem
         {
-            Id = d.Id, Name = d.Name, Phone = d.Phone, BranchName = d.Branch?.Name ?? "",
-            ServiceArea = d.ServiceArea, VehicleNumber = d.VehicleNumber,
-            CurrentLoad = d.CurrentLoad, MaxLoad = d.MaxLoad, Status = d.Status
+            Id = d.Id, Name = d.Name, Phone = d.Phone,
+            BranchId = d.BranchId, BranchName = d.Branch?.Name ?? "",
+            ServiceArea = d.ServiceArea, VehicleNumber = d.VehicleNumber, WeChatId = d.WeChatId,
+            CurrentLoad = d.CurrentLoad, MaxLoad = d.MaxLoad, Status = d.Status,
+            StatusName = GetDeliveryPersonStatusName(d.Status)
         });
     }
 
@@ -1081,8 +1083,11 @@ public class DeliveryPersonService : IDeliveryPersonService
             .OrderByDescending(d => d.MaxLoad - d.CurrentLoad)
             .Select(d => new DeliveryPersonListItem
             {
-                Id = d.Id, Name = d.Name, Phone = d.Phone, BranchName = d.Branch != null ? d.Branch.Name : "",
-                CurrentLoad = d.CurrentLoad, MaxLoad = d.MaxLoad, Status = d.Status
+                Id = d.Id, Name = d.Name, Phone = d.Phone,
+                BranchId = d.BranchId, BranchName = d.Branch != null ? d.Branch.Name : "",
+                ServiceArea = d.ServiceArea, VehicleNumber = d.VehicleNumber, WeChatId = d.WeChatId,
+                CurrentLoad = d.CurrentLoad, MaxLoad = d.MaxLoad, Status = d.Status,
+                StatusName = GetDeliveryPersonStatusName(d.Status)
             }).ToListAsync();
         return ApiResponse<List<DeliveryPersonListItem>>.Ok(items);
     }
@@ -1092,7 +1097,7 @@ public class DeliveryPersonService : IDeliveryPersonService
         var dp = new DeliveryPerson
         {
             Name = request.Name, Phone = request.Phone, BranchId = request.BranchId,
-            ServiceArea = request.ServiceArea, VehicleNumber = request.VehicleNumber,
+            ServiceArea = request.ServiceArea, VehicleNumber = request.VehicleNumber, WeChatId = request.WeChatId,
             MaxLoad = request.MaxLoad, Status = DeliveryPersonStatus.Available,
             CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now,
             LocalTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
@@ -1106,8 +1111,9 @@ public class DeliveryPersonService : IDeliveryPersonService
     {
         var dp = await _dbContext.DeliveryPersons.FindAsync(request.Id);
         if (dp == null) return ApiResponse<bool>.Fail("配送员不存在");
-        dp.Name = request.Name; dp.Phone = request.Phone; dp.ServiceArea = request.ServiceArea;
-        dp.VehicleNumber = request.VehicleNumber; dp.MaxLoad = request.MaxLoad; dp.Status = request.Status;
+        dp.Name = request.Name; dp.Phone = request.Phone; dp.BranchId = request.BranchId;
+        dp.ServiceArea = request.ServiceArea; dp.VehicleNumber = request.VehicleNumber; dp.WeChatId = request.WeChatId;
+        dp.MaxLoad = request.MaxLoad; dp.Status = request.Status;
         dp.UpdatedAt = DateTime.Now; dp.SyncStatus = SyncStatus.Pending;
         await _dbContext.SaveChangesAsync();
         return ApiResponse<bool>.Ok(true, "配送员更新成功");
@@ -1134,6 +1140,14 @@ public class DeliveryPersonService : IDeliveryPersonService
         await _dbContext.SaveChangesAsync();
         return ApiResponse<bool>.Ok(true, "配送员已删除");
     }
+
+    private static string GetDeliveryPersonStatusName(DeliveryPersonStatus status) => status switch
+    {
+        DeliveryPersonStatus.Available => "可用",
+        DeliveryPersonStatus.Busy => "忙碌",
+        DeliveryPersonStatus.Off => "休息",
+        _ => "未知"
+    };
 }
 
 /// <summary>

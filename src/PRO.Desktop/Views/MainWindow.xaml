@@ -310,7 +310,10 @@
 
             <Grid Grid.Row="1">
                 <materialDesign:TransitioningContent Content="{Binding SelectedTab.ViewModel}" Margin="0"/>
-                <controls:LoadingOverlay x:Name="LoadingCtrl" Panel.ZIndex="100"/>
+                <controls:LoadingOverlay x:Name="LoadingCtrl"
+                                         Panel.ZIndex="100"
+                                         Message="加载中..."
+                                         IsActive="{Binding SelectedTab.ViewModel.IsLoading}"/>
             </Grid>
         </Grid>
     </Grid>
