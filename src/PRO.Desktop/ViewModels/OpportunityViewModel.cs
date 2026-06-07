@@ -5,7 +5,6 @@ using PRO.Domain.Entities;
 using PRO.Domain.Enums;
 using PRO.Infrastructure.Persistence;
 using System.Collections.ObjectModel;
-using System.Windows;
 
 namespace PRO.Desktop.ViewModels;
 

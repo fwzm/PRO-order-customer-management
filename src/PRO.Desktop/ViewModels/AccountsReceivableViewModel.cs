@@ -1,10 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
-using PRO.Domain.Entities;
 using PRO.Domain.Enums;
 using PRO.Infrastructure.Persistence;
-using PRO.Desktop.Prediction;
 using System.Collections.ObjectModel;
 
 namespace PRO.Desktop.ViewModels;

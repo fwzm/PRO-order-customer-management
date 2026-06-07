@@ -6,17 +6,14 @@ using PRO.Domain.Entities;
 using PRO.Domain.Enums;
 using PRO.Infrastructure.Persistence;
 using PRO.Infrastructure.Common;
-using PRO.Infrastructure.WeChat;
+using PRO.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
 using System.Windows;
-using System.IO;
 using System.Net.Http;
-using System.Text;
 using Microsoft.Win32;
 using ClosedXML.Excel;
 using Serilog;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace PRO.Desktop.ViewModels;
 
@@ -282,6 +279,19 @@ public partial class CustomerListViewModel : PagedViewModelBase
                 .Take(5000)  // 最多导出5000条
                 .ToListAsync();
 
+            var customerIds = customers.Select(c => c.Id).ToList();
+            var orderStatRows = await _dbContext.Orders.AsNoTracking()
+                .Where(o => customerIds.Contains(o.CustomerId))
+                .GroupBy(o => o.CustomerId)
+                .Select(g => new
+                {
+                    CustomerId = g.Key,
+                    OrderCount = g.Count(),
+                    TotalAmount = g.Sum(o => o.TotalAmount)
+                })
+                .ToListAsync();
+            var orderStats = orderStatRows.ToDictionary(s => s.CustomerId);
+
             var dialog = new SaveFileDialog
             {
                 Filter = "Excel文件|*.xlsx",
@@ -314,8 +324,7 @@ public partial class CustomerListViewModel : PagedViewModelBase
                 var row = 2;
                 foreach (var c in customers)
                 {
-                    var orderCount = await _dbContext.Orders.AsNoTracking().CountAsync(o => o.CustomerId == c.Id);
-                    var totalAmount = await _dbContext.Orders.AsNoTracking().Where(o => o.CustomerId == c.Id).SumAsync(o => o.TotalAmount);
+                    orderStats.TryGetValue(c.Id, out var stats);
 
                     worksheet.Cell(row, 1).Value = c.Name;
                     worksheet.Cell(row, 2).Value = c.CustomerType == CustomerType.Major ? "大客户" : "细分客户";
@@ -325,8 +334,8 @@ public partial class CustomerListViewModel : PagedViewModelBase
                     worksheet.Cell(row, 6).Value = c.Latitude;
                     worksheet.Cell(row, 7).Value = c.LegalPerson;
                     worksheet.Cell(row, 8).Value = c.ParentCustomer?.Name;
-                    worksheet.Cell(row, 9).Value = orderCount;
-                    worksheet.Cell(row, 10).Value = totalAmount;
+                    worksheet.Cell(row, 9).Value = stats?.OrderCount ?? 0;
+                    worksheet.Cell(row, 10).Value = stats?.TotalAmount ?? 0m;
                     worksheet.Cell(row, 11).Value = c.CreatedAt.ToString("yyyy-MM-dd");
                     row++;
                 }
@@ -346,8 +355,14 @@ public partial class CustomerListViewModel : PagedViewModelBase
 public partial class CustomerEditViewModel : ViewModelBase
 {
     private readonly ProDbContext _dbContext;
+    private readonly ICustomerService _customerService;
+    private readonly DraftService _draftService;
+    private CancellationTokenSource? _duplicateCheckCts;
+    private System.Windows.Threading.DispatcherTimer? _autoSaveTimer;
     private int? _customerId;
     private Action? _onSaveCompleted;
+    private const string DraftKeyPrefix = "customer_edit";
+    private bool _isDirty;
 
     public Action? OnSaveCompleted
     {
@@ -436,20 +451,133 @@ public partial class CustomerEditViewModel : ViewModelBase
     [ObservableProperty]
     private string _windowTitle = "新增客户";
 
+    [ObservableProperty]
+    private ObservableCollection<CustomerDuplicateItem> _duplicateCandidates = new();
+
+    [ObservableProperty]
+    private bool _showDuplicateWarning;
+
+    [ObservableProperty]
+    private string _duplicateWarningText = string.Empty;
+
     public CustomerEditViewModel()
     {
         _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext 
             ?? throw new InvalidOperationException("无法获取数据库上下文");
+        _customerService = App.Services.GetService(typeof(ICustomerService)) as ICustomerService
+            ?? throw new InvalidOperationException("无法获取客户服务");
+        _draftService = App.Services.GetService(typeof(DraftService)) as DraftService
+            ?? throw new InvalidOperationException("无法获取草稿服务");
         
         BranchId = CurrentSession.CurrentBranchId;
         IsEdit = false;
         _ = LoadInitialDataAsync();
+        InitializeAutoSave();
+    }
+
+    private void InitializeAutoSave()
+    {
+        _autoSaveTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(30)
+        };
+        _autoSaveTimer.Tick += async (s, e) => await SaveDraftAsync();
+        _autoSaveTimer.Start();
+
+        // 监听属性变化标记为脏数据
+        PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName != nameof(IsLoading) && e.PropertyName != nameof(ErrorMessage) 
+                && e.PropertyName != nameof(SuccessMessage) && e.PropertyName != nameof(ShowDuplicateWarning))
+            {
+                _isDirty = true;
+            }
+        };
+    }
+
+    private string GetDraftKey() => $"{DraftKeyPrefix}_{CurrentSession.CurrentEmployeeId}";
+
+    private async Task SaveDraftAsync()
+    {
+        if (!_isDirty || IsEdit) return;
+
+        try
+        {
+            var draftData = new CustomerDraftData
+            {
+                Name = Name,
+                Phone = Phone,
+                Province = Province,
+                City = City,
+                District = District,
+                Address = Address,
+                LegalPerson = LegalPerson,
+                Remark = Remark,
+                BusinessDistrictId = BusinessDistrictId,
+                ParentCustomerId = ParentCustomerId,
+                Longitude = Longitude,
+                Latitude = Latitude
+            };
+
+            await _draftService.SaveDraftAsync(GetDraftKey(), draftData, CurrentSession.CurrentEmployeeId);
+            _isDirty = false;
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "自动保存草稿失败");
+        }
+    }
+
+    private async Task<CustomerDraftData?> LoadDraftAsync()
+    {
+        return await _draftService.LoadDraftAsync<CustomerDraftData>(GetDraftKey(), CurrentSession.CurrentEmployeeId);
+    }
+
+    private async Task DeleteDraftAsync()
+    {
+        await _draftService.DeleteDraftAsync(GetDraftKey(), CurrentSession.CurrentEmployeeId);
     }
 
     private async Task LoadInitialDataAsync()
     {
         await LoadMajorCustomersAsync();
         await LoadBusinessDistrictsAsync();
+        
+        // 检查是否有未保存的草稿
+        if (!IsEdit)
+        {
+            var draft = await LoadDraftAsync();
+            if (draft != null)
+            {
+                var result = MessageBox.Show(
+                    "检测到上次未保存的客户信息，是否恢复？",
+                    "恢复草稿",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    Name = draft.Name ?? string.Empty;
+                    Phone = draft.Phone;
+                    Province = draft.Province;
+                    City = draft.City;
+                    District = draft.District;
+                    Address = draft.Address;
+                    LegalPerson = draft.LegalPerson;
+                    Remark = draft.Remark;
+                    BusinessDistrictId = draft.BusinessDistrictId;
+                    ParentCustomerId = draft.ParentCustomerId;
+                    Longitude = draft.Longitude;
+                    Latitude = draft.Latitude;
+                    _isDirty = false;
+                    return;
+                }
+                else
+                {
+                    await DeleteDraftAsync();
+                }
+            }
+        }
         
         // 根据分公司名称设置默认省市区
         if (BranchId > 0)
@@ -483,6 +611,11 @@ public partial class CustomerEditViewModel : ViewModelBase
             ParentCustomerName = value.Name;
         }
     }
+
+    partial void OnNameChanged(string value) => QueueDuplicateCheck();
+    partial void OnPhoneChanged(string? value) => QueueDuplicateCheck();
+    partial void OnAddressChanged(string? value) => QueueDuplicateCheck();
+    partial void OnLegalPersonChanged(string? value) => QueueDuplicateCheck();
 
     /// <summary>省份选择变动时更新城市列表</summary>
     partial void OnProvinceChanged(string? value)
@@ -627,6 +760,11 @@ public partial class CustomerEditViewModel : ViewModelBase
 
         try
         {
+            if (!_customerId.HasValue && await ConfirmDuplicateRiskAsync())
+            {
+                return;
+            }
+
             if (_customerId.HasValue)
             {
                 var entity = await _dbContext.Customers.FindAsync(_customerId.Value);
@@ -685,6 +823,13 @@ public partial class CustomerEditViewModel : ViewModelBase
             }
 
             await _dbContext.SaveChangesAsync();
+            
+            // 保存成功后删除草稿
+            if (!IsEdit)
+            {
+                await DeleteDraftAsync();
+            }
+            
             ShowSuccess("保存成功");
             _onSaveCompleted?.Invoke();
 
@@ -696,6 +841,106 @@ public partial class CustomerEditViewModel : ViewModelBase
             Serilog.Log.Error(ex, "保存客户失败");
             ShowError($"保存失败: {ex.Message}");
         }
+    }
+
+    private void QueueDuplicateCheck()
+    {
+        if (IsEdit)
+            return;
+
+        _duplicateCheckCts?.Cancel();
+
+        if (!HasDuplicateCheckInput())
+        {
+            ShowDuplicateWarning = false;
+            DuplicateCandidates.Clear();
+            DuplicateWarningText = string.Empty;
+            return;
+        }
+
+        _duplicateCheckCts = new CancellationTokenSource();
+        var token = _duplicateCheckCts.Token;
+        _ = CheckDuplicatesDebouncedAsync(token);
+    }
+
+    private async Task CheckDuplicatesDebouncedAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(700, cancellationToken);
+            await LoadDuplicateCandidatesAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "客户自动查重失败");
+        }
+    }
+
+    private async Task<bool> LoadDuplicateCandidatesAsync(CancellationToken cancellationToken = default)
+    {
+        if (!HasDuplicateCheckInput())
+            return false;
+
+        var result = await _customerService.CheckDuplicatesAsync(
+            phone: Phone,
+            name: Name,
+            address: BuildFullAddress(),
+            legalPerson: LegalPerson);
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (!result.Success || result.Data == null)
+            return false;
+
+        var candidates = result.Data.Duplicates
+            .Where(d => !_customerId.HasValue || d.Id != _customerId.Value)
+            .Take(5)
+            .ToList();
+
+        DuplicateCandidates = new ObservableCollection<CustomerDuplicateItem>(candidates);
+        ShowDuplicateWarning = candidates.Count > 0;
+        DuplicateWarningText = candidates.Count > 0
+            ? $"发现 {candidates.Count} 个疑似重复客户，建议确认后再保存"
+            : string.Empty;
+
+        return candidates.Count > 0;
+    }
+
+    private async Task<bool> ConfirmDuplicateRiskAsync()
+    {
+        _duplicateCheckCts?.Cancel();
+
+        var hasDuplicates = await LoadDuplicateCandidatesAsync();
+        if (!hasDuplicates)
+            return false;
+
+        var preview = string.Join(Environment.NewLine, DuplicateCandidates
+            .Take(5)
+            .Select(c => $"- {c.Name} {c.Phone} 相似度 {c.Similarity:P0}"));
+
+        var result = MessageBox.Show(
+            $"系统发现疑似重复客户：{Environment.NewLine}{preview}{Environment.NewLine}{Environment.NewLine}仍然继续保存新客户吗？",
+            "疑似重复客户",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        return result != MessageBoxResult.Yes;
+    }
+
+    private bool HasDuplicateCheckInput()
+    {
+        return (!string.IsNullOrWhiteSpace(Phone) && Phone.Trim().Length >= 4)
+            || (!string.IsNullOrWhiteSpace(Name) && Name.Trim().Length >= 2)
+            || (!string.IsNullOrWhiteSpace(Address) && Address.Trim().Length >= 3)
+            || (!string.IsNullOrWhiteSpace(LegalPerson) && LegalPerson.Trim().Length >= 2);
+    }
+
+    private string BuildFullAddress()
+    {
+        return $"{Province ?? ""}{City ?? ""}{District ?? ""} {Address ?? ""}".Trim();
     }
 
     [RelayCommand]
@@ -803,5 +1048,24 @@ public partial class CustomerEditViewModel : ViewModelBase
             Log.Warning(ex, "企业微信同步失败（不影响主流程）");
         }
     }
+}
+
+/// <summary>
+/// 客户编辑草稿数据
+/// </summary>
+public class CustomerDraftData
+{
+    public string Name { get; set; } = string.Empty;
+    public string? Phone { get; set; }
+    public string? Province { get; set; }
+    public string? City { get; set; }
+    public string? District { get; set; }
+    public string? Address { get; set; }
+    public string? LegalPerson { get; set; }
+    public string? Remark { get; set; }
+    public int? BusinessDistrictId { get; set; }
+    public int? ParentCustomerId { get; set; }
+    public double? Longitude { get; set; }
+    public double? Latitude { get; set; }
 }
 

@@ -6,7 +6,6 @@ using PRO.Domain.Entities;
 using PRO.Domain.Enums;
 using PRO.Infrastructure.Persistence;
 using PRO.Infrastructure.WeChat;
-using PRO.Infrastructure.Common;
 using PRO.Infrastructure.Configuration;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
@@ -1407,6 +1406,21 @@ public partial class SystemSettingsViewModel : ViewModelBase
         }
     }
 
+    // 操作日志 ViewModel（懒加载）
+    private OperationLogViewModel? _operationLogVM;
+    public OperationLogViewModel? OperationLogVM
+    {
+        get
+        {
+            if (IsHeadquartersAdmin && _operationLogVM == null)
+            {
+                _operationLogVM = App.Services.GetService(typeof(OperationLogViewModel)) as OperationLogViewModel;
+                _ = _operationLogVM?.InitializeCommand.ExecuteAsync(null);
+            }
+            return _operationLogVM;
+        }
+    }
+
     // 字段管理 ViewModel（懒加载）
     private FieldManagerViewModel? _fieldMgr;
     public FieldManagerViewModel FieldMgr
@@ -2369,42 +2383,14 @@ public partial class HeadquartersAdminViewModel : ViewModelBase
     {
         try
         {
-            var backupDir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "PRO", "backups");
-            Directory.CreateDirectory(backupDir);
+            var backupService = App.Services.GetRequiredService<PRO.Infrastructure.Services.DatabaseBackupService>();
+            var result = await backupService.PerformManualBackupAsync("系统设置手动备份");
 
-            var fileName = $"pro_backup_man_{DateTime.Now:yyyyMMdd_HHmmss}.db";
-            var filePath = Path.Combine(backupDir, fileName);
-
-            var dbPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "PRO", "pro.db");
-
-            if (File.Exists(dbPath))
-            {
-                File.Copy(dbPath, filePath, true);
-                var fileInfo = new FileInfo(filePath);
-
-                _dbContext.BackupRecords.Add(new BackupRecord
-                {
-                    FileName = fileName,
-                    FilePath = filePath,
-                    BackupType = "手动",
-                    FileSize = fileInfo.Length,
-                    BackupTime = DateTime.Now,
-                    ExpireTime = DateTime.Now.AddDays(30),
-                    Status = "Success"
-                });
-                await _dbContext.SaveChangesAsync();
-
-                await LoadBackupRecordsAsync();
-                ShowSuccess($"手动备份完成：{fileName}");
-            }
+            await LoadBackupRecordsAsync();
+            if (result.Success)
+                ShowSuccess($"手动备份完成：{result.FileName}");
             else
-            {
-                ShowError("数据库文件不存在");
-            }
+                ShowError($"备份失败: {result.Message}");
         }
         catch (Exception ex)
         {
@@ -2471,26 +2457,22 @@ public partial class HeadquartersAdminViewModel : ViewModelBase
 
         try
         {
-            if (!string.IsNullOrEmpty(backup.FilePath) && File.Exists(backup.FilePath))
+            var backupFilePath = ResolveBackupFilePath(backup);
+            if (!string.IsNullOrEmpty(backupFilePath) && File.Exists(backupFilePath))
             {
-                var dbPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "PRO", "pro.db");
-
-                // 先创建当前数据备份
-                var preRestoreDir = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "PRO", "backups");
-                Directory.CreateDirectory(preRestoreDir);
-                var preBackupPath = Path.Combine(preRestoreDir, $"pre_restore_{DateTime.Now:yyyyMMdd_HHmmss}.db");
-                if (File.Exists(dbPath))
+                var backupService = App.Services.GetRequiredService<PRO.Infrastructure.Services.DatabaseBackupService>();
+                var preRestoreBackup = await backupService.PerformManualBackupAsync($"恢复前自动备份：{backup.FileName}");
+                if (!preRestoreBackup.Success)
                 {
-                    File.Copy(dbPath, preBackupPath, true);
+                    ShowError($"恢复前备份失败，已取消恢复: {preRestoreBackup.Message}");
+                    return;
                 }
 
-                // 还原
-                File.Copy(backup.FilePath, dbPath, true);
-                ShowSuccess("数据恢复成功，请重新启动应用");
+                var restoreResult = await backupService.RestoreDatabaseAsync(backupFilePath);
+                if (restoreResult.Success)
+                    ShowSuccess("数据恢复成功，请重新启动应用");
+                else
+                    ShowError($"恢复失败: {restoreResult.Message}");
             }
             else
             {
@@ -2515,20 +2497,14 @@ public partial class HeadquartersAdminViewModel : ViewModelBase
                 return;
             }
 
-            if (!string.IsNullOrWhiteSpace(backup.FilePath) && File.Exists(backup.FilePath))
+            var backupService = App.Services.GetRequiredService<PRO.Infrastructure.Services.DatabaseBackupService>();
+            var result = await backupService.DeleteBackupAsync(backupId);
+            if (!result.Success)
             {
-                try
-                {
-                    File.Delete(backup.FilePath);
-                }
-                catch
-                {
-                    // 文件删除失败不阻断记录删除，避免残留脏数据
-                }
+                ShowError(result.Message);
+                return;
             }
 
-            _dbContext.BackupRecords.Remove(backup);
-            await _dbContext.SaveChangesAsync();
             await LoadBackupRecordsAsync();
             ShowSuccess("备份记录已删除");
         }
@@ -2536,6 +2512,16 @@ public partial class HeadquartersAdminViewModel : ViewModelBase
         {
             ShowError($"删除失败: {ex.Message}");
         }
+    }
+
+    private static string ResolveBackupFilePath(BackupRecord record)
+    {
+        if (string.IsNullOrWhiteSpace(record.FilePath))
+            return record.FileName;
+
+        return string.Equals(Path.GetFileName(record.FilePath), record.FileName, StringComparison.OrdinalIgnoreCase)
+            ? record.FilePath
+            : Path.Combine(record.FilePath, record.FileName);
     }
 
 

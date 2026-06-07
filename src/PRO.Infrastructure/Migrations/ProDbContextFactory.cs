@@ -11,8 +11,13 @@ public class ProDbContextFactory : IDesignTimeDbContextFactory<ProDbContext>
         var optionsBuilder = new DbContextOptionsBuilder<ProDbContext>();
         var connectionString =
             Environment.GetEnvironmentVariable("PRO_ConnectionStrings__PostgreSQL")
-            ?? Environment.GetEnvironmentVariable("ConnectionStrings__PostgreSQL")
-            ?? "Host=localhost;Port=5432;Database=pro;Username=postgres;Password=CHANGE_ME";
+            ?? Environment.GetEnvironmentVariable("ConnectionStrings__PostgreSQL");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException(
+                "未配置设计时数据库连接字符串，请设置 PRO_ConnectionStrings__PostgreSQL 或 ConnectionStrings__PostgreSQL。");
+        }
 
         optionsBuilder.UseNpgsql(connectionString);
 

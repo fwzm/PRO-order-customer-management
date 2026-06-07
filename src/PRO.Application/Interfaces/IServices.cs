@@ -211,8 +211,15 @@ public interface IBackupService
 public interface IOperationLogService
 {
     Task<ApiResponse<PagedResult<OperationLogDto>>> GetListAsync(PagedRequest request, int? moduleId = null);
+    Task<ApiResponse<PagedResult<OperationLogDetailDto>>> GetDetailListAsync(OperationLogQueryRequest request);
+    Task<ApiResponse<OperationLogDetailDto>> GetByIdAsync(int id);
+    Task<ApiResponse<OperationLogStatsDto>> GetStatsAsync(int? branchId = null, int days = 30);
+    Task<ApiResponse<List<string>>> GetModulesAsync();
+    Task<ApiResponse<List<string>>> GetOperationTypesAsync(string? module = null);
     Task<ApiResponse<bool>> CreateAsync(int operatorId, string module, string operationType, string content, string? entityType = null, int? entityId = null, string? result = null, string? errorMessage = null);
     Task<ApiResponse<int>> SyncPendingLogsAsync();
+    Task<ApiResponse<string>> ExportAsync(ExportOperationLogRequest request);
+    Task<ApiResponse<bool>> CleanupOldLogsAsync(int retentionDays = 90);
 }
 
 // ==================== 数据同步服务 ====================

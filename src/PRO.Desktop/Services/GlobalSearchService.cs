@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using PRO.Domain.Entities;
 using PRO.Domain.Enums;
 using PRO.Infrastructure.Persistence;
 

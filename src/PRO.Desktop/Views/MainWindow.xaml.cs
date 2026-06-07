@@ -17,6 +17,22 @@ public partial class MainWindow : Window
         InitializeComponent();
         _viewModel = viewModel;
         DataContext = _viewModel;
+
+        // 订阅连接状态变更
+        App.ConnectionStatusChanged = (isConnected, message) =>
+        {
+            Dispatcher.Invoke(() =>
+            {
+                ConnectionBannerText.Text = message;
+                ConnectionBanner.Visibility = isConnected ? Visibility.Collapsed : Visibility.Visible;
+                ConnectionBanner.Background = isConnected
+                    ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(212, 237, 218)) // 绿色
+                    : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 243, 205)); // 黄色
+                ConnectionBannerText.Foreground = isConnected
+                    ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(21, 87, 36))
+                    : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(133, 100, 4));
+            });
+        };
     }
 
     /// <summary>显示全局加载覆盖层</summary>

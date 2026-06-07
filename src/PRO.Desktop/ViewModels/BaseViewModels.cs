@@ -1,10 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using PRO.Application.DTOs;
 using PRO.Domain.Enums;
+using PRO.Infrastructure.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
-using System.Collections.ObjectModel;
 
 namespace PRO.Desktop.ViewModels;
 
@@ -67,6 +66,52 @@ public abstract partial class ViewModelBase : ObservableObject
             ShowError($"{failureMessage}: {ex.Message}");
         }
     }
+
+    /// <summary>
+    /// 带自动重试的数据库操作（使用 ConnectionHealthService）
+    /// </summary>
+    protected async Task<T?> ExecuteWithRetryAsync<T>(Func<Task<T>> operation, string operationName = "")
+    {
+        try
+        {
+            var healthService = App.Services.GetService<ConnectionHealthService>();
+            if (healthService != null)
+            {
+                return await healthService.ExecuteWithRetryAsync(async _ => await operation(), operationName);
+            }
+            return await operation();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "数据库操作失败: {Operation}", operationName);
+            ShowError($"操作失败: {ex.Message}");
+            return default;
+        }
+    }
+
+    /// <summary>
+    /// 带自动重试的数据库操作（无返回值）
+    /// </summary>
+    protected async Task ExecuteWithRetryAsync(Func<Task> operation, string operationName = "")
+    {
+        try
+        {
+            var healthService = App.Services.GetService<ConnectionHealthService>();
+            if (healthService != null)
+            {
+                await healthService.ExecuteWithRetryAsync(async _ => await operation(), operationName);
+            }
+            else
+            {
+                await operation();
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "数据库操作失败: {Operation}", operationName);
+            ShowError($"操作失败: {ex.Message}");
+        }
+    }
 }
 
 /// <summary>
@@ -75,6 +120,20 @@ public abstract partial class ViewModelBase : ObservableObject
 public abstract partial class PagedViewModelBase : ViewModelBase
 {
     private bool _suppressPageIndexLoad;
+
+    // 分页缓存：仅当筛选条件变化时重新计算总数
+    private string? _lastCountCacheKey;
+    private int _cachedTotalCount = -1;
+
+    // 批量选择
+    [ObservableProperty]
+    private bool _isBatchMode;
+
+    [ObservableProperty]
+    private bool _isAllSelected;
+
+    [ObservableProperty]
+    private int _selectedCount;
 
     [ObservableProperty]
     private int _pageIndex = 1;
@@ -100,12 +159,14 @@ public abstract partial class PagedViewModelBase : ViewModelBase
             return;
         }
 
+        ClearBatchSelection();
         RunInBackground(LoadDataAsync(), "加载分页数据失败");
     }
 
     partial void OnPageSizeChanged(int value)
     {
         UpdateTotalPages();
+        ClearBatchSelection();
         RunInBackground(ResetToFirstPageAndLoadAsync(), "刷新分页数据失败");
     }
 
@@ -113,6 +174,13 @@ public abstract partial class PagedViewModelBase : ViewModelBase
     {
         UpdateTotalPages();
     }
+
+    partial void OnIsAllSelectedChanged(bool value)
+    {
+        OnBatchSelectAllChanged(value);
+    }
+
+    protected virtual void OnBatchSelectAllChanged(bool value) { }
 
     protected virtual Task LoadDataAsync() => Task.CompletedTask;
 
@@ -146,6 +214,7 @@ public abstract partial class PagedViewModelBase : ViewModelBase
 
     protected async Task ResetToFirstPageAndLoadAsync()
     {
+        ClearBatchSelection();
         if (PageIndex != 1)
         {
             SetPageIndexWithoutAutoLoad(1);
@@ -154,15 +223,57 @@ public abstract partial class PagedViewModelBase : ViewModelBase
         await LoadDataAsync();
     }
 
+    /// <summary>
+    /// 构建 CountAsync 缓存键
+    /// </summary>
+    protected string BuildCountCacheKey(params object?[] filters)
+    {
+        return string.Join("|", filters.Select(f => f?.ToString() ?? "null"));
+    }
+
+    protected bool TryGetCachedCount(string cacheKey, out int count)
+    {
+        if (_lastCountCacheKey == cacheKey && _cachedTotalCount >= 0)
+        {
+            count = _cachedTotalCount;
+            return true;
+        }
+        count = 0;
+        return false;
+    }
+
+    protected void SetCachedCount(string cacheKey, int count)
+    {
+        _lastCountCacheKey = cacheKey;
+        _cachedTotalCount = count;
+    }
+
+    protected void InvalidateCountCache()
+    {
+        _lastCountCacheKey = null;
+        _cachedTotalCount = -1;
+    }
+
+    public virtual void ClearBatchSelection()
+    {
+        IsBatchMode = false;
+        IsAllSelected = false;
+        SelectedCount = 0;
+    }
+
+    protected virtual List<int> GetSelectedIds() => new();
+
     [RelayCommand]
     protected async Task SearchAsync()
     {
+        InvalidateCountCache();
         await ResetToFirstPageAndLoadAsync();
     }
 
     [RelayCommand]
     protected async Task RefreshAsync()
     {
+        InvalidateCountCache();
         await ResetToFirstPageAndLoadAsync();
     }
 
@@ -205,6 +316,19 @@ public abstract partial class PagedViewModelBase : ViewModelBase
             await LoadDataAsync();
         }
     }
+}
+
+/// <summary>
+/// 支持批量选择的可选列表项
+/// </summary>
+public partial class SelectableItem<T> : ObservableObject
+{
+    public T Data { get; set; } = default!;
+
+    [ObservableProperty]
+    private bool _isSelected;
+
+    public int Id { get; set; }
 }
 
 

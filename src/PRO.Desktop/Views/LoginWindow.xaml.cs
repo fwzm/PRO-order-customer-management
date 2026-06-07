@@ -14,6 +14,7 @@ public partial class LoginWindow : Window
         InitializeComponent();
         _viewModel = viewModel;
         DataContext = _viewModel;
+        _viewModel.MustChangePassword += ShowChangePasswordPanel;
         txtEmployeeNo.Focus();
         MouseDown += (s, e) => { if (e.ChangedButton == System.Windows.Input.MouseButton.Left) DragMove(); };
     }
@@ -40,5 +41,47 @@ public partial class LoginWindow : Window
     {
         if (e.Key == Key.Enter && _viewModel.LoginCommand.CanExecute(null))
             _viewModel.LoginCommand.Execute(null);
+    }
+
+    private void ShowChangePasswordPanel()
+    {
+        Dispatcher.Invoke(() =>
+        {
+            _viewModel.LoginError = null;
+            LoginPanel.Visibility = Visibility.Collapsed;
+            ChangePasswordPanel.Visibility = Visibility.Visible;
+            txtNewPassword.Clear();
+            txtConfirmPassword.Clear();
+            txtNewPassword.Focus();
+        });
+    }
+
+    private void ChangePasswordButton_Click(object sender, RoutedEventArgs e)
+    {
+        TryChangePassword();
+    }
+
+    private void txtNewPassword_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+            txtConfirmPassword.Focus();
+    }
+
+    private void txtConfirmPassword_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+            TryChangePassword();
+    }
+
+    private void TryChangePassword()
+    {
+        if (txtNewPassword.Password != txtConfirmPassword.Password)
+        {
+            _viewModel.LoginError = "两次输入的新密码不一致";
+            return;
+        }
+
+        if (_viewModel.ChangePasswordOnLoginCommand.CanExecute(txtNewPassword.Password))
+            _viewModel.ChangePasswordOnLoginCommand.Execute(txtNewPassword.Password);
     }
 }

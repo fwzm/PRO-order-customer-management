@@ -64,6 +64,34 @@
                                  materialDesign:HintAssist.Hint="选填，11位手机号"/>
                     </Grid>
 
+                    <Border Margin="0,0,0,12"
+                            Background="#FFFFF4D6"
+                            BorderBrush="{StaticResource WarningBrush}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="12"
+                            Visibility="{Binding ShowDuplicateWarning, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <StackPanel>
+                            <TextBlock Text="{Binding DuplicateWarningText}"
+                                       Foreground="#8A5A00"
+                                       FontWeight="SemiBold"
+                                       FontSize="12"/>
+                            <ItemsControl ItemsSource="{Binding DuplicateCandidates}" Margin="0,6,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Foreground="#8A5A00" FontSize="12" TextWrapping="Wrap">
+                                            <Run Text="{Binding Name}"/>
+                                            <Run Text="  "/>
+                                            <Run Text="{Binding Phone}"/>
+                                            <Run Text="  相似度 "/>
+                                            <Run Text="{Binding Similarity, StringFormat={}{0:P0}}"/>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
                     <!-- 客户关联（仅细分客户显示） -->
                     <Border Margin="0,0,0,12" x:Name="MajorCustomerSection" Visibility="Collapsed">
                         <Grid>

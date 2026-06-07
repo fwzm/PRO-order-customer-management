@@ -1,4 +1,3 @@
-using System.Net.Http;
 using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -7,7 +6,6 @@ using PRO.Application.Interfaces;
 using PRO.Domain.Entities;
 using PRO.Domain.Enums;
 using PRO.Infrastructure.Persistence;
-using PRO.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 
 namespace PRO.Infrastructure.WeChat;

@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel; using CommunityToolkit.Mvvm.Input; using Microsoft.EntityFrameworkCore; using PRO.Domain.Entities; using PRO.Infrastructure.Persistence; using Serilog; using System.Collections.ObjectModel; using System.Windows;
+using CommunityToolkit.Mvvm.ComponentModel; using CommunityToolkit.Mvvm.Input; using Microsoft.EntityFrameworkCore; using PRO.Domain.Entities; using PRO.Infrastructure.Persistence; using Serilog; using System.Collections.ObjectModel;
 namespace PRO.Desktop.ViewModels;
 public partial class TagViewModel : ViewModelBase
 {

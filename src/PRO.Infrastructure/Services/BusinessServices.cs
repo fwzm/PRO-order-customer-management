@@ -267,29 +267,213 @@ public class CustomerService : ICustomerService
         try
         {
             var duplicates = new List<CustomerDuplicateItem>();
+            var phoneTerm = NormalizePhone(phone);
+            var nameTerm = NormalizeText(name);
+            var addressTerm = NormalizeText(address);
+            var legalPersonTerm = NormalizeText(legalPerson);
 
-            if (!string.IsNullOrWhiteSpace(phone))
+            if (string.IsNullOrWhiteSpace(phoneTerm)
+                && string.IsNullOrWhiteSpace(nameTerm)
+                && string.IsNullOrWhiteSpace(addressTerm)
+                && string.IsNullOrWhiteSpace(legalPersonTerm))
             {
-                var phoneMatches = await _dbContext.Customers.AsNoTracking()
-                    .Where(c => c.Phone == phone && c.Status == CustomerStatus.Active)
-                    .Take(5).ToListAsync();
-                duplicates.AddRange(phoneMatches.Select(c => new CustomerDuplicateItem
-                {
-                    Id = c.Id, Name = c.Name, Phone = c.Phone, Address = c.Address,
-                    LegalPerson = c.LegalPerson, MatchType = "phone", Similarity = 1.0
-                }));
+                return ApiResponse<CustomerDuplicateCheckResult>.Ok(new CustomerDuplicateCheckResult());
+            }
+
+            var nameSearch = GetSearchToken(nameTerm, 2, 6);
+            var addressSearch = GetSearchToken(addressTerm, 3, 8);
+            var legalPersonSearch = GetSearchToken(legalPersonTerm, 2, 6);
+            var recentCutoff = DateTime.Now.AddDays(-30);
+
+            var query = _dbContext.Customers.AsNoTracking()
+                .Where(c => c.Status == CustomerStatus.Active);
+
+            query = query.Where(c =>
+                (!string.IsNullOrEmpty(phoneTerm) && c.Phone != null && c.Phone.Contains(phoneTerm)) ||
+                (!string.IsNullOrEmpty(nameSearch) && c.Name.Contains(nameSearch)) ||
+                (!string.IsNullOrEmpty(addressSearch) && (
+                    (c.Address != null && c.Address.Contains(addressSearch)) ||
+                    (c.FullAddress != null && c.FullAddress.Contains(addressSearch)))) ||
+                (!string.IsNullOrEmpty(legalPersonSearch) && c.LegalPerson != null && c.LegalPerson.Contains(legalPersonSearch)) ||
+                (!string.IsNullOrEmpty(nameSearch) && c.CreatedAt >= recentCutoff && c.Name.Contains(nameSearch)));
+
+            var candidates = await query
+                .OrderByDescending(c => c.CreatedAt)
+                .Take(80)
+                .ToListAsync();
+
+            foreach (var candidate in candidates)
+            {
+                var item = BuildDuplicateItem(candidate, phoneTerm, nameTerm, addressTerm, legalPersonTerm, recentCutoff);
+                if (item != null)
+                    duplicates.Add(item);
             }
 
             return ApiResponse<CustomerDuplicateCheckResult>.Ok(new CustomerDuplicateCheckResult
             {
                 HasDuplicates = duplicates.Count > 0,
-                Duplicates = duplicates.DistinctBy(d => d.Id).ToList()
+                Duplicates = duplicates
+                    .GroupBy(d => d.Id)
+                    .Select(g => g.OrderByDescending(d => d.Similarity).First())
+                    .OrderByDescending(d => d.Similarity)
+                    .ThenBy(d => d.Name)
+                    .Take(20)
+                    .ToList()
             });
         }
         catch (Exception ex)
         {
             return ApiResponse<CustomerDuplicateCheckResult>.Fail($"查重失败: {ex.Message}");
         }
+    }
+
+    private static CustomerDuplicateItem? BuildDuplicateItem(
+        Customer candidate,
+        string phoneTerm,
+        string nameTerm,
+        string addressTerm,
+        string legalPersonTerm,
+        DateTime recentCutoff)
+    {
+        var candidatePhone = NormalizePhone(candidate.Phone);
+        var candidateName = NormalizeText(candidate.Name);
+        var candidateAddress = NormalizeText(candidate.FullAddress ?? candidate.Address);
+        var candidateLegalPerson = NormalizeText(candidate.LegalPerson);
+
+        var bestScore = 0d;
+        var matchType = "";
+
+        if (!string.IsNullOrEmpty(phoneTerm) && !string.IsNullOrEmpty(candidatePhone))
+        {
+            if (candidatePhone == phoneTerm)
+            {
+                bestScore = 1.0;
+                matchType = "phone";
+            }
+            else if (phoneTerm.Length >= 4 && candidatePhone.Contains(phoneTerm))
+            {
+                bestScore = 0.86;
+                matchType = "phone_partial";
+            }
+        }
+
+        if (!string.IsNullOrEmpty(legalPersonTerm)
+            && !string.IsNullOrEmpty(phoneTerm)
+            && candidateLegalPerson == legalPersonTerm
+            && candidatePhone == phoneTerm)
+        {
+            bestScore = Math.Max(bestScore, 0.98);
+            matchType = "legal_phone";
+        }
+
+        if (!string.IsNullOrEmpty(nameTerm))
+        {
+            var nameScore = Similarity(nameTerm, candidateName);
+            var addressScore = string.IsNullOrEmpty(addressTerm)
+                ? 0d
+                : Similarity(addressTerm, candidateAddress);
+
+            var combinedScore = string.IsNullOrEmpty(addressTerm)
+                ? nameScore
+                : nameScore * 0.72 + addressScore * 0.28;
+
+            if (candidate.CreatedAt >= recentCutoff && nameScore >= 0.70)
+            {
+                combinedScore = Math.Max(combinedScore, nameScore + 0.05);
+                matchType = combinedScore > bestScore ? "name_recent" : matchType;
+            }
+
+            if (combinedScore > bestScore && combinedScore >= 0.65)
+            {
+                bestScore = combinedScore;
+                matchType = string.IsNullOrEmpty(addressTerm) ? "name" : "name_address";
+            }
+        }
+
+        if (bestScore < 0.65)
+            return null;
+
+        return new CustomerDuplicateItem
+        {
+            Id = candidate.Id,
+            Name = candidate.Name,
+            Phone = candidate.Phone,
+            Address = candidate.FullAddress ?? candidate.Address,
+            LegalPerson = candidate.LegalPerson,
+            MatchType = matchType,
+            Similarity = Math.Round(bestScore, 2)
+        };
+    }
+
+    private static string NormalizePhone(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        return new string(value.Where(char.IsDigit).ToArray());
+    }
+
+    private static string NormalizeText(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        return new string(value
+            .Trim()
+            .ToLowerInvariant()
+            .Where(c => !char.IsWhiteSpace(c) && !char.IsPunctuation(c))
+            .ToArray());
+    }
+
+    private static string GetSearchToken(string value, int minLength, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Length < minLength)
+            return string.Empty;
+
+        return value[..Math.Min(value.Length, maxLength)];
+    }
+
+    private static double Similarity(string left, string right)
+    {
+        if (string.IsNullOrEmpty(left) || string.IsNullOrEmpty(right))
+            return 0d;
+        if (left == right)
+            return 1d;
+        if (left.Contains(right) || right.Contains(left))
+        {
+            var shorter = Math.Min(left.Length, right.Length);
+            var longer = Math.Max(left.Length, right.Length);
+            return Math.Max(0.78, shorter * 1.0 / longer);
+        }
+
+        var distance = LevenshteinDistance(left, right);
+        var maxLen = Math.Max(left.Length, right.Length);
+        return maxLen == 0 ? 1d : Math.Max(0d, 1d - distance * 1.0 / maxLen);
+    }
+
+    private static int LevenshteinDistance(string left, string right)
+    {
+        var previous = new int[right.Length + 1];
+        var current = new int[right.Length + 1];
+
+        for (var j = 0; j <= right.Length; j++)
+            previous[j] = j;
+
+        for (var i = 1; i <= left.Length; i++)
+        {
+            current[0] = i;
+            for (var j = 1; j <= right.Length; j++)
+            {
+                var cost = left[i - 1] == right[j - 1] ? 0 : 1;
+                current[j] = Math.Min(
+                    Math.Min(current[j - 1] + 1, previous[j] + 1),
+                    previous[j - 1] + cost);
+            }
+
+            (previous, current) = (current, previous);
+        }
+
+        return previous[right.Length];
     }
 
     public async Task<ApiResponse<bool>> MergeCustomersAsync(MergeCustomerRequest request)
@@ -362,7 +546,8 @@ public class OrderService : IOrderService
             if (!string.IsNullOrWhiteSpace(request.Keyword))
                 query = query.Where(o => o.OrderNo.Contains(request.Keyword) || (o.Customer != null && o.Customer.Name.Contains(request.Keyword)));
 
-            var totalCount = await query.CountAsync();
+            // 使用估算总数避免大表 COUNT（超过10万条时显示"约xxx条"）
+            var totalCount = await GetEstimatedCountAsync(query);
             var items = await query.OrderByDescending(o => o.CreatedAt)
                 .Skip((request.PageIndex - 1) * request.PageSize)
                 .Take(request.PageSize)
@@ -373,7 +558,10 @@ public class OrderService : IOrderService
                     BranchId = o.BranchId, BranchName = o.Branch != null ? o.Branch.Name : "",
                     TotalAmount = o.TotalAmount, Status = o.Status, PaymentStatus = o.PaymentStatus,
                     CreatedAt = o.CreatedAt, DeliveryPersonName = o.DeliveryPerson != null ? o.DeliveryPerson.Name : null,
-                    CreatedByName = o.Creator != null ? o.Creator.Name : ""
+                    CreatedByName = o.Creator != null ? o.Creator.Name : "",
+                    DeliveryLongitude = o.DeliveryLongitude, DeliveryLatitude = o.DeliveryLatitude,
+                    DeliveryAddress = o.DeliveryAddress, ReceivedAmount = o.ReceivedAmount,
+                    DeliveryTime = o.DeliveryTime
                 })
                 .ToListAsync();
 
@@ -386,6 +574,64 @@ public class OrderService : IOrderService
         {
             return ApiResponse<PagedResult<OrderListItem>>.Fail($"查询订单列表失败: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    /// 智能估算总数：小数据量精确统计，大数据量使用 PostgreSQL 估算
+    /// </summary>
+    private async Task<int> GetEstimatedCountAsync(IQueryable<Order> query)
+    {
+        try
+        {
+            // 先用 EXPLAIN 估算行数（PostgreSQL特性，几乎瞬间完成）
+            var sql = query.ToQueryString();
+            var explainQuery = $"EXPLAIN (FORMAT JSON) {sql}";
+            // 使用原始SQL执行 EXPLAIN
+            var connection = _dbContext.Database.GetDbConnection();
+            await connection.OpenAsync();
+            try
+            {
+                using var cmd = connection.CreateCommand();
+                cmd.CommandText = explainQuery;
+                var result = await cmd.ExecuteScalarAsync() as string;
+                if (result != null)
+                {
+                    // 从JSON中提取估算行数
+                    var estimated = ExtractEstimatedRows(result);
+                    if (estimated > 0)
+                        return estimated;
+                }
+            }
+            finally
+            {
+                if (connection.State == System.Data.ConnectionState.Open)
+                    await connection.CloseAsync();
+            }
+        }
+        catch
+        {
+            // EXPLAIN失败，回退到精确统计
+        }
+
+        return await query.CountAsync();
+    }
+
+    private static int ExtractEstimatedRows(string explainJson)
+    {
+        try
+        {
+            // 从 EXPLAIN JSON 结果中提取 Plan Rows
+            var doc = System.Text.Json.JsonDocument.Parse(explainJson);
+            var root = doc.RootElement;
+            if (root.ValueKind == System.Text.Json.JsonValueKind.Array && root.GetArrayLength() > 0)
+            {
+                var plan = root[0].GetProperty("Plan");
+                if (plan.TryGetProperty("Plan Rows", out var rows))
+                    return (int)(rows.GetDouble() + 0.5);
+            }
+        }
+        catch { }
+        return 0;
     }
 
     public async Task<ApiResponse<OrderDetailDto>> GetByIdAsync(int id)

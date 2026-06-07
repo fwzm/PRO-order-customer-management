@@ -42,6 +42,7 @@
         <DataTemplate DataType="{x:Type vm:PredictionDashboardViewModel}"><local:PredictionDashboardView /></DataTemplate>
         <DataTemplate DataType="{x:Type vm:VisitOpportunityViewModel}"><local:VisitOpportunityView /></DataTemplate>
         <DataTemplate DataType="{x:Type vm:DistrictTagViewModel}"><local:DistrictTagView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:OperationLogViewModel}"><local:OperationLogView /></DataTemplate>
     </Window.Resources>
 
     <Grid>
@@ -52,6 +53,13 @@
 
         <controls:ToastNotification x:Name="ToastCtrl" HorizontalAlignment="Right" VerticalAlignment="Top"
                                      Margin="0,12,12,0" Panel.ZIndex="999"/>
+
+        <!-- 连接状态提示条 -->
+        <Border x:Name="ConnectionBanner" Grid.ColumnSpan="2" VerticalAlignment="Top"
+                Background="#FFF3CD" Padding="12,6" Panel.ZIndex="998" Visibility="Collapsed">
+            <TextBlock x:Name="ConnectionBannerText" Text="网络连接不稳定，正在重连..."
+                       Foreground="#856404" FontSize="12" HorizontalAlignment="Center"/>
+        </Border>
 
         <!-- ==================== 侧边栏 ==================== -->
         <!-- 用和正常页面统一的 SurfaceBrush 背景、BorderBrush 分割线 -->

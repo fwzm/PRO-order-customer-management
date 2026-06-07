@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using PRO.Desktop.Prediction;
 using PRO.Infrastructure.Persistence;
 using System.Collections.ObjectModel;
-using System.Windows;
 
 namespace PRO.Desktop.ViewModels;
 

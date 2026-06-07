@@ -2,11 +2,9 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using PRO.Domain.Entities;
-using PRO.Domain.Enums;
 using PRO.Infrastructure.Persistence;
 using Serilog;
 using System.Collections.ObjectModel;
-using System.Windows;
 
 namespace PRO.Desktop.ViewModels;
 

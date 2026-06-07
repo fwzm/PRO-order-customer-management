@@ -1,0 +1,268 @@
+<UserControl x:Class="PRO.Desktop.Views.WeChatSetupWizardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="700"
+             Background="{StaticResource BackgroundBrush}">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="32">
+        <StackPanel MaxWidth="650">
+            <!-- 标题 -->
+            <TextBlock Text="企微集成配置向导" Style="{StaticResource PageTitleStyle}" Margin="0,0,0,8"/>
+            <TextBlock Text="只需4步，完成企业微信与PRO系统的集成配置"
+                       FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,24"/>
+
+            <!-- 步骤指示器 -->
+            <materialDesign:ColorZone Mode="PrimaryMid" CornerRadius="8" Padding="20" Margin="0,0,0,24">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <!-- Step 1 -->
+                        <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                            <Border Width="40" Height="40" CornerRadius="20"
+                                    Background="{Binding IsStep1, Converter={StaticResource BooleanToColorConverter}}"
+                                    HorizontalAlignment="Center">
+                                <TextBlock Text="1" FontSize="16" FontWeight="Bold" Foreground="White"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="应用创建" FontSize="12" Margin="0,6,0,0"
+                                       HorizontalAlignment="Center"
+                                       Foreground="{Binding IsStep1, Converter={StaticResource BooleanToColorConverter}}"/>
+                            <TextBlock Text="{Binding Step1Completed, Converter={StaticResource BooleanToCheckConverter}}"
+                                       FontSize="14" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <!-- Step 2 -->
+                        <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                            <Border Width="40" Height="40" CornerRadius="20"
+                                    Background="{Binding IsStep2, Converter={StaticResource BooleanToColorConverter}}"
+                                    HorizontalAlignment="Center">
+                                <TextBlock Text="2" FontSize="16" FontWeight="Bold" Foreground="White"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="回调配置" FontSize="12" Margin="0,6,0,0"
+                                       HorizontalAlignment="Center"
+                                       Foreground="{Binding IsStep2, Converter={StaticResource BooleanToColorConverter}}"/>
+                            <TextBlock Text="{Binding Step2Completed, Converter={StaticResource BooleanToCheckConverter}}"
+                                       FontSize="14" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <!-- Step 3 -->
+                        <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                            <Border Width="40" Height="40" CornerRadius="20"
+                                    Background="{Binding IsStep3, Converter={StaticResource BooleanToColorConverter}}"
+                                    HorizontalAlignment="Center">
+                                <TextBlock Text="3" FontSize="16" FontWeight="Bold" Foreground="White"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="通讯录同步" FontSize="12" Margin="0,6,0,0"
+                                       HorizontalAlignment="Center"
+                                       Foreground="{Binding IsStep3, Converter={StaticResource BooleanToColorConverter}}"/>
+                            <TextBlock Text="{Binding Step3Completed, Converter={StaticResource BooleanToCheckConverter}}"
+                                       FontSize="14" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <!-- Step 4 -->
+                        <StackPanel Grid.Column="3" HorizontalAlignment="Center">
+                            <Border Width="40" Height="40" CornerRadius="20"
+                                    Background="{Binding IsStep4, Converter={StaticResource BooleanToColorConverter}}"
+                                    HorizontalAlignment="Center">
+                                <TextBlock Text="4" FontSize="16" FontWeight="Bold" Foreground="White"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="完成验证" FontSize="12" Margin="0,6,0,0"
+                                       HorizontalAlignment="Center"
+                                       Foreground="{Binding IsStep4, Converter={StaticResource BooleanToColorConverter}}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </materialDesign:ColorZone>
+
+            <!-- 步骤内容卡片 -->
+            <Border Style="{StaticResource CardStyle}" Padding="24" Margin="0,0,0,16">
+                <Grid>
+                <!-- Step 1: 应用创建 -->
+                <StackPanel Visibility="{Binding IsStep1, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <TextBlock Text="第一步：企业微信应用凭证" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                    <TextBlock Text="在企业微信管理后台 → 应用管理 → 自建应用 → 获取以下信息"
+                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,16"/>
+
+                    <TextBlock Text="企业ID (CorpID)" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                    <TextBox Text="{Binding CorpId, UpdateSourceTrigger=PropertyChanged}"
+                             materialDesign:HintAssist.Hint="我的企业 → 企业信息 → 企业ID"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,16"/>
+
+                    <TextBlock Text="应用Secret" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                    <TextBox Text="{Binding AppSecret, UpdateSourceTrigger=PropertyChanged}"
+                             materialDesign:HintAssist.Hint="自建应用 → 查看Secret"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,16"/>
+
+                    <TextBlock Text="AgentId" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                    <TextBox Text="{Binding AgentId, UpdateSourceTrigger=PropertyChanged}"
+                             materialDesign:HintAssist.Hint="自建应用 → AgentId"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,16"/>
+
+                    <WrapPanel Margin="0,0,0,8">
+                        <Button Content="测试连接" Style="{StaticResource PrimaryButtonStyle}"
+                                Command="{Binding TestConnectionCommand}" Margin="0,0,12,0"/>
+                        <TextBlock Text="{Binding ConnectionTestResult}" VerticalAlignment="Center"
+                                   FontSize="13" FontWeight="SemiBold"/>
+                    </WrapPanel>
+
+                    <materialDesign:Card Padding="12" Background="#FFF3E0" Margin="0,0,0,0"
+                                         Visibility="{Binding ConnectionTestResult, Converter={StaticResource StringToVisibilityConverter}}">
+                        <TextBlock Text="{Binding ConnectionTestResult}" TextWrapping="Wrap" FontSize="13"/>
+                    </materialDesign:Card>
+                </StackPanel>
+
+                <!-- Step 2: 回调配置 -->
+                <StackPanel Visibility="{Binding IsStep2, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <TextBlock Text="第二步：回调地址与安全配置" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                    <TextBlock Text="在企业微信管理后台 → 自建应用 → 接收消息 → 设置API接收"
+                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,16"/>
+
+                    <TextBlock Text="回调URL" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                    <TextBox Text="{Binding CallbackUrl, UpdateSourceTrigger=PropertyChanged}"
+                             materialDesign:HintAssist.Hint="https://your-domain.com/api/wechat/callback"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,16"/>
+
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                            <TextBlock Text="Token" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <TextBox Text="{Binding Token, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="用于验证消息的Token"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="生成" VerticalAlignment="Bottom"
+                                Style="{StaticResource MaterialDesignFlatButton}"
+                                Command="{Binding GenerateTokenCommand}"/>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                            <TextBlock Text="EncodingAESKey" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <TextBox Text="{Binding EncodingAESKey, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="消息加密密钥（43位）"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="生成" VerticalAlignment="Bottom"
+                                Style="{StaticResource MaterialDesignFlatButton}"
+                                Command="{Binding GenerateAesKeyCommand}"/>
+                    </Grid>
+
+                    <TextBlock Text="Webhook地址（可选）" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                    <TextBox Text="{Binding WebhookUrl, UpdateSourceTrigger=PropertyChanged}"
+                             materialDesign:HintAssist.Hint="群机器人Webhook地址"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,12"/>
+
+                    <Button Content="验证回调配置" Style="{StaticResource PrimaryButtonStyle}"
+                            Command="{Binding VerifyCallbackCommand}" HorizontalAlignment="Left" Margin="0,0,0,8"/>
+                    <TextBlock Text="{Binding CallbackVerifyResult}" FontSize="13"
+                               Visibility="{Binding CallbackVerifyResult, Converter={StaticResource StringToVisibilityConverter}}"/>
+                </StackPanel>
+
+                <!-- Step 3: 通讯录同步 -->
+                <StackPanel Visibility="{Binding IsStep3, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <TextBlock Text="第三步：同步通讯录与客户" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                    <TextBlock Text="将企业微信中的部门、成员和客户信息同步到PRO系统"
+                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,16"/>
+
+                    <Border Style="{StaticResource CardStyle}" Padding="16" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="同步通讯录" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <Button Content="开始同步" Style="{StaticResource PrimaryButtonStyle}"
+                                    Command="{Binding SyncOrganizationCommand}" HorizontalAlignment="Left"
+                                    IsEnabled="{Binding IsSyncingOrg, Converter={StaticResource InvertBoolConverter}}"/>
+                            <TextBlock Text="{Binding SyncProgress}" Margin="0,8,0,0" FontSize="13"/>
+
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" FontSize="13">
+                                    <Run Text="部门: "/><Run Text="{Binding SyncedDepartmentCount}" FontWeight="SemiBold"/>
+                                </TextBlock>
+                                <TextBlock Grid.Column="1" FontSize="13">
+                                    <Run Text="成员: "/><Run Text="{Binding SyncedEmployeeCount}" FontWeight="SemiBold"/>
+                                </TextBlock>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource CardStyle}" Padding="16">
+                        <StackPanel>
+                            <TextBlock Text="拉取客户列表" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <Button Content="拉取客户" Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Command="{Binding PullCustomersCommand}" HorizontalAlignment="Left"
+                                    IsEnabled="{Binding IsPullingCustomers, Converter={StaticResource InvertBoolConverter}}"/>
+                            <TextBlock Margin="0,8,0,0" FontSize="13">
+                                <Run Text="已拉取客户: "/><Run Text="{Binding SyncedCustomerCount}" FontWeight="SemiBold"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Step 4: 完成与验证 -->
+                <StackPanel Visibility="{Binding IsStep4, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <TextBlock Text="第四步：验证配置并完成" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                    <TextBlock Text="发送测试消息验证集成是否正常工作"
+                               FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,16"/>
+
+                    <Border Style="{StaticResource CardStyle}" Padding="16" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="发送测试消息" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <Button Content="发送测试消息" Style="{StaticResource PrimaryButtonStyle}"
+                                    Command="{Binding SendTestMessageCommand}" HorizontalAlignment="Left"
+                                    IsEnabled="{Binding IsSendingTest, Converter={StaticResource InvertBoolConverter}}"/>
+                            <TextBlock Text="{Binding TestSendResult}" Margin="0,8,0,0" FontSize="13"
+                                       FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource CardStyle}" Padding="16" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="配置总结" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <TextBlock Text="{Binding SetupSummary}" FontSize="13"
+                                       FontFamily="Consolas" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Button Content="完成配置" Style="{StaticResource PrimaryButtonStyle}"
+                            Command="{Binding FinishSetupCommand}" HorizontalAlignment="Left"
+                            FontSize="15" FontWeight="SemiBold" Padding="24,10"/>
+                </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- 底部导航按钮 -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="上一步" Style="{StaticResource MaterialDesignFlatButton}"
+                        Command="{Binding PreviousStepCommand}" Margin="0,0,12,0"
+                        Visibility="{Binding IsFirstStep, Converter={StaticResource InvertBoolToVisibilityConverter}}"/>
+
+                <Button Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,0,0"
+                        Command="{Binding NextStepCommand}"
+                        Visibility="{Binding IsLastStep, Converter={StaticResource InvertBoolToVisibilityConverter}}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="下一步" VerticalAlignment="Center"/>
+                        <materialDesign:PackIcon Kind="ArrowRight" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

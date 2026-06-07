@@ -268,6 +268,11 @@ public partial class MainViewModel : ViewModelBase
             Id = "system", Title = "应用设置", SortOrder = 102, ParentId = "cat_system",
             ViewModelType = typeof(SystemSettingsViewModel)
         });
+        systemCat.Children.Add(new NavigationItem
+        {
+            Id = "operation_log", Title = "操作日志", SortOrder = 103, ParentId = "cat_system",
+            ViewModelType = typeof(OperationLogViewModel)
+        });
         NavigationItems.Add(systemCat);
 
         // 初始化 CollectionView

@@ -92,7 +92,7 @@
             </Button>
 
             <!-- 登录表单 -->
-            <StackPanel Grid.Row="1" Margin="44,28,44,36" VerticalAlignment="Top">
+            <StackPanel x:Name="LoginPanel" Grid.Row="1" Margin="44,28,44,36" VerticalAlignment="Top">
                 <TextBlock Text="登录" FontSize="28" FontWeight="SemiBold" Foreground="{StaticResource LabelBrush}"
                            Margin="0,0,0,28"/>
 
@@ -161,6 +161,53 @@
                 <!-- 版本 -->
                 <TextBlock Text="{Binding VersionText}" FontSize="11" Foreground="{StaticResource QuaternaryLabelBrush}"
                            HorizontalAlignment="Center" Margin="0,16,0,0"/>
+            </StackPanel>
+
+            <!-- 强制改密表单 -->
+            <StackPanel x:Name="ChangePasswordPanel" Grid.Row="1" Margin="44,28,44,36" VerticalAlignment="Top"
+                        Visibility="Collapsed">
+                <TextBlock Text="设置新密码" FontSize="26" FontWeight="SemiBold" Foreground="{StaticResource LabelBrush}"
+                           Margin="0,0,0,16"/>
+                <TextBlock Text="当前账号仍在使用默认密码或密码已过期，需完成修改后才能进入系统。"
+                           Foreground="{StaticResource TertiaryLabelBrush}"
+                           FontSize="13"
+                           TextWrapping="Wrap"
+                           Margin="0,0,0,18"/>
+
+                <TextBlock Text="新密码" FontSize="13" FontWeight="Medium" Foreground="{StaticResource TertiaryLabelBrush}" Margin="0,0,0,6"/>
+                <PasswordBox x:Name="txtNewPassword"
+                             Padding="12,9" FontSize="13" Margin="0,0,0,14"
+                             KeyDown="txtNewPassword_KeyDown"/>
+
+                <TextBlock Text="确认新密码" FontSize="13" FontWeight="Medium" Foreground="{StaticResource TertiaryLabelBrush}" Margin="0,0,0,6"/>
+                <PasswordBox x:Name="txtConfirmPassword"
+                             Padding="12,9" FontSize="13" Margin="0,0,0,10"
+                             KeyDown="txtConfirmPassword_KeyDown"/>
+
+                <TextBlock Text="至少8位，包含大写字母、小写字母和数字。"
+                           Foreground="{StaticResource QuaternaryLabelBrush}" FontSize="12" Margin="0,0,0,4"/>
+
+                <TextBlock Text="{Binding LoginError}" Foreground="{StaticResource ErrorBrush}" FontSize="13"
+                           Visibility="{Binding LoginError, Converter={StaticResource NullToVisibilityConverter}}"
+                           HorizontalAlignment="Center" Margin="0,8,0,0"/>
+
+                <Rectangle Height="1" Fill="{StaticResource FillBrush}" Margin="0,18,0,18"/>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" Content="取消"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Height="44"
+                            Click="CloseButton_Click"/>
+                    <Button Grid.Column="2" Content="确认修改"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Height="44"
+                            Click="ChangePasswordButton_Click"/>
+                </Grid>
             </StackPanel>
         </Grid>
     </Border>

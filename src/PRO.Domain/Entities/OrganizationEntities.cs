@@ -119,6 +119,15 @@ public class Employee
     /// <summary>密码哈希</summary>
     public string PasswordHash { get; set; } = string.Empty;
     
+    /// <summary>连续登录失败次数</summary>
+    public int LoginFailCount { get; set; }
+    
+    /// <summary>账号锁定截止时间</summary>
+    public DateTime? LockedUntil { get; set; }
+    
+    /// <summary>密码最后修改时间（null表示从未修改过默认密码）</summary>
+    public DateTime? PasswordChangedAt { get; set; }
+    
     /// <summary>部门ID</summary>
     public int DepartmentId { get; set; }
     

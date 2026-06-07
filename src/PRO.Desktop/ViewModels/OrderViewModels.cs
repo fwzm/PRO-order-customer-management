@@ -5,15 +5,12 @@ using PRO.Application.Interfaces;
 using PRO.Domain.Entities;
 using PRO.Domain.Enums;
 using PRO.Infrastructure.Persistence;
+using PRO.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
-using System.Windows;
-using System.IO;
 using Microsoft.Win32;
 using ClosedXML.Excel;
-using System.Text.Json;
-using PRO.Desktop.Views;
+using Serilog;
 
 namespace PRO.Desktop.ViewModels;
 
@@ -24,6 +21,9 @@ public partial class OrderListViewModel : PagedViewModelBase
 
     [ObservableProperty]
     private ObservableCollection<OrderListItem> _orders = new();
+
+    [ObservableProperty]
+    private ObservableCollection<SelectableItem<OrderListItem>> _selectableOrders = new();
 
     [ObservableProperty]
     private OrderListItem? _selectedOrder;
@@ -48,6 +48,12 @@ public partial class OrderListViewModel : PagedViewModelBase
 
     [ObservableProperty]
     private bool _showOnlyDrafts;
+
+    // Draft notification
+    [ObservableProperty]
+    private int _pendingDraftCount;
+
+    public bool HasPendingDrafts => PendingDraftCount > 0;
 
     public OrderListViewModel()
     {
@@ -506,6 +512,177 @@ public partial class OrderListViewModel : PagedViewModelBase
         }
     }
 
+    // ========== 批量操作 ==========
+
+    protected override void OnBatchSelectAllChanged(bool value)
+    {
+        foreach (var item in SelectableOrders)
+            item.IsSelected = value;
+        UpdateSelectedCount();
+    }
+
+    private void UpdateSelectedCount()
+    {
+        SelectedCount = SelectableOrders.Count(x => x.IsSelected);
+    }
+
+    protected override List<int> GetSelectedIds()
+    {
+        return SelectableOrders.Where(x => x.IsSelected).Select(x => x.Id).ToList();
+    }
+
+    [RelayCommand]
+    private void ToggleBatchMode()
+    {
+        IsBatchMode = !IsBatchMode;
+        if (!IsBatchMode)
+            ClearBatchSelection();
+    }
+
+    [RelayCommand]
+    private async Task BatchAssignAsync()
+    {
+        var selectedIds = GetSelectedIds();
+        if (selectedIds.Count == 0)
+        {
+            ShowError("请先选择要分配的订单");
+            return;
+        }
+
+        try
+        {
+            var branchId = CurrentSession.CurrentBranchId;
+            var deliveryPersons = await _dbContext.DeliveryPersons
+                .AsNoTracking()
+                .Where(d => d.BranchId == branchId && d.Status == DeliveryPersonStatus.Available)
+                .ToListAsync();
+
+            if (!deliveryPersons.Any())
+            {
+                ShowError("没有可用的配送员");
+                return;
+            }
+
+            var selectWindow = new System.Windows.Window
+            {
+                Title = "选择配送员",
+                Width = 350,
+                Height = 200,
+                WindowStartupLocation = System.Windows.WindowStartupLocation.CenterOwner,
+                Owner = System.Windows.Application.Current.MainWindow,
+                ResizeMode = System.Windows.ResizeMode.NoResize
+            };
+
+            var panel = new System.Windows.Controls.StackPanel { Margin = new System.Windows.Thickness(15) };
+            panel.Children.Add(new System.Windows.Controls.TextBlock
+            {
+                Text = $"将 {selectedIds.Count} 条订单分配给：",
+                Margin = new System.Windows.Thickness(0, 0, 0, 10)
+            });
+
+            var combo = new System.Windows.Controls.ComboBox { Margin = new System.Windows.Thickness(0, 0, 0, 15) };
+            foreach (var dp in deliveryPersons)
+                combo.Items.Add(new { dp.Id, Name = $"{dp.Name} (负载: {dp.CurrentLoad}/{dp.MaxLoad})" });
+            combo.SelectedIndex = 0;
+            panel.Children.Add(combo);
+
+            var btn = new System.Windows.Controls.Button
+            {
+                Content = "确认分配",
+                Width = 80,
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Right
+            };
+            btn.Click += (s, e) => selectWindow.DialogResult = true;
+            panel.Children.Add(btn);
+            selectWindow.Content = panel;
+
+            if (selectWindow.ShowDialog() == true)
+            {
+                dynamic? selected = combo.SelectedItem;
+                if (selected == null) return;
+                var personId = (int)selected.Id;
+
+                int successCount = 0;
+                foreach (var orderId in selectedIds)
+                {
+                    var order = await _dbContext.Orders.FindAsync(orderId);
+                    if (order != null && (order.Status == OrderStatus.Pending || order.Status == OrderStatus.Draft))
+                    {
+                        order.DeliveryPersonId = personId;
+                        order.Status = OrderStatus.Assigned;
+                        order.UpdatedAt = DateTime.Now;
+                        _dbContext.OrderModificationRecords.Add(new OrderModificationRecord
+                        {
+                            OrderId = orderId,
+                            ModifiedById = CurrentSession.CurrentEmployeeId,
+                            ModifiedAt = DateTime.Now,
+                            Content = $"批量分配配送员",
+                            ModificationType = "BatchAssign"
+                        });
+                        successCount++;
+                    }
+                }
+
+                await _dbContext.SaveChangesAsync();
+                ShowSuccess($"批量分配完成：成功 {successCount}/{selectedIds.Count} 条");
+                ClearBatchSelection();
+                await LoadDataAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowError($"批量分配失败: {ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    private async Task BatchConfirmDraftsAsync()
+    {
+        var selectedIds = GetSelectedIds();
+        if (selectedIds.Count == 0)
+        {
+            ShowError("请先选择草稿订单");
+            return;
+        }
+
+        var result = System.Windows.MessageBox.Show(
+            $"确认将 {selectedIds.Count} 条草稿订单转为待分配状态？",
+            "批量确认", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
+
+        if (result != System.Windows.MessageBoxResult.Yes) return;
+
+        try
+        {
+            int successCount = 0;
+            foreach (var orderId in selectedIds)
+            {
+                var order = await _dbContext.Orders.FindAsync(orderId);
+                if (order != null && order.Status == OrderStatus.Draft)
+                {
+                    order.Status = OrderStatus.Pending;
+                    order.UpdatedAt = DateTime.Now;
+                    _dbContext.OrderModificationRecords.Add(new OrderModificationRecord
+                    {
+                        OrderId = orderId,
+                        ModifiedById = CurrentSession.CurrentEmployeeId,
+                        ModifiedAt = DateTime.Now,
+                        Content = "手动批量确认草稿",
+                        ModificationType = "BatchDraftConfirm"
+                    });
+                    successCount++;
+                }
+            }
+            await _dbContext.SaveChangesAsync();
+            ShowSuccess($"批量确认完成：成功 {successCount}/{selectedIds.Count} 条");
+            ClearBatchSelection();
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            ShowError($"批量确认失败: {ex.Message}");
+        }
+    }
+
     [RelayCommand]
     private void CloseEdit()
     {
@@ -665,22 +842,127 @@ public partial class OrderEditViewModel : ViewModelBase
         }
     }
 
+    private readonly DraftService _draftService;
+    private System.Windows.Threading.DispatcherTimer? _autoSaveTimer;
+    private bool _isDraftDirty;
+    private const string OrderDraftKey = "order_edit";
+
     public OrderEditViewModel()
     {
         _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext 
             ?? throw new InvalidOperationException("无法获取数据库上下文");
+        _draftService = App.Services.GetService(typeof(DraftService)) as DraftService
+            ?? throw new InvalidOperationException("无法获取草稿服务");
         
         _orderId = null;
         WindowTitle = "新建订单";
         IsReadOnly = false;
 
         _ = InitAsync();
+        InitializeAutoSave();
+    }
+
+    private void InitializeAutoSave()
+    {
+        _autoSaveTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(30)
+        };
+        _autoSaveTimer.Tick += async (s, e) => await SaveDraftAsync();
+        _autoSaveTimer.Start();
+
+        PropertyChanged += (s, e) =>
+        {
+            if (!IsReadOnly && e.PropertyName != nameof(IsLoading))
+                _isDraftDirty = true;
+        };
+    }
+
+    private async Task SaveDraftAsync()
+    {
+        if (!_isDraftDirty) return;
+        try
+        {
+            var draftData = new OrderDraftData
+            {
+                CustomerId = CustomerId,
+                CustomerName = CustomerName,
+                DeliveryAddress = DeliveryAddress,
+                DeliveryLongitude = DeliveryLongitude,
+                DeliveryLatitude = DeliveryLatitude,
+                DeliveryTime = DeliveryTime,
+                Remark = Remark,
+                DiscountAmount = DiscountAmount,
+                Items = Items.Select(i => new OrderItemDraftData
+                {
+                    ProductId = i.ProductId,
+                    ProductName = i.ProductName,
+                    Quantity = i.Quantity,
+                    UnitPrice = i.UnitPrice,
+                    Amount = i.Amount
+                }).ToList()
+            };
+
+            await _draftService.SaveDraftAsync(OrderDraftKey, draftData, CurrentSession.CurrentEmployeeId);
+            _isDraftDirty = false;
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "订单草稿自动保存失败");
+        }
+    }
+
+    private async Task<OrderDraftData?> LoadDraftAsync()
+    {
+        return await _draftService.LoadDraftAsync<OrderDraftData>(OrderDraftKey, CurrentSession.CurrentEmployeeId);
+    }
+
+    private async Task DeleteDraftAsync()
+    {
+        await _draftService.DeleteDraftAsync(OrderDraftKey, CurrentSession.CurrentEmployeeId);
     }
 
     private async Task InitAsync()
     {
         try
         {
+            // 检查是否有未保存的草稿
+            var draft = await LoadDraftAsync();
+            if (draft != null)
+            {
+                var result = System.Windows.MessageBox.Show(
+                    "检测到上次未保存的订单草稿，是否恢复？",
+                    "恢复草稿", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
+                if (result == System.Windows.MessageBoxResult.Yes)
+                {
+                    CustomerId = draft.CustomerId;
+                    CustomerName = draft.CustomerName;
+                    DeliveryAddress = draft.DeliveryAddress;
+                    DeliveryLongitude = draft.DeliveryLongitude;
+                    DeliveryLatitude = draft.DeliveryLatitude;
+                    DeliveryTime = draft.DeliveryTime;
+                    Remark = draft.Remark;
+                    DiscountAmount = draft.DiscountAmount;
+                    if (draft.Items != null)
+                    {
+                        Items = new ObservableCollection<OrderItemDto>(
+                            draft.Items.Select(i => new OrderItemDto
+                            {
+                                ProductId = i.ProductId,
+                                ProductName = i.ProductName ?? "",
+                                Quantity = i.Quantity,
+                                UnitPrice = i.UnitPrice,
+                                Amount = i.Amount
+                            }));
+                    }
+                    RecalculateTotal();
+                }
+                else
+                {
+                    await DeleteDraftAsync();
+                }
+            }
+
             OrderNo = await GenerateOrderNoAsync();
             await LoadCustomersAsync();
             await LoadProductsAsync();
@@ -1030,6 +1312,7 @@ public partial class OrderEditViewModel : ViewModelBase
                     await UpdateStockForOrderAsync(order.Id, Items);
 
                     await transaction.CommitAsync();
+                    await DeleteDraftAsync();
                     ShowSuccess("保存成功");
                     _onSaveCompleted?.Invoke();
                 }
@@ -1096,6 +1379,7 @@ public partial class OrderEditViewModel : ViewModelBase
                 await UpdateStockForOrderAsync(order.Id, Items);
 
                 await transaction.CommitAsync();
+                await DeleteDraftAsync();
                 ShowSuccess("保存成功");
                 _onSaveCompleted?.Invoke();
             }
