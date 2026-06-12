@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Net;
 using System.Text;
 using PRO.Infrastructure.Services;
 
@@ -8,10 +9,13 @@ namespace PRO.WebApi.Middleware;
 /// <summary>
 /// Prometheus 指标中间件 — 采集 API 请求耗时、次数、错误、缓存命中率
 /// 通过 /metrics 端点暴露 Prometheus 格式指标
+/// Production 环境支持 IP 白名单限制访问
 /// </summary>
 public class PrometheusMetricsMiddleware
 {
     private readonly RequestDelegate _next;
+    private readonly ILogger<PrometheusMetricsMiddleware> _logger;
+    private readonly List<IpRangeEntry> _allowedIpRanges;
 
     // 指标存储
     private static readonly ConcurrentDictionary<string, long> _requestCounters = new();
@@ -33,16 +37,60 @@ public class PrometheusMetricsMiddleware
     private const int SlowRequestThresholdMs = 1000;
     private const int MaxDurationSamples = 1000;
 
-    public PrometheusMetricsMiddleware(RequestDelegate next)
+    public PrometheusMetricsMiddleware(RequestDelegate next, ILogger<PrometheusMetricsMiddleware> logger, IConfiguration configuration)
     {
         _next = next;
+        _logger = logger;
+        _allowedIpRanges = ParseAllowedIpRanges(configuration);
+    }
+
+    /// <summary>解析配置的 IP 白名单 (CIDR 或单 IP)</summary>
+    private static List<IpRangeEntry> ParseAllowedIpRanges(IConfiguration configuration)
+    {
+        var ranges = new List<IpRangeEntry>();
+        var configRanges = configuration.GetSection("Metrics:AllowedIpRanges").Get<string[]>();
+
+        if (configRanges == null || configRanges.Length == 0) return ranges;
+
+        foreach (var range in configRanges)
+        {
+            try
+            {
+                ranges.Add(IpRangeEntry.Parse(range.Trim()));
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Warning("PrometheusMetrics: 无法解析 IP 范围 '{Range}': {Error}", range, ex.Message);
+            }
+        }
+
+        return ranges;
+    }
+
+    /// <summary>检查客户端 IP 是否在白名单内。白名单为空时仅允许本地回环。</summary>
+    private bool IsIpAllowed(HttpContext context)
+    {
+        var remoteIp = context.Connection.RemoteIpAddress;
+        if (remoteIp == null) return false;
+
+        // 无配置时默认仅允许本地回环
+        if (_allowedIpRanges.Count == 0)
+            return IPAddress.IsLoopback(remoteIp);
+
+        return _allowedIpRanges.Any(range => range.Contains(remoteIp));
     }
 
     public async Task InvokeAsync(HttpContext context)
     {
-        // 跳过 /metrics 端点自身
+        // /metrics 端点 — 生产环境 IP 白名单检查
         if (context.Request.Path.StartsWithSegments("/metrics"))
         {
+            if (!IsIpAllowed(context))
+            {
+                _logger.LogWarning("PrometheusMetrics: /metrics 访问被拒绝 — IP: {RemoteIp}", context.Connection.RemoteIpAddress);
+                context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                return;
+            }
             await WriteMetricsAsync(context);
             return;
         }
@@ -221,5 +269,79 @@ public class PrometheusMetricsMiddleware
                 segments[i] = "{id}";
         }
         return string.Join("/", segments);
+    }
+}
+
+/// <summary>IP 范围条目 — 支持 CIDR 和单 IP 匹配，无外部依赖</summary>
+internal readonly struct IpRangeEntry
+{
+    private readonly byte[] _network;
+    private readonly byte[] _mask;
+    private readonly bool _isV6;
+
+    private IpRangeEntry(byte[] network, byte[] mask, bool isV6)
+    {
+        _network = network;
+        _mask = mask;
+        _isV6 = isV6;
+    }
+
+    public static IpRangeEntry Parse(string cidrOrIp)
+    {
+        if (string.IsNullOrWhiteSpace(cidrOrIp))
+            throw new ArgumentException("IP 范围不能为空");
+
+        if (cidrOrIp.Contains('/'))
+        {
+            var parts = cidrOrIp.Split('/');
+            var ip = IPAddress.Parse(parts[0].Trim());
+            var prefix = int.Parse(parts[1].Trim());
+            return FromCidr(ip, prefix);
+        }
+
+        var singleIp = IPAddress.Parse(cidrOrIp.Trim());
+        return singleIp.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6
+            ? FromCidr(singleIp, 128)
+            : FromCidr(singleIp, 32);
+    }
+
+    private static IpRangeEntry FromCidr(IPAddress ip, int prefixLength)
+    {
+        var bytes = ip.GetAddressBytes();
+        var bitLen = bytes.Length * 8;
+        if (prefixLength < 0 || prefixLength > bitLen)
+            throw new ArgumentException($"前缀长度 {prefixLength} 无效 (0-{bitLen})");
+
+        var mask = new byte[bytes.Length];
+        for (var i = 0; i < mask.Length; i++)
+        {
+            var bits = Math.Min(8, Math.Max(0, prefixLength - i * 8));
+            mask[i] = (byte)(bits == 0 ? 0 : (0xFF << (8 - bits)) & 0xFF);
+        }
+
+        // 对 network 地址应用 mask
+        var network = new byte[bytes.Length];
+        for (var i = 0; i < bytes.Length; i++)
+            network[i] = (byte)(bytes[i] & mask[i]);
+
+        return new IpRangeEntry(network, mask, ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6);
+    }
+
+    public bool Contains(IPAddress ip)
+    {
+        if (ip.AddressFamily != (_isV6
+            ? System.Net.Sockets.AddressFamily.InterNetworkV6
+            : System.Net.Sockets.AddressFamily.InterNetwork))
+            return false;
+
+        var bytes = ip.GetAddressBytes();
+        if (bytes.Length != _network.Length) return false;
+
+        for (var i = 0; i < bytes.Length; i++)
+        {
+            if ((bytes[i] & _mask[i]) != _network[i])
+                return false;
+        }
+        return true;
     }
 }

@@ -1,0 +1,15 @@
+# UAT 临时输出
+build_result.txt
+build_err.txt
+build_errors.txt
+build_final.txt
+build_infra.txt
+build_app.txt
+build_desktop.txt
+test_result.txt
+test_result2.txt
+test_output*.txt
+dashboard.html
+_github_upload/
+*.trx
+TestResults/
