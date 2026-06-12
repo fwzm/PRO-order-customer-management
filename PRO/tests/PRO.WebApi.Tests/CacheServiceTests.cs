@@ -39,19 +39,19 @@ public class CacheServiceTests
         var callCount = 0;
 
         // 第一次调用：缓存未命中
-        var result1 = await cache.GetOrCreateAsync("hit_test", async () =>
+        var result1 = await cache.GetOrCreateAsync("hit_test", () =>
         {
             callCount++;
-            return "first";
+            return Task.FromResult("first");
         });
         Assert.Equal("first", result1);
         Assert.Equal(1, callCount);
 
         // 第二次调用：缓存命中，不调用工厂
-        var result2 = await cache.GetOrCreateAsync("hit_test", async () =>
+        var result2 = await cache.GetOrCreateAsync("hit_test", () =>
         {
             callCount++;
-            return "second";
+            return Task.FromResult("second");
         });
         Assert.Equal("first", result2); // 应返回缓存值
         Assert.Equal(1, callCount); // 工厂未被再次调用
@@ -61,7 +61,6 @@ public class CacheServiceTests
     public void Remove_ShouldInvalidateCache()
     {
         var cache = CreateCache();
-        var callCount = 0;
 
         // 设置缓存
         cache.Set("remove_test", "cached_value");
@@ -111,7 +110,7 @@ public class CacheServiceTests
         var callCount = 0;
 
         var result1 = await cache.GetOrCreateAsync("expire_test",
-            async () => { callCount++; return "expiring"; },
+            () => { callCount++; return Task.FromResult("expiring"); },
             TimeSpan.FromMilliseconds(50));
 
         Assert.Equal("expiring", result1);
@@ -122,7 +121,7 @@ public class CacheServiceTests
 
         // 过期后应重新调用工厂
         var result2 = await cache.GetOrCreateAsync("expire_test",
-            async () => { callCount++; return "refreshed"; },
+            () => { callCount++; return Task.FromResult("refreshed"); },
             TimeSpan.FromMilliseconds(50));
 
         Assert.Equal("refreshed", result2);
