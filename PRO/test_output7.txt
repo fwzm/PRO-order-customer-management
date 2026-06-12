@@ -1,0 +1,603 @@
+生成启动时间为 6/9/2026 11:08:46。
+C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll (.NETCoreApp,Version=v8.0)的测试运行
+VSTest 版本 18.0.2 (x64)
+
+正在启动测试执行，请稍候...
+总共 1 个测试文件与指定模式相匹配。
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.4.1+b9eacec401 (64-bit .NET 8.0.27)
+[xUnit.net 00:00:00.06]   Discovering: PRO.WebApi.Tests
+[xUnit.net 00:00:00.09]   Discovered:  PRO.WebApi.Tests
+[xUnit.net 00:00:00.09]   Starting:    PRO.WebApi.Tests
+[11:08:49 INF] PRO WebApi 正在启动...
+[11:08:49 INF] PRO WebApi 正在启动...
+[11:08:49 INF] PRO WebApi 正在启动...
+[11:08:49 INF] PRO WebApi 正在启动...
+[11:08:49 INF] PRO WebApi 正在启动...
+[11:08:49 INF] PRO WebApi 正在启动...
+[11:08:50 INF] API请求 POST /api/auth/login Duration=394ms Status=200
+[11:08:50 INF] API请求 POST /api/auth/login Duration=394ms Status=200
+[11:08:50 INF] API请求 POST /api/auth/login Duration=394ms Status=200
+[11:08:50 INF] API请求 POST /api/auth/login Duration=394ms Status=200
+[11:08:50 INF] API请求 POST /api/auth/login Duration=394ms Status=200
+[11:08:50 INF] API请求 POST /api/auth/login Duration=394ms Status=200
+[xUnit.net 00:00:02.98]     PRO.WebApi.Tests.PermissionIsolationTests.AuditLog_Contains_Operator_Info [FAIL]
+[xUnit.net 00:00:02.98]       System.Net.Http.HttpRequestException : Response status code does not indicate success: 401 (Unauthorized).
+[xUnit.net 00:00:02.98]       Stack Trace:
+[xUnit.net 00:00:02.98]            at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+[xUnit.net 00:00:02.98]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs(175,0): at PRO.WebApi.Tests.PermissionIsolationTests.AuditLog_Contains_Operator_Info()
+[xUnit.net 00:00:02.98]         --- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.AuditLog_Contains_Operator_Info [2 s]
+  错误消息:
+   System.Net.Http.HttpRequestException : Response status code does not indicate success: 401 (Unauthorized).
+  堆栈跟踪:
+     at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at PRO.WebApi.Tests.PermissionIsolationTests.AuditLog_Contains_Operator_Info() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 175
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:03.03]     PRO.WebApi.Tests.PermissionTests.NormalUser_CannotMergeCustomers_ShouldReturn403 [FAIL]
+[xUnit.net 00:00:03.03]       Expected response.StatusCode to be HttpStatusCode.Forbidden {value: 403}, but found HttpStatusCode.Unauthorized {value: 401}.
+[xUnit.net 00:00:03.03]       Stack Trace:
+[xUnit.net 00:00:03.03]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:03.03]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:03.03]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:03.03]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:03.03]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:03.03]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:03.03]            at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+[xUnit.net 00:00:03.03]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs(355,0): at PRO.WebApi.Tests.PermissionTests.NormalUser_CannotMergeCustomers_ShouldReturn403()
+[xUnit.net 00:00:03.03]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:03.03]     PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotChangeBranchBOrderStatus_ShouldReturn403 [FAIL]
+[xUnit.net 00:00:03.03]       Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.NotFound {value: 404}}, but found HttpStatusCode.Unauthorized {value: 401}.
+[xUnit.net 00:00:03.03]       Stack Trace:
+[xUnit.net 00:00:03.03]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:03.03]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:03.03]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:03.03]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:03.03]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:03.03]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:03.03]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)
+[xUnit.net 00:00:03.03]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)
+[xUnit.net 00:00:03.03]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs(222,0): at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotChangeBranchBOrderStatus_ShouldReturn403()
+[xUnit.net 00:00:03.03]         --- End of stack trace from previous location ---
+[11:08:50 INF] API请求 POST /api/auth/login Duration=232ms Status=200
+[11:08:50 INF] API请求 POST /api/auth/login Duration=232ms Status=200
+[xUnit.net 00:00:03.22]       System.Net.Http.HttpRequestException : Response status code does not indicate success: 401 (Unauthorized).
+[xUnit.net 00:00:03.22]     PRO.WebApi.Tests.PermissionIsolationTests.AuditLog_Is_Branch_Isolated [FAIL]
+[xUnit.net 00:00:03.22]       Stack Trace:
+[xUnit.net 00:00:03.22]            at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+[xUnit.net 00:00:03.22]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs(186,0): at PRO.WebApi.Tests.PermissionIsolationTests.AuditLog_Is_Branch_Isolated()
+[xUnit.net 00:00:03.22]         --- End of stack trace from previous location ---
+[11:08:50 INF] API请求 POST /api/auth/login Duration=233ms Status=200
+[11:08:50 INF] API请求 POST /api/auth/login Duration=233ms Status=200
+[11:08:50 INF] API请求 POST /api/auth/login Duration=234ms Status=200
+[11:08:50 INF] API请求 POST /api/auth/login Duration=234ms Status=200
+[xUnit.net 00:00:03.27]     PRO.WebApi.Tests.PermissionTests.NormalUser_CannotAutoAssign_ShouldReturn403 [FAIL]
+[xUnit.net 00:00:03.27]       Expected response.StatusCode to be HttpStatusCode.Forbidden {value: 403}, but found HttpStatusCode.MethodNotAllowed {value: 405}.
+[xUnit.net 00:00:03.27]       Stack Trace:
+[xUnit.net 00:00:03.27]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:03.27]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:03.27]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:03.27]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:03.27]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:03.27]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:03.27]            at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+[xUnit.net 00:00:03.27]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs(340,0): at PRO.WebApi.Tests.PermissionTests.NormalUser_CannotAutoAssign_ShouldReturn403()
+[xUnit.net 00:00:03.27]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:03.27]     PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAssignBranchBOrder_ShouldReturn403 [FAIL]
+[xUnit.net 00:00:03.27]       Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.NotFound {value: 404}}, but found HttpStatusCode.Unauthorized {value: 401}.
+[xUnit.net 00:00:03.27]       Stack Trace:
+[xUnit.net 00:00:03.27]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:03.27]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:03.27]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:03.27]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:03.27]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:03.27]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:03.27]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)
+[xUnit.net 00:00:03.27]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)
+[xUnit.net 00:00:03.27]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs(202,0): at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAssignBranchBOrder_ShouldReturn403()
+[xUnit.net 00:00:03.27]         --- End of stack trace from previous location ---
+[11:08:50 INF] API请求 POST /api/auth/login Duration=235ms Status=200
+[11:08:50 INF] API请求 POST /api/auth/login Duration=235ms Status=200
+[xUnit.net 00:00:03.47]     PRO.WebApi.Tests.PermissionIsolationTests.Undo_Operation_Logs_Audit [FAIL]
+[xUnit.net 00:00:03.47]       System.Net.Http.HttpRequestException : Response status code does not indicate success: 401 (Unauthorized).
+[xUnit.net 00:00:03.47]       Stack Trace:
+[xUnit.net 00:00:03.47]            at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+[xUnit.net 00:00:03.47]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs(245,0): at PRO.WebApi.Tests.PermissionIsolationTests.Undo_Operation_Logs_Audit()
+[xUnit.net 00:00:03.47]         --- End of stack trace from previous location ---
+[11:08:50 INF] API请求 POST /api/auth/login Duration=228ms Status=200
+[11:08:50 INF] API请求 POST /api/auth/login Duration=228ms Status=200
+[11:08:50 INF] API请求 POST /api/auth/login Duration=236ms Status=200
+[11:08:50 INF] API请求 POST /api/auth/login Duration=236ms Status=200
+[xUnit.net 00:00:03.51]     PRO.WebApi.Tests.PermissionTests.NormalUser_CannotDeleteOrder_ShouldReturn403 [FAIL]
+[xUnit.net 00:00:03.51]       Expected response.StatusCode to be HttpStatusCode.Forbidden {value: 403}, but found HttpStatusCode.Unauthorized {value: 401}.
+[xUnit.net 00:00:03.51]       Stack Trace:
+[xUnit.net 00:00:03.51]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:03.51]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:03.51]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:03.51]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:03.51]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:03.51]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:03.51]            at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+[xUnit.net 00:00:03.51]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs(328,0): at PRO.WebApi.Tests.PermissionTests.NormalUser_CannotDeleteOrder_ShouldReturn403()
+[xUnit.net 00:00:03.51]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:03.51]       Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.BadRequest {value: 400}}, but found HttpStatusCode.Unauthorized {value: 401}.
+[xUnit.net 00:00:03.51]       Stack Trace:
+[xUnit.net 00:00:03.51]     PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotCreateCustomerForBranchB_ShouldReturn403 [FAIL]
+[xUnit.net 00:00:03.51]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:03.51]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:03.51]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:03.51]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:03.51]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:03.51]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:03.51]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)
+[xUnit.net 00:00:03.51]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)
+[xUnit.net 00:00:03.51]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs(127,0): at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotCreateCustomerForBranchB_ShouldReturn403()
+[xUnit.net 00:00:03.51]         --- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.PermissionTests.NormalUser_CannotMergeCustomers_ShouldReturn403 [2 s]
+  错误消息:
+   Expected response.StatusCode to be HttpStatusCode.Forbidden {value: 403}, but found HttpStatusCode.Unauthorized {value: 401}.
+  堆栈跟踪:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+   at PRO.WebApi.Tests.PermissionTests.NormalUser_CannotMergeCustomers_ShouldReturn403() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 355
+--- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotChangeBranchBOrderStatus_ShouldReturn403 [2 s]
+  错误消息:
+   Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.NotFound {value: 404}}, but found HttpStatusCode.Unauthorized {value: 401}.
+  堆栈跟踪:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)
+   at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotChangeBranchBOrderStatus_ShouldReturn403() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 222
+--- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.AuditLog_Is_Branch_Isolated [239 ms]
+  错误消息:
+   System.Net.Http.HttpRequestException : Response status code does not indicate success: 401 (Unauthorized).
+  堆栈跟踪:
+     at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at PRO.WebApi.Tests.PermissionIsolationTests.AuditLog_Is_Branch_Isolated() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 186
+--- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.PermissionTests.NormalUser_CannotAutoAssign_ShouldReturn403 [239 ms]
+  错误消息:
+   Expected response.StatusCode to be HttpStatusCode.Forbidden {value: 403}, but found HttpStatusCode.MethodNotAllowed {value: 405}.
+  堆栈跟踪:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+   at PRO.WebApi.Tests.PermissionTests.NormalUser_CannotAutoAssign_ShouldReturn403() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 340
+--- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAssignBranchBOrder_ShouldReturn403 [243 ms]
+  错误消息:
+   Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.NotFound {value: 404}}, but found HttpStatusCode.Unauthorized {value: 401}.
+  堆栈跟踪:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)
+   at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAssignBranchBOrder_ShouldReturn403() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 202
+--- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.Undo_Operation_Logs_Audit [244 ms]
+  错误消息:
+   System.Net.Http.HttpRequestException : Response status code does not indicate success: 401 (Unauthorized).
+  堆栈跟踪:
+     at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at PRO.WebApi.Tests.PermissionIsolationTests.Undo_Operation_Logs_Audit() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 245
+--- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.PermissionTests.NormalUser_CannotDeleteOrder_ShouldReturn403 [245 ms]
+  错误消息:
+   Expected response.StatusCode to be HttpStatusCode.Forbidden {value: 403}, but found HttpStatusCode.Unauthorized {value: 401}.
+  堆栈跟踪:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+   at PRO.WebApi.Tests.PermissionTests.NormalUser_CannotDeleteOrder_ShouldReturn403() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 328
+--- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotCreateCustomerForBranchB_ShouldReturn403 [244 ms]
+  错误消息:
+   Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.BadRequest {value: 400}}, but found HttpStatusCode.Unauthorized {value: 401}.
+  堆栈跟踪:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)
+   at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotCreateCustomerForBranchB_ShouldReturn403() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 127
+--- End of stack trace from previous location ---
+[11:08:50 INF] API请求 POST /api/auth/login Duration=226ms Status=200
+[11:08:50 INF] API请求 POST /api/auth/login Duration=226ms Status=200
+[xUnit.net 00:00:03.70]       Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.NotFound {value: 404}}, but found HttpStatusCode.Unauthorized {value: 401}.
+[xUnit.net 00:00:03.70]       Stack Trace:
+[xUnit.net 00:00:03.70]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:03.70]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:03.70]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:03.70]     PRO.WebApi.Tests.PermissionIsolationTests.BranchA_User_Cannot_Access_BranchB_Customer [FAIL]
+[xUnit.net 00:00:03.70]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:03.70]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:03.70]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:03.70]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)
+[xUnit.net 00:00:03.70]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)
+[xUnit.net 00:00:03.70]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs(62,0): at PRO.WebApi.Tests.PermissionIsolationTests.BranchA_User_Cannot_Access_BranchB_Customer()
+[xUnit.net 00:00:03.70]         --- End of stack trace from previous location ---
+[11:08:50 INF] API请求 POST /api/auth/login Duration=219ms Status=200
+[11:08:50 INF] API请求 POST /api/auth/login Duration=219ms Status=200
+[xUnit.net 00:00:03.74]     PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotDeleteBranchBCustomer_ShouldReturn403 [FAIL]
+[xUnit.net 00:00:03.74]       Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.NotFound {value: 404}}, but found HttpStatusCode.Unauthorized {value: 401}.
+[xUnit.net 00:00:03.74]       Stack Trace:
+[xUnit.net 00:00:03.74]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:03.74]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:03.74]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:03.74]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:03.74]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:03.74]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:03.74]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)
+[xUnit.net 00:00:03.74]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)
+[xUnit.net 00:00:03.74]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs(141,0): at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotDeleteBranchBCustomer_ShouldReturn403()
+[xUnit.net 00:00:03.74]         --- End of stack trace from previous location ---
+[11:08:51 INF] API请求 POST /api/auth/login Duration=220ms Status=200
+[11:08:51 INF] API请求 POST /api/auth/login Duration=220ms Status=200
+[xUnit.net 00:00:03.92]     PRO.WebApi.Tests.PermissionIsolationTests.BranchA_CustomerList_Contains_Only_BranchA_Data [FAIL]
+[xUnit.net 00:00:03.92]       System.Net.Http.HttpRequestException : Response status code does not indicate success: 401 (Unauthorized).
+[xUnit.net 00:00:03.92]       Stack Trace:
+[xUnit.net 00:00:03.92]            at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+[xUnit.net 00:00:03.92]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs(95,0): at PRO.WebApi.Tests.PermissionIsolationTests.BranchA_CustomerList_Contains_Only_BranchA_Data()
+[xUnit.net 00:00:03.92]         --- End of stack trace from previous location ---
+[11:08:51 INF] API请求 POST /api/auth/login Duration=227ms Status=200
+[11:08:51 INF] API请求 POST /api/auth/login Duration=227ms Status=200
+[xUnit.net 00:00:03.97]       Expected response.StatusCode to be HttpStatusCode.OK {value: 200}, but found HttpStatusCode.Unauthorized {value: 401}.
+[xUnit.net 00:00:03.97]     PRO.WebApi.Tests.BranchIsolationTests.HeadquartersAdmin_CanAccessAllBranches_ShouldReturn200 [FAIL]
+[xUnit.net 00:00:03.97]       Stack Trace:
+[xUnit.net 00:00:03.97]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:03.97]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:03.97]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:03.97]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:03.97]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:03.97]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:03.97]            at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+[xUnit.net 00:00:03.97]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs(274,0): at PRO.WebApi.Tests.BranchIsolationTests.HeadquartersAdmin_CanAccessAllBranches_ShouldReturn200()
+[xUnit.net 00:00:03.97]         --- End of stack trace from previous location ---
+[11:08:51 INF] API请求 POST /api/auth/login Duration=235ms Status=200
+[11:08:51 INF] API请求 POST /api/auth/login Duration=235ms Status=200
+[xUnit.net 00:00:04.16]       System.Net.Http.HttpRequestException : Response status code does not indicate success: 401 (Unauthorized).
+[xUnit.net 00:00:04.16]     PRO.WebApi.Tests.PermissionIsolationTests.BranchA_OrderList_Contains_Only_BranchA_Data [FAIL]
+[xUnit.net 00:00:04.16]       Stack Trace:
+[xUnit.net 00:00:04.16]            at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+[xUnit.net 00:00:04.16]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs(73,0): at PRO.WebApi.Tests.PermissionIsolationTests.BranchA_OrderList_Contains_Only_BranchA_Data()
+[xUnit.net 00:00:04.16]         --- End of stack trace from previous location ---
+[11:08:51 INF] API请求 POST /api/auth/login Duration=1ms Status=200
+[11:08:51 INF] API请求 POST /api/auth/login Duration=1ms Status=200
+[xUnit.net 00:00:04.17]     PRO.WebApi.Tests.PermissionIsolationTests.User_Without_OrderManage_Cannot_CreateOrder [FAIL]
+[xUnit.net 00:00:04.17]       System.Net.Http.HttpRequestException : Response status code does not indicate success: 400 (Bad Request).
+[xUnit.net 00:00:04.17]       Stack Trace:
+[xUnit.net 00:00:04.17]            at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+[xUnit.net 00:00:04.17]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs(257,0): at PRO.WebApi.Tests.PermissionIsolationTests.LoginAsync(String employeeNo, String password)
+[xUnit.net 00:00:04.17]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs(126,0): at PRO.WebApi.Tests.PermissionIsolationTests.User_Without_OrderManage_Cannot_CreateOrder()
+[xUnit.net 00:00:04.17]         --- End of stack trace from previous location ---
+[11:08:51 INF] API请求 POST /api/auth/login Duration=225ms Status=200
+[11:08:51 INF] API请求 POST /api/auth/login Duration=225ms Status=200
+[xUnit.net 00:00:04.20]     PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_ListOnlyShowsBranchAData_ShouldFilterByBranch [FAIL]
+[xUnit.net 00:00:04.20]       System.Net.Http.HttpRequestException : Response status code does not indicate success: 401 (Unauthorized).
+[xUnit.net 00:00:04.20]       Stack Trace:
+[xUnit.net 00:00:04.20]            at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+[xUnit.net 00:00:04.20]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs(288,0): at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_ListOnlyShowsBranchAData_ShouldFilterByBranch()
+[xUnit.net 00:00:04.20]         --- End of stack trace from previous location ---
+[11:08:51 INF] API请求 POST /api/auth/login Duration=255ms Status=200
+[11:08:51 INF] API请求 POST /api/auth/login Duration=255ms Status=200
+[xUnit.net 00:00:04.43]     PRO.WebApi.Tests.PermissionIsolationTests.Payment_Allocation_Partial_Allocation [FAIL]
+[xUnit.net 00:00:04.43]       System.Net.Http.HttpRequestException : Response status code does not indicate success: 401 (Unauthorized).
+[xUnit.net 00:00:04.43]       Stack Trace:
+[xUnit.net 00:00:04.43]            at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+[xUnit.net 00:00:04.43]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs(214,0): at PRO.WebApi.Tests.PermissionIsolationTests.Payment_Allocation_Partial_Allocation()
+[xUnit.net 00:00:04.43]         --- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.BranchA_User_Cannot_Access_BranchB_Customer [230 ms]
+  错误消息:
+   Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.NotFound {value: 404}}, but found HttpStatusCode.Unauthorized {value: 401}.
+  堆栈跟踪:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)
+   at PRO.WebApi.Tests.PermissionIsolationTests.BranchA_User_Cannot_Access_BranchB_Customer() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 62
+--- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotDeleteBranchBCustomer_ShouldReturn403 [223 ms]
+  错误消息:
+   Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.NotFound {value: 404}}, but found HttpStatusCode.Unauthorized {value: 401}.
+  堆栈跟踪:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)
+   at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotDeleteBranchBCustomer_ShouldReturn403() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 141
+--- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.BranchA_CustomerList_Contains_Only_BranchA_Data [225 ms]
+  错误消息:
+   System.Net.Http.HttpRequestException : Response status code does not indicate success: 401 (Unauthorized).
+  堆栈跟踪:
+     at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at PRO.WebApi.Tests.PermissionIsolationTests.BranchA_CustomerList_Contains_Only_BranchA_Data() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 95
+--- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.BranchIsolationTests.HeadquartersAdmin_CanAccessAllBranches_ShouldReturn200 [232 ms]
+  错误消息:
+   Expected response.StatusCode to be HttpStatusCode.OK {value: 200}, but found HttpStatusCode.Unauthorized {value: 401}.
+  堆栈跟踪:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+   at PRO.WebApi.Tests.BranchIsolationTests.HeadquartersAdmin_CanAccessAllBranches_ShouldReturn200() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 274
+--- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.BranchA_OrderList_Contains_Only_BranchA_Data [239 ms]
+  错误消息:
+   System.Net.Http.HttpRequestException : Response status code does not indicate success: 401 (Unauthorized).
+  堆栈跟踪:
+     at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at PRO.WebApi.Tests.PermissionIsolationTests.BranchA_OrderList_Contains_Only_BranchA_Data() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 73
+--- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.User_Without_OrderManage_Cannot_CreateOrder [4 ms]
+  错误消息:
+   System.Net.Http.HttpRequestException : Response status code does not indicate success: 400 (Bad Request).
+  堆栈跟踪:
+     at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at PRO.WebApi.Tests.PermissionIsolationTests.LoginAsync(String employeeNo, String password) in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 257
+   at PRO.WebApi.Tests.PermissionIsolationTests.User_Without_OrderManage_Cannot_CreateOrder() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 126
+--- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_ListOnlyShowsBranchAData_ShouldFilterByBranch [230 ms]
+  错误消息:
+   System.Net.Http.HttpRequestException : Response status code does not indicate success: 401 (Unauthorized).
+  堆栈跟踪:
+     at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_ListOnlyShowsBranchAData_ShouldFilterByBranch() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 288
+--- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.Payment_Allocation_Partial_Allocation [263 ms]
+  错误消息:
+   System.Net.Http.HttpRequestException : Response status code does not indicate success: 401 (Unauthorized).
+  堆栈跟踪:
+     at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at PRO.WebApi.Tests.PermissionIsolationTests.Payment_Allocation_Partial_Allocation() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 214
+--- End of stack trace from previous location ---
+[11:08:51 INF] API请求 POST /api/auth/login Duration=251ms Status=200
+[11:08:51 INF] API请求 POST /api/auth/login Duration=251ms Status=200
+[xUnit.net 00:00:04.46]     PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAccessBranchBCustomer_ShouldReturn403 [FAIL]
+[xUnit.net 00:00:04.46]       Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.NotFound {value: 404}}, but found HttpStatusCode.Unauthorized {value: 401}.
+[xUnit.net 00:00:04.46]       Stack Trace:
+[xUnit.net 00:00:04.46]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:04.46]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:04.46]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:04.46]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:04.46]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:04.46]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:04.46]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)
+[xUnit.net 00:00:04.46]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)
+[xUnit.net 00:00:04.46]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs(101,0): at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAccessBranchBCustomer_ShouldReturn403()
+[xUnit.net 00:00:04.46]         --- End of stack trace from previous location ---
+[11:08:51 INF] API请求 POST /api/auth/login Duration=227ms Status=200
+[11:08:51 INF] API请求 POST /api/auth/login Duration=227ms Status=200
+[xUnit.net 00:00:04.66]       Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.NotFound {value: 404}}, but found HttpStatusCode.Unauthorized {value: 401}.
+[xUnit.net 00:00:04.66]     PRO.WebApi.Tests.PermissionIsolationTests.BranchA_User_Cannot_Access_BranchB_Order [FAIL]
+[xUnit.net 00:00:04.66]       Stack Trace:
+[xUnit.net 00:00:04.66]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:04.66]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:04.66]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:04.66]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:04.66]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:04.66]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:04.66]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)
+[xUnit.net 00:00:04.66]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)
+[xUnit.net 00:00:04.66]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs(50,0): at PRO.WebApi.Tests.PermissionIsolationTests.BranchA_User_Cannot_Access_BranchB_Order()
+[xUnit.net 00:00:04.66]         --- End of stack trace from previous location ---
+[11:08:51 INF] API请求 POST /api/auth/login Duration=234ms Status=200
+[11:08:51 INF] API请求 POST /api/auth/login Duration=234ms Status=200
+[xUnit.net 00:00:04.70]     PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotMergeBranchBCustomer_ShouldReturn403 [FAIL]
+[xUnit.net 00:00:04.70]       Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.BadRequest {value: 400}}, but found HttpStatusCode.Unauthorized {value: 401}.
+[xUnit.net 00:00:04.70]       Stack Trace:
+[xUnit.net 00:00:04.70]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:04.70]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:04.70]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:04.70]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:04.70]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:04.70]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:04.70]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)
+[xUnit.net 00:00:04.70]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)
+[xUnit.net 00:00:04.70]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs(166,0): at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotMergeBranchBCustomer_ShouldReturn403()
+[xUnit.net 00:00:04.70]         --- End of stack trace from previous location ---
+[11:08:52 INF] API请求 POST /api/auth/login Duration=218ms Status=200
+[11:08:52 INF] API请求 POST /api/auth/login Duration=218ms Status=200
+[xUnit.net 00:00:04.89]     PRO.WebApi.Tests.PermissionIsolationTests.HeadquartersAdmin_Can_Access_All_Branches [FAIL]
+[xUnit.net 00:00:04.89]       System.Net.Http.HttpRequestException : Response status code does not indicate success: 401 (Unauthorized).
+[xUnit.net 00:00:04.89]       Stack Trace:
+[xUnit.net 00:00:04.89]            at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+[xUnit.net 00:00:04.89]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs(112,0): at PRO.WebApi.Tests.PermissionIsolationTests.HeadquartersAdmin_Can_Access_All_Branches()
+[xUnit.net 00:00:04.89]         --- End of stack trace from previous location ---
+[11:08:52 INF] API请求 POST /api/auth/login Duration=221ms Status=200
+[11:08:52 INF] API请求 POST /api/auth/login Duration=221ms Status=200
+[xUnit.net 00:00:04.92]     PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAccessBranchBOrder_ShouldReturn403 [FAIL]
+[xUnit.net 00:00:04.92]       Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.NotFound {value: 404}}, but found HttpStatusCode.Unauthorized {value: 401}.
+[xUnit.net 00:00:04.92]       Stack Trace:
+[xUnit.net 00:00:04.92]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:04.92]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:04.92]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:04.92]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:04.92]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:04.92]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:04.92]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)
+[xUnit.net 00:00:04.92]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)
+[xUnit.net 00:00:04.93]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs(182,0): at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAccessBranchBOrder_ShouldReturn403()
+[xUnit.net 00:00:04.93]         --- End of stack trace from previous location ---
+[11:08:52 INF] API请求 POST /api/auth/login Duration=213ms Status=200
+[11:08:52 INF] API请求 POST /api/auth/login Duration=213ms Status=200
+[xUnit.net 00:00:05.10]     PRO.WebApi.Tests.PermissionIsolationTests.PaymentRecords_Are_Branch_Isolated [FAIL]
+[xUnit.net 00:00:05.10]       System.Net.Http.HttpRequestException : Response status code does not indicate success: 401 (Unauthorized).
+[xUnit.net 00:00:05.10]       Stack Trace:
+[xUnit.net 00:00:05.10]            at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+[xUnit.net 00:00:05.10]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs(162,0): at PRO.WebApi.Tests.PermissionIsolationTests.PaymentRecords_Are_Branch_Isolated()
+[xUnit.net 00:00:05.10]         --- End of stack trace from previous location ---
+[11:08:52 INF] API请求 POST /api/auth/login Duration=0ms Status=200
+[11:08:52 INF] API请求 POST /api/auth/login Duration=0ms Status=200
+[xUnit.net 00:00:05.10]       System.Net.Http.HttpRequestException : Response status code does not indicate success: 400 (Bad Request).
+[xUnit.net 00:00:05.10]       Stack Trace:
+[xUnit.net 00:00:05.10]            at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+[xUnit.net 00:00:05.10]     PRO.WebApi.Tests.PermissionIsolationTests.User_Without_CustomerManage_Cannot_EditCustomer [FAIL]
+[xUnit.net 00:00:05.10]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs(257,0): at PRO.WebApi.Tests.PermissionIsolationTests.LoginAsync(String employeeNo, String password)
+[xUnit.net 00:00:05.10]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs(141,0): at PRO.WebApi.Tests.PermissionIsolationTests.User_Without_CustomerManage_Cannot_EditCustomer()
+[xUnit.net 00:00:05.10]         --- End of stack trace from previous location ---
+[11:08:52 INF] API请求 POST /api/auth/login Duration=205ms Status=200
+[11:08:52 INF] API请求 POST /api/auth/login Duration=205ms Status=200
+[xUnit.net 00:00:05.15]       Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.BadRequest {value: 400}}, but found HttpStatusCode.NotFound {value: 404}.
+[xUnit.net 00:00:05.15]     PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotCreateDeliveryPersonForBranchB_ShouldReturn403 [FAIL]
+[xUnit.net 00:00:05.15]       Stack Trace:
+[xUnit.net 00:00:05.15]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+[xUnit.net 00:00:05.15]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+[xUnit.net 00:00:05.15]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:05.15]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:05.15]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+[xUnit.net 00:00:05.15]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+[xUnit.net 00:00:05.15]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)
+[xUnit.net 00:00:05.15]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)
+[xUnit.net 00:00:05.15]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs(258,0): at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotCreateDeliveryPersonForBranchB_ShouldReturn403()
+[xUnit.net 00:00:05.15]         --- End of stack trace from previous location ---
+[11:08:52 INF] API请求 POST /api/auth/login Duration=205ms Status=200
+[11:08:52 INF] API请求 POST /api/auth/login Duration=205ms Status=200
+[xUnit.net 00:00:05.36]   Finished:    PRO.WebApi.Tests
+  失败 PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAccessBranchBCustomer_ShouldReturn403 [257 ms]
+  错误消息:
+   Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.NotFound {value: 404}}, but found HttpStatusCode.Unauthorized {value: 401}.
+  堆栈跟踪:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)
+   at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAccessBranchBCustomer_ShouldReturn403() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 101
+--- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.BranchA_User_Cannot_Access_BranchB_Order [231 ms]
+  错误消息:
+   Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.NotFound {value: 404}}, but found HttpStatusCode.Unauthorized {value: 401}.
+  堆栈跟踪:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)
+   at PRO.WebApi.Tests.PermissionIsolationTests.BranchA_User_Cannot_Access_BranchB_Order() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 50
+--- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotMergeBranchBCustomer_ShouldReturn403 [239 ms]
+  错误消息:
+   Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.BadRequest {value: 400}}, but found HttpStatusCode.Unauthorized {value: 401}.
+  堆栈跟踪:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)
+   at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotMergeBranchBCustomer_ShouldReturn403() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 166
+--- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.HeadquartersAdmin_Can_Access_All_Branches [221 ms]
+  错误消息:
+   System.Net.Http.HttpRequestException : Response status code does not indicate success: 401 (Unauthorized).
+  堆栈跟踪:
+     at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at PRO.WebApi.Tests.PermissionIsolationTests.HeadquartersAdmin_Can_Access_All_Branches() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 112
+--- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAccessBranchBOrder_ShouldReturn403 [224 ms]
+  错误消息:
+   Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.NotFound {value: 404}}, but found HttpStatusCode.Unauthorized {value: 401}.
+  堆栈跟踪:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)
+   at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAccessBranchBOrder_ShouldReturn403() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 182
+--- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.PaymentRecords_Are_Branch_Isolated [215 ms]
+  错误消息:
+   System.Net.Http.HttpRequestException : Response status code does not indicate success: 401 (Unauthorized).
+  堆栈跟踪:
+     at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at PRO.WebApi.Tests.PermissionIsolationTests.PaymentRecords_Are_Branch_Isolated() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 162
+--- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.User_Without_CustomerManage_Cannot_EditCustomer [2 ms]
+  错误消息:
+   System.Net.Http.HttpRequestException : Response status code does not indicate success: 400 (Bad Request).
+  堆栈跟踪:
+     at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at PRO.WebApi.Tests.PermissionIsolationTests.LoginAsync(String employeeNo, String password) in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 257
+   at PRO.WebApi.Tests.PermissionIsolationTests.User_Without_CustomerManage_Cannot_EditCustomer() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 141
+--- End of stack trace from previous location ---
+  失败 PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotCreateDeliveryPersonForBranchB_ShouldReturn403 [211 ms]
+  错误消息:
+   Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.BadRequest {value: 400}}, but found HttpStatusCode.NotFound {value: 404}.
+  堆栈跟踪:
+     at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)
+   at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotCreateDeliveryPersonForBranchB_ShouldReturn403() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 258
+--- End of stack trace from previous location ---
+  已通过 PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAccessBranchBDeliveryPerson_ShouldReturn403 [208 ms]
+
+测试运行失败。
+测试总数: 26
+     通过数: 1
+     失败数: 25
+总时间: 5.7692 秒
+     1>项目“C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PRO.WebApi.Tests.csproj”在节点 1 上(VSTest 个目标)。
+     1>_VSTestConsole:
+         MSB4181: “VSTestTask”任务返回了 false，但未记录错误。
+     1>已完成生成项目“C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PRO.WebApi.Tests.csproj”(VSTest 个目标)的操作 - 失败。
+
+生成失败。
+    0 个警告
+    0 个错误
+
+已用时间 00:00:06.30

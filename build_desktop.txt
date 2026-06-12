@@ -1,0 +1,11 @@
+C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Desktop\Views\MainWindow.xaml(58,39): error CS0234: 命名空间“PRO.Desktop.Controls”中不存在类型或命名空间名“ToastNotification”(是否缺少程序集引用?) [C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Desktop\PRO.Desktop_qjynznkp_wpftmp.csproj]
+C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Desktop\ViewModels\OtherViewModels.cs(1399,22): error CS0246: 未能找到类型或命名空间名“BusinessConfigService”(是否缺少 using 指令或程序集引用?) [C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Desktop\PRO.Desktop_qjynznkp_wpftmp.csproj]
+
+生成失败。
+
+C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Desktop\Views\MainWindow.xaml(58,39): error CS0234: 命名空间“PRO.Desktop.Controls”中不存在类型或命名空间名“ToastNotification”(是否缺少程序集引用?) [C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Desktop\PRO.Desktop_qjynznkp_wpftmp.csproj]
+C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Desktop\ViewModels\OtherViewModels.cs(1399,22): error CS0246: 未能找到类型或命名空间名“BusinessConfigService”(是否缺少 using 指令或程序集引用?) [C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Desktop\PRO.Desktop_qjynznkp_wpftmp.csproj]
+    0 个警告
+    2 个错误
+
+已用时间 00:00:09.69

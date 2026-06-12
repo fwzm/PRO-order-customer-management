@@ -1,0 +1,13 @@
+C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Infrastructure\WeChat\SmartTableSyncService.cs(177,35): error CS0246: 未能找到类型或命名空间名“WeChatApiResponse”(是否缺少 using 指令或程序集引用?) [C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Infrastructure\PRO.Infrastructure.csproj]
+C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Infrastructure\WeChat\WeChatService.cs(330,72): error CS0246: 未能找到类型或命名空间名“WebhookMessage”(是否缺少 using 指令或程序集引用?) [C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Infrastructure\PRO.Infrastructure.csproj]
+C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Infrastructure\WeChat\WeChatService.cs(416,24): error CS0246: 未能找到类型或命名空间名“WeChatUser”(是否缺少 using 指令或程序集引用?) [C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Infrastructure\PRO.Infrastructure.csproj]
+
+生成失败。
+
+C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Infrastructure\WeChat\SmartTableSyncService.cs(177,35): error CS0246: 未能找到类型或命名空间名“WeChatApiResponse”(是否缺少 using 指令或程序集引用?) [C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Infrastructure\PRO.Infrastructure.csproj]
+C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Infrastructure\WeChat\WeChatService.cs(330,72): error CS0246: 未能找到类型或命名空间名“WebhookMessage”(是否缺少 using 指令或程序集引用?) [C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Infrastructure\PRO.Infrastructure.csproj]
+C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Infrastructure\WeChat\WeChatService.cs(416,24): error CS0246: 未能找到类型或命名空间名“WeChatUser”(是否缺少 using 指令或程序集引用?) [C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Infrastructure\PRO.Infrastructure.csproj]
+    0 个警告
+    3 个错误
+
+已用时间 00:00:03.04

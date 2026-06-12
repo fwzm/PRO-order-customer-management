@@ -1,0 +1,15 @@
+  正在确定要还原的项目…
+  所有项目均是最新的，无法还原。
+  PRO.Domain -> C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Domain\bin\Release\net8.0\PRO.Domain.dll
+  PRO.Application -> C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Application\bin\Release\net8.0\PRO.Application.dll
+C:\Program Files\dotnet\sdk\9.0.313\Microsoft.Common.CurrentVersion.targets(4916,5): warning MSB3026: 无法将“obj\Release\net8.0\PRO.Infrastructure.dll”复制到“bin\Release\net8.0\PRO.Infrastructure.dll”。1000 毫秒后将开始第 1 次重试。The process cannot access the file 'C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Infrastructure\bin\Release\net8.0\PRO.Infrastructure.dll' because it is being used by another process. 文件被“.NET Host (27240)”锁定。 [C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Infrastructure\PRO.Infrastructure.csproj]
+  PRO.Infrastructure -> C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Infrastructure\bin\Release\net8.0\PRO.Infrastructure.dll
+  PRO.Desktop -> C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Desktop\bin\Release\net8.0-windows\PRO.dll
+
+已成功生成。
+
+C:\Program Files\dotnet\sdk\9.0.313\Microsoft.Common.CurrentVersion.targets(4916,5): warning MSB3026: 无法将“obj\Release\net8.0\PRO.Infrastructure.dll”复制到“bin\Release\net8.0\PRO.Infrastructure.dll”。1000 毫秒后将开始第 1 次重试。The process cannot access the file 'C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Infrastructure\bin\Release\net8.0\PRO.Infrastructure.dll' because it is being used by another process. 文件被“.NET Host (27240)”锁定。 [C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Infrastructure\PRO.Infrastructure.csproj]
+    1 个警告
+    0 个错误
+
+已用时间 00:00:17.52

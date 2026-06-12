@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRO 项目管理仪表盘 — 真实问题追踪</title>
+<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+:root {
+  --bg: #f0f2f5;
+  --card: #fff;
+  --text: #1a1a2e;
+  --sub: #666;
+  --primary: #409EFF;
+  --success: #27AE60;
+  --warning: #E6A23C;
+  --danger: #E74C3C;
+  --high: #E74C3C;
+  --mid: #F39C12;
+  --low: #3498DB;
+  --border: #ebeef5;
+  --shadow: 0 2px 12px rgba(0,0,0,.06);
+  --radius: 12px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+.app { max-width:1400px; margin:0 auto; padding:16px; }
+
+/* Header */
+.header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px; }
+.header h1 { font-size:22px; font-weight:700; display:flex; align-items:center; gap:8px; }
+.header h1 span.icon { font-size:26px; }
+.header-actions { display:flex; gap:8px; }
+.btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border:none; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; transition:.2s; white-space:nowrap; }
+.btn-primary { background:var(--primary); color:#fff; }
+.btn-primary:hover { background:#337ecc; }
+.btn-outline { background:var(--card); color:var(--text); border:1px solid var(--border); }
+.btn-outline:hover { border-color:var(--primary); color:var(--primary); }
+.btn-sm { padding:5px 10px; font-size:12px; border-radius:6px; }
+
+/* Stats */
+.stat-row { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:16px; }
+.stat-card { background:var(--card); border-radius:var(--radius); padding:18px 20px; box-shadow:var(--shadow); display:flex; align-items:center; gap:14px; transition:.2s; cursor:default; }
+.stat-card:hover { transform:translateY(-2px); box-shadow:0 4px 20px rgba(0,0,0,.1); }
+.stat-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:24px; }
+.stat-icon.total { background:#e8f4fd; color:var(--primary); }
+.stat-icon.resolved { background:#e8f8e8; color:var(--success); }
+.stat-icon.high { background:#fdeaea; color:var(--danger); }
+.stat-icon.active { background:#fef3e2; color:var(--warning); }
+.stat-value { font-size:28px; font-weight:700; line-height:1.2; }
+.stat-label { font-size:13px; color:var(--sub); margin-top:2px; }
+.stat-progress { font-size:11px; color:var(--sub); margin-top:4px; }
+
+/* Charts */
+.chart-row { display:grid; grid-template-columns:2fr 1fr; gap:12px; margin-bottom:16px; }
+.chart-card { background:var(--card); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow); }
+.chart-card h3 { font-size:15px; font-weight:600; margin-bottom:12px; color:var(--text); }
+.chart { width:100%; height:280px; }
+.legend-row { display:flex; gap:16px; flex-wrap:wrap; margin-top:8px; justify-content:center; }
+.legend-item { display:flex; align-items:center; gap:6px; font-size:13px; }
+.legend-dot { width:10px; height:10px; border-radius:50%; }
+
+/* Toolbar */
+.toolbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:16px; background:var(--card); padding:10px 14px; border-radius:var(--radius); box-shadow:var(--shadow); }
+.search-box { flex:1; min-width:180px; position:relative; }
+.search-box input { width:100%; padding:8px 12px 8px 34px; border:1px solid var(--border); border-radius:8px; font-size:13px; outline:none; transition:.2s; }
+.search-box input:focus { border-color:var(--primary); }
+.search-box .search-icon { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#999; font-size:15px; }
+.filter-select { padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; outline:none; background:var(--card); cursor:pointer; min-width:100px; }
+.filter-select:focus { border-color:var(--primary); }
+.toolbar-info { font-size:12px; color:var(--sub); white-space:nowrap; }
+
+/* Table */
+.table-card { background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+.table-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+thead th { background:#fafafa; padding:11px 12px; text-align:left; font-weight:600; border-bottom:2px solid var(--border); cursor:pointer; user-select:none; white-space:nowrap; font-size:12px; color:var(--sub); }
+thead th:hover { color:var(--primary); }
+thead th .sort-arrow { margin-left:4px; font-size:10px; }
+tbody td { padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:middle; }
+tbody tr { transition:background .15s; }
+tbody tr:hover { background:#f5f7fa; }
+tbody tr.resolved td { opacity:0.55; }
+tbody tr.resolved td:first-child { text-decoration:line-through; }
+
+.badge { display:inline-block; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:600; }
+.badge-high { background:#fdeaea; color:var(--danger); }
+.badge-mid { background:#fef3e2; color:var(--warning); }
+.badge-low { background:#e8f4fd; color:var(--low); }
+.badge-bug { background:#fdeaea; color:#c0392b; }
+.badge-td { background:#fef3e2; color:#d35400; }
+.badge-uiux { background:#e8f4fd; color:#2980b9; }
+.badge-feature { background:#f3e8ff; color:#7c3aed; }
+.badge-limit { background:#f0f0f0; color:#666; }
+.status-dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; }
+.status-dot.open { background:var(--warning); }
+.status-dot.progress { background:var(--primary); }
+.status-dot.resolved { background:var(--success); }
+
+.action-btn { padding:5px 10px; border-radius:5px; font-size:11px; cursor:pointer; border:none; transition:.2s; }
+.action-resolve { background:#e8f8e8; color:var(--success); }
+.action-resolve:hover { background:var(--success); color:#fff; }
+
+/* Pagination */
+.pagination { display:flex; align-items:center; justify-content:flex-end; gap:4px; padding:12px 16px; flex-wrap:wrap; }
+.pagination button { width:32px; height:32px; border:1px solid var(--border); border-radius:6px; background:var(--card); cursor:pointer; font-size:12px; transition:.2s; }
+.pagination button:hover:not(:disabled) { border-color:var(--primary); color:var(--primary); }
+.pagination button.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+.pagination button:disabled { opacity:0.4; cursor:default; }
+.pagination .page-info { font-size:12px; color:var(--sub); margin:0 8px; }
+
+/* Toast */
+.toast { position:fixed; top:20px; right:20px; z-index:9999; padding:12px 20px; border-radius:8px; color:#fff; font-size:13px; box-shadow:0 4px 16px rgba(0,0,0,.2); animation:slideIn .3s ease; }
+.toast-success { background:var(--success); }
+@keyframes slideIn { from { transform:translateX(100%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+
+/* Empty */
+.empty { text-align:center; padding:40px; color:var(--sub); font-size:14px; }
+
+/* Responsive */
+@media (max-width:900px) {
+  .stat-row { grid-template-columns:repeat(2, 1fr); }
+  .chart-row { grid-template-columns:1fr; }
+  .header h1 { font-size:18px; }
+  .stat-value { font-size:22px; }
+  .toolbar { flex-direction:column; align-items:stretch; }
+  .filter-select { min-width:0; }
+  .search-box { min-width:0; }
+}
+@media (max-width:480px) {
+  .stat-row { grid-template-columns:1fr; }
+  .app { padding:8px; }
+  .stat-card { padding:14px; }
+  .stat-value { font-size:24px; }
+  thead th, tbody td { padding:8px 6px; font-size:11px; }
+  .pagination button { width:28px; height:28px; font-size:11px; }
+}
+</style>
+</head>
+<body>
+<div id="app" class="app">
+  <!-- Header -->
+  <div class="header">
+    <h1><span class="icon">📊</span>PRO 项目管理仪表盘</h1>
+    <div class="header-actions">
+      <button class="btn btn-outline" @click="showAddModal=true">+ 添加问题</button>
+      <button class="btn btn-primary" @click="refreshAll">🔄 刷新数据</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="stat-icon total">⚠️</div>
+      <div>
+        <div class="stat-value">{{ unresolvedCount }}</div>
+        <div class="stat-label">未解决问题</div>
+        <div class="stat-progress">{{ progressText }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon resolved">✅</div>
+      <div>
+        <div class="stat-value">{{ resolvedCount }}</div>
+        <div class="stat-label">已解决</div>
+        <div class="stat-progress">{{ resolveRate }}% 解决率</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon high">🔴</div>
+      <div>
+        <div class="stat-value">{{ priorityCount.high }}</div>
+        <div class="stat-label">高优先级</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon active">🕐</div>
+      <div>
+        <div class="stat-value">{{ priorityCount.low }}</div>
+        <div class="stat-label">低优先级</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="chart-row">
+    <div class="chart-card">
+      <h3>📈 按优先级分布 · 问题概览</h3>
+      <div class="chart" ref="priorityChart"></div>
+    </div>
+    <div class="chart-card">
+      <h3>📂 按类别分布</h3>
+      <div class="chart" ref="categoryChart"></div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" v-model="searchKeyword" placeholder="搜索问题标题、描述..." @input="onSearch" />
+    </div>
+    <select class="filter-select" v-model="filterPriority" @change="onFilterChange">
+      <option value="">全部优先级</option>
+      <option value="高">高优先级</option>
+      <option value="中">中优先级</option>
+      <option value="低">低优先级</option>
+    </select>
+    <select class="filter-select" v-model="filterCategory" @change="onFilterChange">
+      <option value="">全部类别</option>
+      <option value="Bug">Bug</option>
+      <option value="技术债务">技术债务</option>
+      <option value="UI/UX">UI/UX</option>
+      <option value="功能缺失">功能缺失</option>
+      <option value="已知限制">已知限制</option>
+    </select>
+    <select class="filter-select" v-model="filterStatus" @change="onFilterChange">
+      <option value="">全部状态</option>
+      <option value="待处理">待处理</option>
+      <option value="进行中">进行中</option>
+      <option value="已解决">已解决</option>
+    </select>
+    <select class="filter-select" v-model="sortField" @change="onFilterChange">
+      <option value="id">默认排序</option>
+      <option value="priority">按优先级</option>
+      <option value="createdAt">按创建时间</option>
+    </select>
+    <span class="toolbar-info">共 {{ totalFiltered }} 条</span>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th @click="toggleSort('id')"># <span class="sort-arrow">{{ sorter('id') }}</span></th>
+            <th>标题</th>
+            <th @click="toggleSort('priority')">优先级 <span class="sort-arrow">{{ sorter('priority') }}</span></th>
+            <th>类别</th>
+            <th @click="toggleSort('status')">状态 <span class="sort-arrow">{{ sorter('status') }}</span></th>
+            <th @click="toggleSort('createdAt')">创建时间 <span class="sort-arrow">{{ sorter('createdAt') }}</span></th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in pagedItems" :key="item.id" :class="{ resolved: item.status==='已解决' }">
+            <td>{{ item.id }}</td>
+            <td>
+              <div style="font-weight:500">{{ item.title }}</div>
+              <div style="font-size:11px;color:var(--sub);margin-top:2px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ item.description }}</div>
+            </td>
+            <td><span :class="['badge', 'badge-' + priorityClass(item.priority)]">{{ item.priority }}</span></td>
+            <td><span :class="['badge', 'badge-' + categoryClass(item.category)]">{{ item.category }}</span></td>
+            <td>
+              <span :class="['status-dot', statusClass(item.status)]"></span>{{ item.status }}
+            </td>
+            <td style="font-size:12px;color:var(--sub)">{{ item.createdAt }}</td>
+            <td>
+              <button v-if="item.status!=='已解决'" class="action-btn action-resolve" @click="markResolved(item)">✓ 已解决</button>
+              <span v-else style="color:var(--success);font-size:12px">已解决 ✓</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div v-if="pagedItems.length===0" class="empty">没有匹配的问题记录</div>
+
+    <!-- Pagination -->
+    <div class="pagination" v-if="totalPages>1">
+      <button :disabled="currentPage<=1" @click="currentPage=1">«</button>
+      <button :disabled="currentPage<=1" @click="currentPage--">‹</button>
+      <template v-for="p in visiblePages" :key="p">
+        <button v-if="p!=='...'" :class="{active:p===currentPage}" @click="currentPage=p">{{ p }}</button>
+        <span v-else style="padding:0 2px">…</span>
+      </template>
+      <button :disabled="currentPage>=totalPages" @click="currentPage++">›</button>
+      <button :disabled="currentPage>=totalPages" @click="currentPage=totalPages">»</button>
+      <span class="page-info">{{ currentPage }} / {{ totalPages }} 页</span>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<transition name="fade">
+  <div v-if="toast.show" :class="['toast', 'toast-' + toast.type]">{{ toast.message }}</div>
+</transition>
+
+<!-- Add Modal -->
+<teleport to="body">
+  <div v-if="showAddModal" class="modal-overlay" @click.self="showAddModal=false">
+    <div class="modal">
+      <h3>添加新问题</h3>
+      <label>标题 *</label>
+      <input v-model="newIssue.title" placeholder="请输入问题标题" />
+      <label>描述</label>
+      <textarea v-model="newIssue.description" placeholder="可选：补充问题描述" rows="3"></textarea>
+      <label>优先级 *</label>
+      <select v-model="newIssue.priority"><option>高</option><option>中</option><option>低</option></select>
+      <label>类别 *</label>
+      <select v-model="newIssue.category"><option>Bug</option><option>技术债务</option><option>UI/UX</option><option>功能缺失</option><option>已知限制</option></select>
+      <div class="modal-actions">
+        <button class="btn btn-outline" @click="showAddModal=false">取消</button>
+        <button class="btn btn-primary" @click="addIssue">确认添加</button>
+      </div>
+    </div>
+  </div>
+</teleport>
+</body>
+
+<style>
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; z-index:1000; padding:16px; }
+.modal { background:var(--card); border-radius:var(--radius); padding:24px; width:100%; max-width:440px; box-shadow:0 8px 30px rgba(0,0,0,.15); }
+.modal h3 { margin-bottom:16px; font-size:16px; }
+.modal label { display:block; font-size:13px; font-weight:500; margin-bottom:4px; margin-top:10px; }
+.modal input, .modal textarea, .modal select { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; outline:none; font-family:inherit; }
+.modal input:focus, .modal textarea:focus, .modal select:focus { border-color:var(--primary); }
+.modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:18px; }
+</style>
+
+<script>
+const { createApp, ref, computed, watch, onMounted, nextTick, reactive } = Vue;
+
+// ─── 真实项目问题数据 ───
+const categories = ['Bug', '技术债务', 'UI/UX', '功能缺失', '已知限制'];
+const priorities = ['高', '中', '低'];
+const statuses = ['待处理', '进行中', '已解决'];
+
+// 问题定义: { title, description, priority, category }
+const issueDefs = [
+  // === 生产就绪审计 - 代码层面 (8项) ===
+  { t:'DbContext 并发加载', d:'ViewModel 构造函数中多个 _=LoadXxxAsync() 并发执行，重复查询数据库', p:'高', c:'Bug' },
+  { t:'Fire-and-forget 异常丢失', d:'大量 _=LoadDataAsync() 无 try-catch，异常变未观察任务异常', p:'高', c:'技术债务' },
+  { t:'XAML ManualSyncCommand 绑定', d:'MainWindow.xaml 绑定已删除的 ManualSyncCommand（已修复）', p:'高', c:'Bug' },
+  { t:'导航菜单重复', d:'应用设置和高级设置指向同一 SystemSettingsViewModel（已修复）', p:'中', c:'Bug' },
+  { t:'catch 块缺少 Serilog 日志', d:'多处 catch 块仅 ShowError() 不写 Log.Error，生产环境无法追踪', p:'中', c:'技术债务' },
+  { t:'Services.GetService 空引用', d:'MainViewModel/WeChatScrmViewModel 中 GetService 无 null 检查', p:'中', c:'Bug' },
+  { t:'种子数据字段过期', d:'InitDatabase.cs 中 Product 实体字段已变更(Price→ReferencePrice)', p:'中', c:'Bug' },
+  { t:'DataGrid ToolTip 覆盖风险', d:'模板列可能覆盖全局 DataGridCell ToolTip，ContextMenu 可能不触发', p:'低', c:'Bug' },
+
+  // === UI/UX Phase 1: 全局 UI 框架 (6项) ===
+  { t:'侧边栏滚动条美化', d:'侧边栏滚动条应为圆角窄条，滑动丝滑流畅', p:'低', c:'UI/UX' },
+  { t:'标签页关闭按钮显示', d:'顶部标签页需要有关闭按钮（×）', p:'低', c:'UI/UX' },
+  { t:'标签页文字居中', d:'标签页文字应居中对齐', p:'低', c:'UI/UX' },
+  { t:'选中标签背景色块', d:'选中标签需有背景色块区分', p:'低', c:'UI/UX' },
+  { t:'个人菜单移除', d:'右下角个人菜单已删除，布局自然填满', p:'低', c:'UI/UX' },
+  { t:'DataGrid 单元格 ToolTip', d:'所有单元格鼠标悬停显示完整 ToolTip', p:'低', c:'UI/UX' },
+
+  // === UI/UX Phase 2: 客户模块 (13项) ===
+  { t:'客户列表默认显示字段', d:'列表字段：客户名称、地址、创建时间、客户担当', p:'中', c:'UI/UX' },
+  { t:'移除默认只显示大客户', d:'不再默认只显示大客户', p:'中', c:'UI/UX' },
+  { t:'客户详情完整信息', d:'客户详情含完整基本信息', p:'中', c:'UI/UX' },
+  { t:'客户担当变更历史', d:'客户详情含担当变更历史', p:'中', c:'UI/UX' },
+  { t:'关联客户展示', d:'客户详情含关联大客户/细分客户', p:'中', c:'UI/UX' },
+  { t:'客户详情子Tab', d:'订单历史、拜访记录、商机、价格 Tab', p:'中', c:'UI/UX' },
+  { t:'子记录操作痕迹', d:'所有子记录含创建人/修改人/时间', p:'低', c:'UI/UX' },
+  { t:'客户详情内联编辑', d:'可直接编辑（切换编辑模式）', p:'中', c:'UI/UX' },
+  { t:'客户选择器字段', d:'字段：名称、编号、客户担当', p:'中', c:'UI/UX' },
+  { t:'客户选择器搜索', d:'客户选择器可搜索', p:'中', c:'UI/UX' },
+  { t:'选择器内新建客户', d:'客户选择器可新建客户', p:'低', c:'UI/UX' },
+  { t:'选择器打开详情', d:'客户选择器可打开客户详情', p:'低', c:'UI/UX' },
+  { t:'统一客户选择器', d:'所有选择客户的地方使用同一选择器', p:'中', c:'UI/UX' },
+
+  // === UI/UX Phase 3: 订单模块 (8项) ===
+  { t:'订单三层子菜单', d:'订单菜单有三个子菜单：新建、草稿、订单列表', p:'中', c:'UI/UX' },
+  { t:'新建订单搜索客户', d:'新建订单可搜索和选择客户', p:'中', c:'UI/UX' },
+  { t:'新建订单搜索产品', d:'新建订单可搜索和选择产品', p:'中', c:'UI/UX' },
+  { t:'产品明细无限添加', d:'产品明细支持无限添加', p:'中', c:'UI/UX' },
+  { t:'每行优惠选项', d:'每行有优惠选项（打折/改价）', p:'中', c:'UI/UX' },
+  { t:'订单总额自动计算', d:'订单总金额只读自动计算', p:'中', c:'UI/UX' },
+  { t:'优惠金额手动修改', d:'优惠金额可手动修改', p:'中', c:'UI/UX' },
+  { t:'收款金额逻辑保留', d:'收款金额逻辑不变', p:'低', c:'UI/UX' },
+
+  // === UI/UX Phase 4: 产品模块 (5项) ===
+  { t:'产品无Price/CostPrice字段', d:'产品实体移除Price/CostPrice字段', p:'高', c:'技术债务' },
+  { t:'产品参考价与均价', d:'产品有 ReferencePrice 和 AverageSalePrice', p:'中', c:'UI/UX' },
+  { t:'销售均价自动计算', d:'根据已完成订单自动计算 AverageSalePrice', p:'中', c:'UI/UX' },
+  { t:'产品列表字段正确', d:'产品列表显示正确字段', p:'中', c:'UI/UX' },
+  { t:'产品详情显示SKU', d:'产品详情显示 SKU', p:'低', c:'UI/UX' },
+
+  // === UI/UX Phase 5: 财务库存 (6项) ===
+  { t:'应收款订单号列宽', d:'应收账款订单号列宽合理', p:'低', c:'UI/UX' },
+  { t:'应收款含客户担当', d:'应收账款含客户担当字段', p:'中', c:'UI/UX' },
+  { t:'应收款支持搜索', d:'应收账款支持搜索', p:'中', c:'UI/UX' },
+  { t:'库存盘点仓库管理', d:'库存盘点支持仓库管理', p:'中', c:'UI/UX' },
+  { t:'仓库CRUD', d:'仓库可新增/编辑/删除', p:'中', c:'功能缺失' },
+  { t:'盘点按仓库进行', d:'盘点按仓库进行', p:'中', c:'UI/UX' },
+
+  // === UI/UX Phase 6: 拜访商机 (5项) ===
+  { t:'拜访人字段调整', d:'拜访人字段显示客户担当', p:'中', c:'UI/UX' },
+  { t:'列表移除方式字段', d:'列表不显示方式字段', p:'低', c:'UI/UX' },
+  { t:'列表移除内容字段', d:'列表不显示内容字段', p:'低', c:'UI/UX' },
+  { t:'列表详情按钮', d:'列表每行有详情按钮', p:'中', c:'UI/UX' },
+  { t:'详情含历史记录', d:'详情含完整历史记录', p:'中', c:'UI/UX' },
+
+  // === UI/UX Phase 7: 工作计划报表 (7项) ===
+  { t:'新建排班可用', d:'新建排班功能可用', p:'高', c:'功能缺失' },
+  { t:'新建计划可用', d:'新建计划功能可用', p:'高', c:'功能缺失' },
+  { t:'排班界面布局', d:'排班界面正确布局', p:'中', c:'UI/UX' },
+  { t:'报表中心可打开', d:'报表中心可打开', p:'中', c:'功能缺失' },
+  { t:'智能预测可打开', d:'智能预测可打开', p:'中', c:'功能缺失' },
+  { t:'图表字段完整', d:'图表字段完整显示', p:'中', c:'UI/UX' },
+  { t:'预测数据源配置', d:'预测引擎需配置数据源和生产环境参数', p:'中', c:'技术债务' },
+
+  // === UI/UX Phase 8: 系统设置组织 (10项) ===
+  { t:'设置合并', d:'应用设置和高级设置已合并', p:'中', c:'UI/UX' },
+  { t:'字段管理子菜单', d:'字段管理二级菜单存在', p:'中', c:'UI/UX' },
+  { t:'商圈字段管理', d:'商圈在字段管理中可管理', p:'中', c:'UI/UX' },
+  { t:'标签字段管理', d:'标签在字段管理中可管理', p:'中', c:'UI/UX' },
+  { t:'产品分类字段管理', d:'产品分类在字段管理中可管理', p:'中', c:'UI/UX' },
+  { t:'城市选择器自动补全', d:'城市选择器支持自动补全和手动输入', p:'低', c:'UI/UX' },
+  { t:'状态中文显示', d:'状态使用中文显示', p:'中', c:'UI/UX' },
+  { t:'部门内联编辑', d:'部门可在页面内直接编辑', p:'中', c:'UI/UX' },
+  { t:'员工内联编辑', d:'员工可在页面内直接编辑', p:'中', c:'UI/UX' },
+  { t:'分公司数据隔离', d:'仅显示本分公司数据', p:'中', c:'技术债务' },
+
+  // === UI/UX Phase 9: 企微筛选器 (3项) ===
+  { t:'企微SCRM关联字段', d:'企微SCRM无关联客户字段', p:'中', c:'UI/UX' },
+  { t:'日期筛选器中文', d:'日期筛选器使用中文', p:'低', c:'UI/UX' },
+  { t:'状态筛选器中文', d:'状态筛选器使用中文', p:'低', c:'UI/UX' },
+
+  // === 待实现功能 (交付报告, 3项) ===
+  { t:'移动端 PWA 支持', d:'需要开发移动端 Progressive Web App', p:'中', c:'功能缺失' },
+  { t:'企业微信深度集成', d:'需要真实企业微信账号测试并完成剩余集成功能', p:'中', c:'功能缺失' },
+  { t:'应用自动更新机制', d:'Desktop 客户端版本更新下载安装流程', p:'低', c:'功能缺失' },
+
+  // === 已知限制 (5项) ===
+  { t:'单数路由已废弃', d:'/api/order、/api/customer、/api/product 已废弃但未标记 [Obsolete]', p:'低', c:'已知限制' },
+  { t:'WebApi 依赖 PostgreSQL', d:'WebApi 启动需要 PostgreSQL 数据库可用', p:'低', c:'已知限制' },
+  { t:'Desktop 依赖 .NET 8.0 Runtime', d:'需要安装 .NET 8.0 Desktop Runtime', p:'低', c:'已知限制' },
+  { t:'高级功能需企微配置', d:'部分高级功能需要企业微信配置', p:'低', c:'已知限制' },
+  { t:'Admin Web 需 npm 启动', d:'Admin Web 前端需 npm install && npm run dev', p:'低', c:'已知限制' },
+];
+
+// 初始化：所有问题默认"待处理"，创建日期随机分布在过去90天
+function initIssues() {
+  return issueDefs.map((item, idx) => {
+    const days = Math.floor(Math.random() * 90) + 1;
+    const d = new Date();
+    d.setDate(d.getDate() - days);
+    return {
+      id: idx + 1,
+      title: item.t,
+      description: item.d,
+      priority: item.p,
+      category: item.c,
+      status: '待处理',
+      createdAt: d.toISOString().split('T')[0],
+    };
+  });
+}
+
+createApp({
+  setup() {
+    const allIssues = reactive(initIssues());
+    const searchKeyword = ref('');
+    const filterPriority = ref('');
+    const filterCategory = ref('');
+    const filterStatus = ref('');
+    const sortField = ref('id');
+    const sortOrder = ref('asc');
+    const currentPage = ref(1);
+    const pageSize = ref(15);
+    const toast = reactive({ show:false, message:'', type:'success' });
+    const showAddModal = ref(false);
+    const newIssue = reactive({ title:'', description:'', priority:'高', category:'Bug' });
+    const priorityChart = ref(null);
+    const categoryChart = ref(null);
+
+    // ─── Computed ───
+    const filteredItems = computed(() => {
+      let list = [...allIssues];
+      const kw = searchKeyword.value.trim();
+      if (kw) list = list.filter(i => i.title.includes(kw) || i.description.includes(kw));
+      if (filterPriority.value) list = list.filter(i => i.priority === filterPriority.value);
+      if (filterCategory.value) list = list.filter(i => i.category === filterCategory.value);
+      if (filterStatus.value) list = list.filter(i => i.status === filterStatus.value);
+
+      const sf = sortField.value, so = sortOrder.value === 'asc' ? 1 : -1;
+      const priorityWeight = p => p === '高' ? 3 : p === '中' ? 2 : 1;
+      if (sf === 'priority') list.sort((a,b) => (priorityWeight(a.priority) - priorityWeight(b.priority)) * so);
+      else if (sf === 'status') list.sort((a,b) => a.status.localeCompare(b.status) * so);
+      else if (sf === 'createdAt') list.sort((a,b) => a.createdAt.localeCompare(b.createdAt) * so);
+      else list.sort((a,b) => (a.id - b.id) * so);
+      return list;
+    });
+    const totalFiltered = computed(() => filteredItems.value.length);
+    const totalPages = computed(() => Math.ceil(totalFiltered.value / pageSize.value) || 1);
+    const pagedItems = computed(() => {
+      const start = (currentPage.value - 1) * pageSize.value;
+      return filteredItems.value.slice(start, start + pageSize.value);
+    });
+    const visiblePages = computed(() => {
+      const tp = totalPages.value, cp = currentPage.value;
+      if (tp <= 7) return Array.from({length:tp},(_,i)=>i+1);
+      const pages = [1];
+      if (cp > 3) pages.push('...');
+      for (let p=Math.max(2,cp-1); p<=Math.min(tp-1,cp+1); p++) pages.push(p);
+      if (cp < tp-2) pages.push('...');
+      pages.push(tp);
+      return pages;
+    });
+
+    const unresolvedCount = computed(() => allIssues.filter(i => i.status !== '已解决').length);
+    const resolvedCount = computed(() => allIssues.filter(i => i.status === '已解决').length);
+    const resolveRate = computed(() => allIssues.length ? Math.round(resolvedCount.value / allIssues.length * 100) : 0);
+    const progressText = computed(() => `${resolveRate.value}% 已解决，还有 ${unresolvedCount.value} 条待处理`);
+
+    const priorityCount = computed(() => {
+      const unresolved = allIssues.filter(i => i.status !== '已解决');
+      return {
+        high: unresolved.filter(i => i.priority === '高').length,
+        mid: unresolved.filter(i => i.priority === '中').length,
+        low: unresolved.filter(i => i.priority === '低').length,
+      };
+    });
+
+    const priorityDistribution = computed(() => ({
+      unresolved: [
+        { name:'高', value:allIssues.filter(i=>i.status!=='已解决'&&i.priority==='高').length },
+        { name:'中', value:allIssues.filter(i=>i.status!=='已解决'&&i.priority==='中').length },
+        { name:'低', value:allIssues.filter(i=>i.status!=='已解决'&&i.priority==='低').length },
+      ],
+      resolved: [
+        { name:'高', value:allIssues.filter(i=>i.status==='已解决'&&i.priority==='高').length },
+        { name:'中', value:allIssues.filter(i=>i.status==='已解决'&&i.priority==='中').length },
+        { name:'低', value:allIssues.filter(i=>i.status==='已解决'&&i.priority==='低').length },
+      ],
+    }));
+
+    const categoryDistribution = computed(() => [
+      { name:'Bug', value:allIssues.filter(i=>i.status!=='已解决'&&i.category==='Bug').length },
+      { name:'技术债务', value:allIssues.filter(i=>i.status!=='已解决'&&i.category==='技术债务').length },
+      { name:'UI/UX', value:allIssues.filter(i=>i.status!=='已解决'&&i.category==='UI/UX').length },
+      { name:'功能缺失', value:allIssues.filter(i=>i.status!=='已解决'&&i.category==='功能缺失').length },
+      { name:'已知限制', value:allIssues.filter(i=>i.status!=='已解决'&&i.category==='已知限制').length },
+    ]);
+
+    // ─── Actions ───
+    function markResolved(item) {
+      const found = allIssues.find(i => i.id === item.id);
+      if (found) {
+        found.status = '已解决';
+        toastShow('✓ 问题 #' + item.id + ' 已标记为已解决', 'success');
+        refreshCharts();
+      }
+    }
+
+    function addIssue() {
+      if (!newIssue.title.trim()) { toastShow('请输入问题标题', 'success'); return; }
+      const newId = allIssues.length + 1;
+      allIssues.push({
+        id: newId,
+        title: newIssue.title.trim(),
+        description: newIssue.description.trim() || '无描述',
+        priority: newIssue.priority,
+        category: newIssue.category,
+        status: '待处理',
+        createdAt: new Date().toISOString().split('T')[0],
+      });
+      newIssue.title = '';
+      newIssue.description = '';
+      showAddModal.value = false;
+      toastShow('✓ 问题 #' + newId + ' 已添加', 'success');
+      refreshCharts();
+    }
+
+    function toggleSort(field) {
+      if (sortField.value === field) sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+      else { sortField.value = field; sortOrder.value = 'asc'; }
+    }
+    function sorter(field) {
+      return sortField.value === field ? (sortOrder.value === 'asc' ? '▲' : '▼') : '';
+    }
+    function onSearch() { currentPage.value = 1; }
+    function onFilterChange() { currentPage.value = 1; }
+
+    function priorityClass(p) { return p === '高' ? 'high' : p === '中' ? 'mid' : 'low'; }
+    function categoryClass(c) { return c === 'Bug' ? 'bug' : c === '技术债务' ? 'td' : c === 'UI/UX' ? 'uiux' : c === '功能缺失' ? 'feature' : 'limit'; }
+    function statusClass(s) { return s === '待处理' ? 'open' : s === '进行中' ? 'progress' : 'resolved'; }
+
+    function toastShow(msg, type) {
+      toast.message = msg; toast.type = type; toast.show = true;
+      setTimeout(() => { toast.show = false; }, 2500);
+    }
+    function refreshAll() {
+      toastShow('数据已刷新', 'success');
+      refreshCharts();
+    }
+
+    // ─── Charts ───
+    let pcInstance=null, ccInstance=null;
+    function initCharts() {
+      if (!priorityChart.value || !categoryChart.value) return;
+      pcInstance = echarts.init(priorityChart.value);
+      ccInstance = echarts.init(categoryChart.value);
+      refreshCharts();
+      window.addEventListener('resize', () => { pcInstance?.resize(); ccInstance?.resize(); });
+    }
+
+    function refreshCharts() {
+      const pd = priorityDistribution.value;
+      pcInstance?.setOption({
+        tooltip: { trigger:'axis', axisPointer:{ type:'shadow' } },
+        legend: { data:['未解决','已解决'], bottom:0 },
+        grid: { left:'3%', right:'4%', bottom:'12%', top:'8%', containLabel:true },
+        xAxis: { type:'category', data:['高','中','低'] },
+        yAxis: { type:'value' },
+        series: [
+          { name:'未解决', type:'bar', stack:'total', data:pd.unresolved.map(i=>i.value), itemStyle:{ color:'#E74C3C' }, barWidth:'50%', emphasis:{ focus:'series' } },
+          { name:'已解决', type:'bar', stack:'total', data:pd.resolved.map(i=>i.value), itemStyle:{ color:'#27AE60' }, barWidth:'50%', emphasis:{ focus:'series' } },
+        ],
+      });
+      ccInstance?.setOption({
+        tooltip: { trigger:'item' },
+        legend: { bottom:0 },
+        series: [{
+          type:'pie', radius:['45%','72%'], center:['50%','45%'], avoidLabelOverlap:false,
+          itemStyle: { borderRadius:6, borderColor:'#fff', borderWidth:2 },
+          label: { show:true, formatter:'{b}\n{d}%' },
+          data: [
+            { value:categoryDistribution.value[0].value, name:'Bug', itemStyle:{ color:'#E74C3C' } },
+            { value:categoryDistribution.value[1].value, name:'技术债务', itemStyle:{ color:'#F39C12' } },
+            { value:categoryDistribution.value[2].value, name:'UI/UX', itemStyle:{ color:'#3498DB' } },
+            { value:categoryDistribution.value[3].value, name:'功能缺失', itemStyle:{ color:'#9B59B6' } },
+            { value:categoryDistribution.value[4].value, name:'已知限制', itemStyle:{ color:'#95A5A6' } },
+          ],
+          emphasis: { label:{ fontSize:16, fontWeight:'bold' } },
+        }],
+      });
+    }
+
+    onMounted(() => nextTick(initCharts));
+
+    return {
+      searchKeyword, filterPriority, filterCategory, filterStatus, sortField, currentPage, pageSize, toast,
+      showAddModal, newIssue,
+      allIssues, filteredItems, totalFiltered, totalPages, pagedItems, visiblePages,
+      unresolvedCount, resolvedCount, resolveRate, progressText, priorityCount,
+      priorityChart, categoryChart,
+      markResolved, addIssue, toggleSort, sorter, onSearch, onFilterChange,
+      priorityClass, categoryClass, statusClass, refreshAll,
+    };
+  }
+}).mount('#app');
+</script>
+</html>

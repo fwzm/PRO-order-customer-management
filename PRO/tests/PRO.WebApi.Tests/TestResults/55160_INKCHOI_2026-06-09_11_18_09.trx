@@ -1,0 +1,349 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="08aa4627-7cff-48f5-a133-1bb6924fd0b6" name="55160@INKCHOI 2026-06-09 11:18:09" runUser="INKCHOI\55160" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-06-09T11:18:09.6924463-07:00" queuing="2026-06-09T11:18:09.6924469-07:00" start="2026-06-09T11:18:06.0717965-07:00" finish="2026-06-09T11:18:12.7340497-07:00" />
+  <TestSettings name="default" id="8372843e-1ba9-4d84-b66c-9b769b671880">
+    <Deployment runDeploymentRoot="55160_INKCHOI_2026-06-09_11_18_09" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="a6b1b01f-b348-41ed-b307-dbbcc0059935" testId="dc3752f1-1078-88f3-6977-292f06151146" testName="PRO.WebApi.Tests.PermissionIsolationTests.BranchA_OrderList_Contains_Only_BranchA_Data" computerName="INKCHOI" duration="00:00:00.3607591" startTime="2026-06-09T11:18:11.1582131-07:00" endTime="2026-06-09T11:18:11.1582134-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a6b1b01f-b348-41ed-b307-dbbcc0059935" />
+    <UnitTestResult executionId="9730c190-fcb4-443c-a229-795ec758aa1e" testId="c29931ed-00a1-8f53-7990-bc12ef124ee0" testName="PRO.WebApi.Tests.BranchIsolationTests.HeadquartersAdmin_CanAccessAllBranches_ShouldReturn200" computerName="INKCHOI" duration="00:00:00.2296574" startTime="2026-06-09T11:18:10.8163750-07:00" endTime="2026-06-09T11:18:10.8163752-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9730c190-fcb4-443c-a229-795ec758aa1e" />
+    <UnitTestResult executionId="f6b8b963-15a1-47b7-837f-11b3695cac1c" testId="55b45986-de82-15d0-2bce-061f44e6dadb" testName="PRO.WebApi.Tests.PermissionIsolationTests.AuditLog_Is_Branch_Isolated" computerName="INKCHOI" duration="00:00:00.2322445" startTime="2026-06-09T11:18:09.9015284-07:00" endTime="2026-06-09T11:18:09.9015285-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f6b8b963-15a1-47b7-837f-11b3695cac1c" />
+    <UnitTestResult executionId="96e3d9d2-9939-4aab-9599-d5ea6787a801" testId="ae318121-d544-0701-c6b1-57b241c5f259" testName="PRO.WebApi.Tests.PermissionIsolationTests.AuditLog_Contains_Operator_Info" computerName="INKCHOI" duration="00:00:03.0906014" startTime="2026-06-09T11:18:09.6766270-07:00" endTime="2026-06-09T11:18:09.6766271-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="96e3d9d2-9939-4aab-9599-d5ea6787a801" />
+    <UnitTestResult executionId="d44c56c6-d405-41cb-b12b-62ec8f279f7b" testId="299b95a9-bd28-9b70-f616-b621b744727a" testName="PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAccessBranchBOrder_ShouldReturn403" computerName="INKCHOI" duration="00:00:00.2253752" startTime="2026-06-09T11:18:11.7228027-07:00" endTime="2026-06-09T11:18:11.7228028-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d44c56c6-d405-41cb-b12b-62ec8f279f7b" />
+    <UnitTestResult executionId="dbbc6266-da5a-423b-a690-3ce4eaeb6a25" testId="00882ba8-b790-2dd5-1fe8-7dd66717c7ca" testName="PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAccessBranchBCustomer_ShouldReturn403" computerName="INKCHOI" duration="00:00:00.2286731" startTime="2026-06-09T11:18:11.2666400-07:00" endTime="2026-06-09T11:18:11.2666401-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="dbbc6266-da5a-423b-a690-3ce4eaeb6a25" />
+    <UnitTestResult executionId="d59fa388-1689-458a-8507-d4149e2bcf2b" testId="ad8be207-602e-211a-2ba1-9de6560f155b" testName="PRO.WebApi.Tests.PermissionIsolationTests.PaymentRecords_Are_Branch_Isolated" computerName="INKCHOI" duration="00:00:00.2889321" startTime="2026-06-09T11:18:12.4459297-07:00" endTime="2026-06-09T11:18:12.4459298-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d59fa388-1689-458a-8507-d4149e2bcf2b" />
+    <UnitTestResult executionId="974e97b5-0fb9-47b4-a904-78f2c976d924" testId="f1a3cd3c-af0c-2a68-0f8c-59d6964aa42c" testName="PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_ListOnlyShowsBranchAData_ShouldFilterByBranch" computerName="INKCHOI" duration="00:00:00.2211010" startTime="2026-06-09T11:18:11.0384944-07:00" endTime="2026-06-09T11:18:11.0384945-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="974e97b5-0fb9-47b4-a904-78f2c976d924">
+      <Output>
+        <ErrorInfo>
+          <Message>Expected result?.Data?.Items to contain only items satisfying the inspector, but collection is empty.</Message>
+          <StackTrace>   at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)&#xD;
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)&#xD;
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)&#xD;
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)&#xD;
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)&#xD;
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)&#xD;
+   at FluentAssertions.Execution.GivenSelector`1.FailWith(String message, Object[] args)&#xD;
+   at FluentAssertions.Execution.GivenSelector`1.FailWith(String message)&#xD;
+   at FluentAssertions.Collections.GenericCollectionAssertions`3.AllSatisfy(Action`1 expected, String because, Object[] becauseArgs)&#xD;
+   at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_ListOnlyShowsBranchAData_ShouldFilterByBranch() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 294&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="57b70372-9413-4631-b5f0-f4ea6c88b96c" testId="ae7030d0-a082-0e2a-b06c-55df2531e59c" testName="PRO.WebApi.Tests.PermissionIsolationTests.Undo_Operation_Logs_Audit" computerName="INKCHOI" duration="00:00:00.2379706" startTime="2026-06-09T11:18:10.1396264-07:00" endTime="2026-06-09T11:18:10.1396265-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="57b70372-9413-4631-b5f0-f4ea6c88b96c" />
+    <UnitTestResult executionId="8f9f8c61-3ba3-468d-90a1-e911fbebacba" testId="5c8a46ac-16c2-9a80-5bcd-45b70435753c" testName="PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotCreateCustomerForBranchB_ShouldReturn403" computerName="INKCHOI" duration="00:00:00.3382343" startTime="2026-06-09T11:18:10.3485552-07:00" endTime="2026-06-09T11:18:10.3485555-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8f9f8c61-3ba3-468d-90a1-e911fbebacba">
+      <Output>
+        <ErrorInfo>
+          <Message>Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.BadRequest {value: 400}}, but found HttpStatusCode.Created {value: 201}.</Message>
+          <StackTrace>   at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)&#xD;
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)&#xD;
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)&#xD;
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)&#xD;
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)&#xD;
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)&#xD;
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)&#xD;
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)&#xD;
+   at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotCreateCustomerForBranchB_ShouldReturn403() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 127&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="64b35ad1-2920-4809-bf20-840f44da7e96" testId="d9c1d8bf-b62d-1f0a-6277-fba83390f493" testName="PRO.WebApi.Tests.PermissionIsolationTests.User_Without_CustomerManage_Cannot_EditCustomer" computerName="INKCHOI" duration="00:00:00.2148521" startTime="2026-06-09T11:18:12.6608774-07:00" endTime="2026-06-09T11:18:12.6608774-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="64b35ad1-2920-4809-bf20-840f44da7e96" />
+    <UnitTestResult executionId="556a9ad2-cfcc-42b9-87aa-4ea9ae6ec365" testId="7b169775-dd31-3cff-f819-650ea1935a21" testName="PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotCreateDeliveryPersonForBranchB_ShouldReturn403" computerName="INKCHOI" duration="00:00:00.2187713" startTime="2026-06-09T11:18:11.9424757-07:00" endTime="2026-06-09T11:18:11.9424758-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="556a9ad2-cfcc-42b9-87aa-4ea9ae6ec365">
+      <Output>
+        <ErrorInfo>
+          <Message>Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.BadRequest {value: 400}}, but found HttpStatusCode.NotFound {value: 404}.</Message>
+          <StackTrace>   at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)&#xD;
+   at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)&#xD;
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)&#xD;
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)&#xD;
+   at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)&#xD;
+   at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)&#xD;
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)&#xD;
+   at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)&#xD;
+   at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotCreateDeliveryPersonForBranchB_ShouldReturn403() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 258&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="39a95f93-dde1-470b-bacf-0b5ceb79b7b6" testId="44383496-6d8e-79dc-1930-21a678d305a5" testName="PRO.WebApi.Tests.PermissionIsolationTests.User_Without_OrderManage_Cannot_CreateOrder" computerName="INKCHOI" duration="00:00:00.2232193" startTime="2026-06-09T11:18:11.3815693-07:00" endTime="2026-06-09T11:18:11.3815694-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="39a95f93-dde1-470b-bacf-0b5ceb79b7b6" />
+    <UnitTestResult executionId="71bfb753-5a35-4e98-bbb1-c3175997e6a4" testId="de052c00-9d20-43df-02f5-f3e1b01f37f8" testName="PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotChangeBranchBOrderStatus_ShouldReturn403" computerName="INKCHOI" duration="00:00:03.1731645" startTime="2026-06-09T11:18:09.7518182-07:00" endTime="2026-06-09T11:18:09.7518183-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="71bfb753-5a35-4e98-bbb1-c3175997e6a4" />
+    <UnitTestResult executionId="9e48590d-a660-4204-a966-051a7ecef096" testId="93fea041-85fd-7320-1cde-96751bdc4557" testName="PRO.WebApi.Tests.PermissionTests.NormalUser_CannotAutoAssign_ShouldReturn403" computerName="INKCHOI" duration="00:00:00.2308952" startTime="2026-06-09T11:18:09.9003107-07:00" endTime="2026-06-09T11:18:09.9003108-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9e48590d-a660-4204-a966-051a7ecef096" />
+    <UnitTestResult executionId="f6360d1b-7b34-4bba-8a41-61af60230731" testId="0a2a706c-0cf0-14c9-ccc6-6429c950bf17" testName="PRO.WebApi.Tests.PermissionTests.NormalUser_CannotDeleteOrder_ShouldReturn403" computerName="INKCHOI" duration="00:00:00.2393873" startTime="2026-06-09T11:18:10.1397018-07:00" endTime="2026-06-09T11:18:10.1397018-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f6360d1b-7b34-4bba-8a41-61af60230731" />
+    <UnitTestResult executionId="50fd15b2-84e2-466d-9762-8d0faff7e70d" testId="36384ace-b63b-b7fb-e8f5-3ea19304ed63" testName="PRO.WebApi.Tests.PermissionIsolationTests.BranchA_User_Cannot_Access_BranchB_Customer" computerName="INKCHOI" duration="00:00:00.3354301" startTime="2026-06-09T11:18:10.4751735-07:00" endTime="2026-06-09T11:18:10.4751736-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="50fd15b2-84e2-466d-9762-8d0faff7e70d" />
+    <UnitTestResult executionId="7b8ef6a2-50e6-475b-b9f5-b1b91d98a98d" testId="795c2de2-828b-1c5b-7a65-d512bfbb4411" testName="PRO.WebApi.Tests.PermissionIsolationTests.Payment_Allocation_Partial_Allocation" computerName="INKCHOI" duration="00:00:00.2389853" startTime="2026-06-09T11:18:11.6206469-07:00" endTime="2026-06-09T11:18:11.6206471-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7b8ef6a2-50e6-475b-b9f5-b1b91d98a98d" />
+    <UnitTestResult executionId="2f693467-d476-4e58-812c-8786e80d9e30" testId="fcce932b-17a2-8895-570f-dc4469d26f03" testName="PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotMergeBranchBCustomer_ShouldReturn403" computerName="INKCHOI" duration="00:00:00.2305096" startTime="2026-06-09T11:18:11.4972958-07:00" endTime="2026-06-09T11:18:11.4972960-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2f693467-d476-4e58-812c-8786e80d9e30" />
+    <UnitTestResult executionId="d2cb4ae5-a281-40b3-a1e6-f44b44eec147" testId="a2374e40-3fb8-7907-4930-8dd9645c2fab" testName="PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAccessBranchBDeliveryPerson_ShouldReturn403" computerName="INKCHOI" duration="00:00:00.2345618" startTime="2026-06-09T11:18:12.1765736-07:00" endTime="2026-06-09T11:18:12.1765737-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d2cb4ae5-a281-40b3-a1e6-f44b44eec147" />
+    <UnitTestResult executionId="512734a8-c972-43a3-91fc-8fa28bf97033" testId="f5a7d81d-58d3-7df0-2485-04129b54876c" testName="PRO.WebApi.Tests.PermissionTests.NormalUser_CannotMergeCustomers_ShouldReturn403" computerName="INKCHOI" duration="00:00:03.0864308" startTime="2026-06-09T11:18:09.6688808-07:00" endTime="2026-06-09T11:18:09.6688938-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="512734a8-c972-43a3-91fc-8fa28bf97033" />
+    <UnitTestResult executionId="ffd135de-431a-4d69-8a1c-392563187c1b" testId="a4f0f580-ca67-fba4-2e53-5ca334ec8a03" testName="PRO.WebApi.Tests.PermissionIsolationTests.BranchA_CustomerList_Contains_Only_BranchA_Data" computerName="INKCHOI" duration="00:00:00.3219009" startTime="2026-06-09T11:18:10.7972990-07:00" endTime="2026-06-09T11:18:10.7972993-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ffd135de-431a-4d69-8a1c-392563187c1b" />
+    <UnitTestResult executionId="9d744f28-283d-4663-b6d4-1000d4831288" testId="8e444359-7111-ceb9-f315-3825b73af66f" testName="PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAssignBranchBOrder_ShouldReturn403" computerName="INKCHOI" duration="00:00:00.2384686" startTime="2026-06-09T11:18:09.9904667-07:00" endTime="2026-06-09T11:18:09.9904669-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9d744f28-283d-4663-b6d4-1000d4831288" />
+    <UnitTestResult executionId="8289c2f3-1b6e-4d4d-af4c-9b9b9330590a" testId="287ef7f4-6333-b36a-ce96-22e479960514" testName="PRO.WebApi.Tests.PermissionIsolationTests.HeadquartersAdmin_Can_Access_All_Branches" computerName="INKCHOI" duration="00:00:00.3110703" startTime="2026-06-09T11:18:12.1568881-07:00" endTime="2026-06-09T11:18:12.1568881-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8289c2f3-1b6e-4d4d-af4c-9b9b9330590a" />
+    <UnitTestResult executionId="efea2182-1a48-49fb-8333-1b392fa5817d" testId="7ba97de9-fd6d-25c4-5438-dc3271e0532a" testName="PRO.WebApi.Tests.PermissionIsolationTests.BranchA_User_Cannot_Access_BranchB_Order" computerName="INKCHOI" duration="00:00:00.2249585" startTime="2026-06-09T11:18:11.8457384-07:00" endTime="2026-06-09T11:18:11.8457385-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="efea2182-1a48-49fb-8333-1b392fa5817d" />
+    <UnitTestResult executionId="43dbce99-6b20-4469-9c86-7c6d20559f8c" testId="428c756e-4322-eba3-7d8f-0791ffc6479b" testName="PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotDeleteBranchBCustomer_ShouldReturn403" computerName="INKCHOI" duration="00:00:00.2559014" startTime="2026-06-09T11:18:10.5866103-07:00" endTime="2026-06-09T11:18:10.5866104-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="43dbce99-6b20-4469-9c86-7c6d20559f8c" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="PRO.WebApi.Tests.BranchIsolationTests.HeadquartersAdmin_CanAccessAllBranches_ShouldReturn200" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="c29931ed-00a1-8f53-7990-bc12ef124ee0">
+      <Execution id="9730c190-fcb4-443c-a229-795ec758aa1e" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.BranchIsolationTests" name="HeadquartersAdmin_CanAccessAllBranches_ShouldReturn200" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.PermissionIsolationTests.User_Without_CustomerManage_Cannot_EditCustomer" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="d9c1d8bf-b62d-1f0a-6277-fba83390f493">
+      <Execution id="64b35ad1-2920-4809-bf20-840f44da7e96" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.PermissionIsolationTests" name="User_Without_CustomerManage_Cannot_EditCustomer" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotCreateCustomerForBranchB_ShouldReturn403" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="5c8a46ac-16c2-9a80-5bcd-45b70435753c">
+      <Execution id="8f9f8c61-3ba3-468d-90a1-e911fbebacba" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.BranchIsolationTests" name="BranchAUser_CannotCreateCustomerForBranchB_ShouldReturn403" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.PermissionIsolationTests.HeadquartersAdmin_Can_Access_All_Branches" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="287ef7f4-6333-b36a-ce96-22e479960514">
+      <Execution id="8289c2f3-1b6e-4d4d-af4c-9b9b9330590a" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.PermissionIsolationTests" name="HeadquartersAdmin_Can_Access_All_Branches" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotChangeBranchBOrderStatus_ShouldReturn403" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="de052c00-9d20-43df-02f5-f3e1b01f37f8">
+      <Execution id="71bfb753-5a35-4e98-bbb1-c3175997e6a4" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.BranchIsolationTests" name="BranchAUser_CannotChangeBranchBOrderStatus_ShouldReturn403" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.PermissionIsolationTests.AuditLog_Contains_Operator_Info" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="ae318121-d544-0701-c6b1-57b241c5f259">
+      <Execution id="96e3d9d2-9939-4aab-9599-d5ea6787a801" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.PermissionIsolationTests" name="AuditLog_Contains_Operator_Info" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.PermissionIsolationTests.User_Without_OrderManage_Cannot_CreateOrder" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="44383496-6d8e-79dc-1930-21a678d305a5">
+      <Execution id="39a95f93-dde1-470b-bacf-0b5ceb79b7b6" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.PermissionIsolationTests" name="User_Without_OrderManage_Cannot_CreateOrder" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotCreateDeliveryPersonForBranchB_ShouldReturn403" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="7b169775-dd31-3cff-f819-650ea1935a21">
+      <Execution id="556a9ad2-cfcc-42b9-87aa-4ea9ae6ec365" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.BranchIsolationTests" name="BranchAUser_CannotCreateDeliveryPersonForBranchB_ShouldReturn403" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.PermissionIsolationTests.BranchA_CustomerList_Contains_Only_BranchA_Data" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="a4f0f580-ca67-fba4-2e53-5ca334ec8a03">
+      <Execution id="ffd135de-431a-4d69-8a1c-392563187c1b" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.PermissionIsolationTests" name="BranchA_CustomerList_Contains_Only_BranchA_Data" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.PermissionIsolationTests.Undo_Operation_Logs_Audit" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="ae7030d0-a082-0e2a-b06c-55df2531e59c">
+      <Execution id="57b70372-9413-4631-b5f0-f4ea6c88b96c" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.PermissionIsolationTests" name="Undo_Operation_Logs_Audit" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.PermissionIsolationTests.BranchA_User_Cannot_Access_BranchB_Order" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="7ba97de9-fd6d-25c4-5438-dc3271e0532a">
+      <Execution id="efea2182-1a48-49fb-8333-1b392fa5817d" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.PermissionIsolationTests" name="BranchA_User_Cannot_Access_BranchB_Order" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAssignBranchBOrder_ShouldReturn403" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="8e444359-7111-ceb9-f315-3825b73af66f">
+      <Execution id="9d744f28-283d-4663-b6d4-1000d4831288" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.BranchIsolationTests" name="BranchAUser_CannotAssignBranchBOrder_ShouldReturn403" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.PermissionTests.NormalUser_CannotDeleteOrder_ShouldReturn403" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="0a2a706c-0cf0-14c9-ccc6-6429c950bf17">
+      <Execution id="f6360d1b-7b34-4bba-8a41-61af60230731" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.PermissionTests" name="NormalUser_CannotDeleteOrder_ShouldReturn403" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAccessBranchBOrder_ShouldReturn403" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="299b95a9-bd28-9b70-f616-b621b744727a">
+      <Execution id="d44c56c6-d405-41cb-b12b-62ec8f279f7b" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.BranchIsolationTests" name="BranchAUser_CannotAccessBranchBOrder_ShouldReturn403" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.PermissionIsolationTests.Payment_Allocation_Partial_Allocation" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="795c2de2-828b-1c5b-7a65-d512bfbb4411">
+      <Execution id="7b8ef6a2-50e6-475b-b9f5-b1b91d98a98d" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.PermissionIsolationTests" name="Payment_Allocation_Partial_Allocation" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_ListOnlyShowsBranchAData_ShouldFilterByBranch" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="f1a3cd3c-af0c-2a68-0f8c-59d6964aa42c">
+      <Execution id="974e97b5-0fb9-47b4-a904-78f2c976d924" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.BranchIsolationTests" name="BranchAUser_ListOnlyShowsBranchAData_ShouldFilterByBranch" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.PermissionTests.NormalUser_CannotMergeCustomers_ShouldReturn403" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="f5a7d81d-58d3-7df0-2485-04129b54876c">
+      <Execution id="512734a8-c972-43a3-91fc-8fa28bf97033" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.PermissionTests" name="NormalUser_CannotMergeCustomers_ShouldReturn403" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.PermissionIsolationTests.AuditLog_Is_Branch_Isolated" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="55b45986-de82-15d0-2bce-061f44e6dadb">
+      <Execution id="f6b8b963-15a1-47b7-837f-11b3695cac1c" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.PermissionIsolationTests" name="AuditLog_Is_Branch_Isolated" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.PermissionTests.NormalUser_CannotAutoAssign_ShouldReturn403" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="93fea041-85fd-7320-1cde-96751bdc4557">
+      <Execution id="9e48590d-a660-4204-a966-051a7ecef096" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.PermissionTests" name="NormalUser_CannotAutoAssign_ShouldReturn403" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.PermissionIsolationTests.PaymentRecords_Are_Branch_Isolated" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="ad8be207-602e-211a-2ba1-9de6560f155b">
+      <Execution id="d59fa388-1689-458a-8507-d4149e2bcf2b" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.PermissionIsolationTests" name="PaymentRecords_Are_Branch_Isolated" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAccessBranchBCustomer_ShouldReturn403" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="00882ba8-b790-2dd5-1fe8-7dd66717c7ca">
+      <Execution id="dbbc6266-da5a-423b-a690-3ce4eaeb6a25" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.BranchIsolationTests" name="BranchAUser_CannotAccessBranchBCustomer_ShouldReturn403" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.PermissionIsolationTests.BranchA_User_Cannot_Access_BranchB_Customer" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="36384ace-b63b-b7fb-e8f5-3ea19304ed63">
+      <Execution id="50fd15b2-84e2-466d-9762-8d0faff7e70d" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.PermissionIsolationTests" name="BranchA_User_Cannot_Access_BranchB_Customer" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotMergeBranchBCustomer_ShouldReturn403" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="fcce932b-17a2-8895-570f-dc4469d26f03">
+      <Execution id="2f693467-d476-4e58-812c-8786e80d9e30" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.BranchIsolationTests" name="BranchAUser_CannotMergeBranchBCustomer_ShouldReturn403" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotDeleteBranchBCustomer_ShouldReturn403" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="428c756e-4322-eba3-7d8f-0791ffc6479b">
+      <Execution id="43dbce99-6b20-4469-9c86-7c6d20559f8c" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.BranchIsolationTests" name="BranchAUser_CannotDeleteBranchBCustomer_ShouldReturn403" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAccessBranchBDeliveryPerson_ShouldReturn403" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="a2374e40-3fb8-7907-4930-8dd9645c2fab">
+      <Execution id="d2cb4ae5-a281-40b3-a1e6-f44b44eec147" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.BranchIsolationTests" name="BranchAUser_CannotAccessBranchBDeliveryPerson_ShouldReturn403" />
+    </UnitTest>
+    <UnitTest name="PRO.WebApi.Tests.PermissionIsolationTests.BranchA_OrderList_Contains_Only_BranchA_Data" storage="c:\users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\pro项目\pro\tests\pro.webapi.tests\bin\debug\net8.0\pro.webapi.tests.dll" id="dc3752f1-1078-88f3-6977-292f06151146">
+      <Execution id="a6b1b01f-b348-41ed-b307-dbbcc0059935" />
+      <TestMethod codeBase="C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Debug\net8.0\PRO.WebApi.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PRO.WebApi.Tests.PermissionIsolationTests" name="BranchA_OrderList_Contains_Only_BranchA_Data" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="dc3752f1-1078-88f3-6977-292f06151146" executionId="a6b1b01f-b348-41ed-b307-dbbcc0059935" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c29931ed-00a1-8f53-7990-bc12ef124ee0" executionId="9730c190-fcb4-443c-a229-795ec758aa1e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="55b45986-de82-15d0-2bce-061f44e6dadb" executionId="f6b8b963-15a1-47b7-837f-11b3695cac1c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ae318121-d544-0701-c6b1-57b241c5f259" executionId="96e3d9d2-9939-4aab-9599-d5ea6787a801" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="299b95a9-bd28-9b70-f616-b621b744727a" executionId="d44c56c6-d405-41cb-b12b-62ec8f279f7b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="00882ba8-b790-2dd5-1fe8-7dd66717c7ca" executionId="dbbc6266-da5a-423b-a690-3ce4eaeb6a25" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ad8be207-602e-211a-2ba1-9de6560f155b" executionId="d59fa388-1689-458a-8507-d4149e2bcf2b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f1a3cd3c-af0c-2a68-0f8c-59d6964aa42c" executionId="974e97b5-0fb9-47b4-a904-78f2c976d924" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ae7030d0-a082-0e2a-b06c-55df2531e59c" executionId="57b70372-9413-4631-b5f0-f4ea6c88b96c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5c8a46ac-16c2-9a80-5bcd-45b70435753c" executionId="8f9f8c61-3ba3-468d-90a1-e911fbebacba" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d9c1d8bf-b62d-1f0a-6277-fba83390f493" executionId="64b35ad1-2920-4809-bf20-840f44da7e96" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7b169775-dd31-3cff-f819-650ea1935a21" executionId="556a9ad2-cfcc-42b9-87aa-4ea9ae6ec365" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="44383496-6d8e-79dc-1930-21a678d305a5" executionId="39a95f93-dde1-470b-bacf-0b5ceb79b7b6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="de052c00-9d20-43df-02f5-f3e1b01f37f8" executionId="71bfb753-5a35-4e98-bbb1-c3175997e6a4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="93fea041-85fd-7320-1cde-96751bdc4557" executionId="9e48590d-a660-4204-a966-051a7ecef096" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0a2a706c-0cf0-14c9-ccc6-6429c950bf17" executionId="f6360d1b-7b34-4bba-8a41-61af60230731" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="36384ace-b63b-b7fb-e8f5-3ea19304ed63" executionId="50fd15b2-84e2-466d-9762-8d0faff7e70d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="795c2de2-828b-1c5b-7a65-d512bfbb4411" executionId="7b8ef6a2-50e6-475b-b9f5-b1b91d98a98d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="fcce932b-17a2-8895-570f-dc4469d26f03" executionId="2f693467-d476-4e58-812c-8786e80d9e30" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a2374e40-3fb8-7907-4930-8dd9645c2fab" executionId="d2cb4ae5-a281-40b3-a1e6-f44b44eec147" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f5a7d81d-58d3-7df0-2485-04129b54876c" executionId="512734a8-c972-43a3-91fc-8fa28bf97033" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a4f0f580-ca67-fba4-2e53-5ca334ec8a03" executionId="ffd135de-431a-4d69-8a1c-392563187c1b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8e444359-7111-ceb9-f315-3825b73af66f" executionId="9d744f28-283d-4663-b6d4-1000d4831288" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="287ef7f4-6333-b36a-ce96-22e479960514" executionId="8289c2f3-1b6e-4d4d-af4c-9b9b9330590a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7ba97de9-fd6d-25c4-5438-dc3271e0532a" executionId="efea2182-1a48-49fb-8333-1b392fa5817d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="428c756e-4322-eba3-7d8f-0791ffc6479b" executionId="43dbce99-6b20-4469-9c86-7c6d20559f8c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="列表中未列出的结果" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="所有已加载的结果" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="26" executed="26" passed="23" failed="3" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.4.1+b9eacec401 (64-bit .NET 8.0.27)&#xD;
+[xUnit.net 00:00:00.06]   Discovering: PRO.WebApi.Tests&#xD;
+[xUnit.net 00:00:00.08]   Discovered:  PRO.WebApi.Tests&#xD;
+[xUnit.net 00:00:00.09]   Starting:    PRO.WebApi.Tests&#xD;
+[11:18:09 INF] PRO WebApi 正在启动...&#xD;
+[11:18:09 INF] PRO WebApi 正在启动...&#xD;
+[11:18:09 INF] PRO WebApi 正在启动...&#xD;
+[11:18:09 INF] PRO WebApi 正在启动...&#xD;
+[11:18:09 INF] PRO WebApi 正在启动...&#xD;
+[11:18:09 INF] PRO WebApi 正在启动...&#xD;
+[11:18:09 INF] API请求 POST /api/auth/login Duration=381ms Status=200&#xD;
+[11:18:09 INF] API请求 POST /api/auth/login Duration=381ms Status=200&#xD;
+[11:18:09 INF] API请求 POST /api/auth/login Duration=381ms Status=200&#xD;
+[11:18:09 INF] API请求 POST /api/auth/login Duration=381ms Status=200&#xD;
+[11:18:09 INF] API请求 POST /api/auth/login Duration=381ms Status=200&#xD;
+[11:18:09 INF] API请求 POST /api/auth/login Duration=381ms Status=200&#xD;
+[11:18:09 WRN] 员工 4 缺少权限 Customer.Merge&#xD;
+[11:18:09 WRN] 员工 4 缺少权限 Customer.Merge&#xD;
+[11:18:09 INF] API请求 POST /api/auth/login Duration=225ms Status=200&#xD;
+[11:18:09 INF] API请求 POST /api/auth/login Duration=225ms Status=200&#xD;
+[11:18:09 INF] API请求 POST /api/auth/login Duration=226ms Status=200&#xD;
+[11:18:09 INF] API请求 POST /api/auth/login Duration=226ms Status=200&#xD;
+[11:18:09 WRN] 员工 4 缺少权限 Delivery.AutoAssign&#xD;
+[11:18:09 WRN] 员工 4 缺少权限 Delivery.AutoAssign&#xD;
+[11:18:09 INF] API请求 POST /api/auth/login Duration=226ms Status=200&#xD;
+[11:18:09 INF] API请求 POST /api/auth/login Duration=226ms Status=200&#xD;
+[11:18:10 INF] API请求 POST /api/auth/login Duration=232ms Status=200&#xD;
+[11:18:10 INF] API请求 POST /api/auth/login Duration=233ms Status=200&#xD;
+[11:18:10 INF] API请求 POST /api/auth/login Duration=232ms Status=200&#xD;
+[11:18:10 INF] API请求 POST /api/auth/login Duration=233ms Status=200&#xD;
+[11:18:10 WRN] 员工 4 缺少权限 Order.Delete&#xD;
+[11:18:10 WRN] 员工 4 缺少权限 Order.Delete&#xD;
+[11:18:10 INF] API请求 POST /api/auth/login Duration=231ms Status=200&#xD;
+[11:18:10 INF] API请求 POST /api/auth/login Duration=231ms Status=200&#xD;
+[xUnit.net 00:00:03.89]       Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.BadRequest {value: 400}}, but found HttpStatusCode.Created {value: 201}.&#xD;
+[xUnit.net 00:00:03.89]       Stack Trace:&#xD;
+[xUnit.net 00:00:03.89]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)&#xD;
+[xUnit.net 00:00:03.89]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)&#xD;
+[xUnit.net 00:00:03.89]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)&#xD;
+[xUnit.net 00:00:03.89]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)&#xD;
+[xUnit.net 00:00:03.89]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)&#xD;
+[xUnit.net 00:00:03.89]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)&#xD;
+[xUnit.net 00:00:03.89]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)&#xD;
+[xUnit.net 00:00:03.89]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)&#xD;
+[xUnit.net 00:00:03.89]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs(127,0): at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotCreateCustomerForBranchB_ShouldReturn403()&#xD;
+[xUnit.net 00:00:03.89]         --- End of stack trace from previous location ---&#xD;
+[11:18:10 INF] API请求 POST /api/auth/login Duration=246ms Status=200&#xD;
+[11:18:10 INF] API请求 POST /api/auth/login Duration=246ms Status=200&#xD;
+[11:18:10 INF] API请求 POST /api/auth/login Duration=247ms Status=200&#xD;
+[11:18:10 INF] API请求 POST /api/auth/login Duration=247ms Status=200&#xD;
+[11:18:10 INF] API请求 POST /api/auth/login Duration=224ms Status=200&#xD;
+[11:18:10 INF] API请求 POST /api/auth/login Duration=224ms Status=200&#xD;
+[11:18:10 INF] API请求 POST /api/auth/login Duration=222ms Status=200&#xD;
+[11:18:10 INF] API请求 POST /api/auth/login Duration=222ms Status=200&#xD;
+[11:18:11 INF] API请求 POST /api/auth/login Duration=213ms Status=200&#xD;
+[11:18:11 INF] API请求 POST /api/auth/login Duration=213ms Status=200&#xD;
+[11:18:11 INF] API请求 POST /api/auth/login Duration=213ms Status=200&#xD;
+[11:18:11 INF] API请求 POST /api/auth/login Duration=213ms Status=200&#xD;
+[xUnit.net 00:00:04.58]       Expected result?.Data?.Items to contain only items satisfying the inspector, but collection is empty.&#xD;
+[xUnit.net 00:00:04.58]       Stack Trace:&#xD;
+[xUnit.net 00:00:04.58]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)&#xD;
+[xUnit.net 00:00:04.58]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)&#xD;
+[xUnit.net 00:00:04.58]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)&#xD;
+[xUnit.net 00:00:04.58]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)&#xD;
+[xUnit.net 00:00:04.58]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)&#xD;
+[xUnit.net 00:00:04.58]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)&#xD;
+[xUnit.net 00:00:04.58]            at FluentAssertions.Execution.GivenSelector`1.FailWith(String message, Object[] args)&#xD;
+[xUnit.net 00:00:04.58]            at FluentAssertions.Execution.GivenSelector`1.FailWith(String message)&#xD;
+[xUnit.net 00:00:04.58]            at FluentAssertions.Collections.GenericCollectionAssertions`3.AllSatisfy(Action`1 expected, String because, Object[] becauseArgs)&#xD;
+[xUnit.net 00:00:04.58]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs(294,0): at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_ListOnlyShowsBranchAData_ShouldFilterByBranch()&#xD;
+[xUnit.net 00:00:04.58]         --- End of stack trace from previous location ---&#xD;
+[11:18:11 INF] API请求 POST /api/auth/login Duration=223ms Status=200&#xD;
+[11:18:11 INF] API请求 POST /api/auth/login Duration=223ms Status=200&#xD;
+[11:18:11 INF] API请求 POST /api/auth/login Duration=218ms Status=200&#xD;
+[11:18:11 INF] API请求 POST /api/auth/login Duration=218ms Status=200&#xD;
+[11:18:11 WRN] 员工 5 缺少权限 Order.Create&#xD;
+[11:18:11 WRN] 员工 5 缺少权限 Order.Create&#xD;
+[11:18:11 INF] API请求 POST /api/auth/login Duration=222ms Status=200&#xD;
+[11:18:11 INF] API请求 POST /api/auth/login Duration=222ms Status=200&#xD;
+[11:18:11 INF] API请求 POST /api/auth/login Duration=219ms Status=200&#xD;
+[11:18:11 INF] API请求 POST /api/auth/login Duration=219ms Status=200&#xD;
+[11:18:11 INF] API请求 POST /api/auth/login Duration=217ms Status=200&#xD;
+[11:18:11 INF] API请求 POST /api/auth/login Duration=217ms Status=200&#xD;
+[11:18:11 INF] API请求 POST /api/auth/login Duration=218ms Status=200&#xD;
+[11:18:11 INF] API请求 POST /api/auth/login Duration=218ms Status=200&#xD;
+[11:18:11 INF] API请求 POST /api/auth/login Duration=214ms Status=200&#xD;
+[11:18:11 INF] API请求 POST /api/auth/login Duration=214ms Status=200&#xD;
+[xUnit.net 00:00:05.48]       Expected response.StatusCode to be one of {HttpStatusCode.Forbidden {value: 403}, HttpStatusCode.BadRequest {value: 400}}, but found HttpStatusCode.NotFound {value: 404}.&#xD;
+[xUnit.net 00:00:05.48]       Stack Trace:&#xD;
+[xUnit.net 00:00:05.48]            at FluentAssertions.Execution.XUnit2TestFramework.Throw(String message)&#xD;
+[xUnit.net 00:00:05.48]            at FluentAssertions.Execution.TestFrameworkProvider.Throw(String message)&#xD;
+[xUnit.net 00:00:05.48]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)&#xD;
+[xUnit.net 00:00:05.48]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)&#xD;
+[xUnit.net 00:00:05.48]            at FluentAssertions.Execution.AssertionScope.FailWith(Func`1 failReasonFunc)&#xD;
+[xUnit.net 00:00:05.48]            at FluentAssertions.Execution.AssertionScope.FailWith(String message, Object[] args)&#xD;
+[xUnit.net 00:00:05.48]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(IEnumerable`1 validValues, String because, Object[] becauseArgs)&#xD;
+[xUnit.net 00:00:05.48]            at FluentAssertions.Primitives.EnumAssertions`2.BeOneOf(TEnum[] validValues)&#xD;
+[xUnit.net 00:00:05.48]         C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs(258,0): at PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotCreateDeliveryPersonForBranchB_ShouldReturn403()&#xD;
+[xUnit.net 00:00:05.48]         --- End of stack trace from previous location ---&#xD;
+[11:18:12 INF] API请求 POST /api/auth/login Duration=213ms Status=200&#xD;
+[11:18:12 INF] API请求 POST /api/auth/login Duration=213ms Status=200&#xD;
+[11:18:12 INF] API请求 POST /api/auth/login Duration=213ms Status=200&#xD;
+[11:18:12 INF] API请求 POST /api/auth/login Duration=213ms Status=200&#xD;
+[11:18:12 INF] API请求 POST /api/auth/login Duration=208ms Status=200&#xD;
+[11:18:12 INF] API请求 POST /api/auth/login Duration=208ms Status=200&#xD;
+[11:18:12 INF] API请求 POST /api/auth/login Duration=209ms Status=200&#xD;
+[11:18:12 INF] API请求 POST /api/auth/login Duration=209ms Status=200&#xD;
+[11:18:12 WRN] 员工 5 缺少权限 Customer.Edit&#xD;
+[11:18:12 WRN] 员工 5 缺少权限 Customer.Edit&#xD;
+[xUnit.net 00:00:06.20]   Finished:    PRO.WebApi.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="INKCHOI" outcome="Error" timestamp="2026-06-09T11:18:10.3467044-07:00">
+        <Text>[xUnit.net 00:00:03.87]     PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotCreateCustomerForBranchB_ShouldReturn403 [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="INKCHOI" outcome="Error" timestamp="2026-06-09T11:18:11.0385154-07:00">
+        <Text>[xUnit.net 00:00:04.58]     PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_ListOnlyShowsBranchAData_ShouldFilterByBranch [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="INKCHOI" outcome="Error" timestamp="2026-06-09T11:18:11.9421622-07:00">
+        <Text>[xUnit.net 00:00:05.48]     PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotCreateDeliveryPersonForBranchB_ShouldReturn403 [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

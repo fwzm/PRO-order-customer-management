@@ -1,0 +1,14 @@
+  正在确定要还原的项目…
+  所有项目均是最新的，无法还原。
+  PRO.Domain -> C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Domain\bin\Release\net8.0\PRO.Domain.dll
+  PRO.Application -> C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Application\bin\Release\net8.0\PRO.Application.dll
+  PRO.Infrastructure -> C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Infrastructure\bin\Release\net8.0\PRO.Infrastructure.dll
+C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Desktop\ViewModels\AdditionalViewModels.cs(19,55): error CS1513: 应输入 } [C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Desktop\PRO.Desktop_xqn5vgah_wpftmp.csproj]
+
+生成失败。
+
+C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Desktop\ViewModels\AdditionalViewModels.cs(19,55): error CS1513: 应输入 } [C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Desktop\PRO.Desktop_xqn5vgah_wpftmp.csproj]
+    0 个警告
+    1 个错误
+
+已用时间 00:00:02.73

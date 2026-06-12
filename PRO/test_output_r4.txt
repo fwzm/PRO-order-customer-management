@@ -1,0 +1,508 @@
+  正在确定要还原的项目…
+  所有项目均是最新的，无法还原。
+  PRO.Domain -> C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Domain\bin\Release\net8.0\PRO.Domain.dll
+  PRO.Application -> C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Application\bin\Release\net8.0\PRO.Application.dll
+  PRO.Infrastructure -> C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.Infrastructure\bin\Release\net8.0\PRO.Infrastructure.dll
+  PRO.WebApi -> C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\src\PRO.WebApi\bin\Release\net8.0\PRO.WebApi.dll
+  PRO.WebApi.Tests -> C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Release\net8.0\PRO.WebApi.Tests.dll
+C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\bin\Release\net8.0\PRO.WebApi.Tests.dll (.NETCoreApp,Version=v8.0)的测试运行
+VSTest 版本 17.14.1 (x64)
+
+正在启动测试执行，请稍候...
+总共 1 个测试文件与指定模式相匹配。
+[xUnit.net 00:00:00.56]     PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotChangeBranchBOrderStatus_ShouldReturn403 [FAIL]
+[xUnit.net 00:00:00.61]     PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAssignBranchBOrder_ShouldReturn403 [FAIL]
+  失败 PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotChangeBranchBOrderStatus_ShouldReturn403 [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.BranchIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 34
+  失败 PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAssignBranchBOrder_ShouldReturn403 [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.BranchIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 34
+[xUnit.net 00:00:00.67]     PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotCreateCustomerForBranchB_ShouldReturn403 [FAIL]
+[xUnit.net 00:00:00.71]     PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotDeleteBranchBCustomer_ShouldReturn403 [FAIL]
+[xUnit.net 00:00:00.77]     PRO.WebApi.Tests.BranchIsolationTests.HeadquartersAdmin_CanAccessAllBranches_ShouldReturn200 [FAIL]
+[xUnit.net 00:00:00.82]     PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_ListOnlyShowsBranchAData_ShouldFilterByBranch [FAIL]
+[xUnit.net 00:00:00.90]     PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAccessBranchBCustomer_ShouldReturn403 [FAIL]
+[xUnit.net 00:00:00.96]     PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotMergeBranchBCustomer_ShouldReturn403 [FAIL]
+[xUnit.net 00:00:01.03]     PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAccessBranchBOrder_ShouldReturn403 [FAIL]
+  失败 PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotCreateCustomerForBranchB_ShouldReturn403 [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.BranchIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 34
+  失败 PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotDeleteBranchBCustomer_ShouldReturn403 [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.BranchIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 34
+  失败 PRO.WebApi.Tests.BranchIsolationTests.HeadquartersAdmin_CanAccessAllBranches_ShouldReturn200 [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.BranchIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 34
+  失败 PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_ListOnlyShowsBranchAData_ShouldFilterByBranch [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.BranchIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 34
+  失败 PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAccessBranchBCustomer_ShouldReturn403 [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.BranchIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 34
+  失败 PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotMergeBranchBCustomer_ShouldReturn403 [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.BranchIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 34
+  失败 PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAccessBranchBOrder_ShouldReturn403 [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.BranchIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 34
+[xUnit.net 00:00:01.13]     PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotCreateDeliveryPersonForBranchB_ShouldReturn403 [FAIL]
+  失败 PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotCreateDeliveryPersonForBranchB_ShouldReturn403 [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.BranchIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 34
+[xUnit.net 00:00:01.18]     PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAccessBranchBDeliveryPerson_ShouldReturn403 [FAIL]
+[xUnit.net 00:00:01.25]     PRO.WebApi.Tests.PermissionTests.NormalUser_CannotMergeCustomers_ShouldReturn403 [FAIL]
+  失败 PRO.WebApi.Tests.BranchIsolationTests.BranchAUser_CannotAccessBranchBDeliveryPerson_ShouldReturn403 [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.BranchIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 34
+  失败 PRO.WebApi.Tests.PermissionTests.NormalUser_CannotMergeCustomers_ShouldReturn403 [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.PermissionTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 292
+[xUnit.net 00:00:01.30]     PRO.WebApi.Tests.PermissionTests.NormalUser_CannotAutoAssign_ShouldReturn403 [FAIL]
+[xUnit.net 00:00:01.35]     PRO.WebApi.Tests.PermissionTests.NormalUser_CannotDeleteOrder_ShouldReturn403 [FAIL]
+[xUnit.net 00:00:01.43]     PRO.WebApi.Tests.PermissionIsolationTests.AuditLog_Contains_Operator_Info [FAIL]
+[xUnit.net 00:00:01.48]     PRO.WebApi.Tests.PermissionIsolationTests.AuditLog_Is_Branch_Isolated [FAIL]
+[xUnit.net 00:00:01.53]     PRO.WebApi.Tests.PermissionIsolationTests.Undo_Operation_Logs_Audit [FAIL]
+[xUnit.net 00:00:01.58]     PRO.WebApi.Tests.PermissionIsolationTests.BranchA_User_Cannot_Access_BranchB_Customer [FAIL]
+[xUnit.net 00:00:01.62]     PRO.WebApi.Tests.PermissionIsolationTests.BranchA_CustomerList_Contains_Only_BranchA_Data [FAIL]
+[xUnit.net 00:00:01.67]     PRO.WebApi.Tests.PermissionIsolationTests.BranchA_OrderList_Contains_Only_BranchA_Data [FAIL]
+  失败 PRO.WebApi.Tests.PermissionTests.NormalUser_CannotAutoAssign_ShouldReturn403 [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.PermissionTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 292
+  失败 PRO.WebApi.Tests.PermissionTests.NormalUser_CannotDeleteOrder_ShouldReturn403 [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.PermissionTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\BranchIsolationTests.cs:line 292
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.AuditLog_Contains_Operator_Info [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.PermissionIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 35
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.AuditLog_Is_Branch_Isolated [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.PermissionIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 35
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.Undo_Operation_Logs_Audit [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.PermissionIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 35
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.BranchA_User_Cannot_Access_BranchB_Customer [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.PermissionIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 35
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.BranchA_CustomerList_Contains_Only_BranchA_Data [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.PermissionIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 35
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.BranchA_OrderList_Contains_Only_BranchA_Data [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.PermissionIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 35
+[xUnit.net 00:00:01.73]     PRO.WebApi.Tests.PermissionIsolationTests.User_Without_OrderManage_Cannot_CreateOrder [FAIL]
+[xUnit.net 00:00:01.78]     PRO.WebApi.Tests.PermissionIsolationTests.Payment_Allocation_Partial_Allocation [FAIL]
+[xUnit.net 00:00:01.85]     PRO.WebApi.Tests.PermissionIsolationTests.BranchA_User_Cannot_Access_BranchB_Order [FAIL]
+[xUnit.net 00:00:01.93]     PRO.WebApi.Tests.PermissionIsolationTests.HeadquartersAdmin_Can_Access_All_Branches [FAIL]
+[xUnit.net 00:00:02.00]     PRO.WebApi.Tests.PermissionIsolationTests.PaymentRecords_Are_Branch_Isolated [FAIL]
+[xUnit.net 00:00:02.08]     PRO.WebApi.Tests.PermissionIsolationTests.User_Without_CustomerManage_Cannot_EditCustomer [FAIL]
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.User_Without_OrderManage_Cannot_CreateOrder [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.PermissionIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 35
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.Payment_Allocation_Partial_Allocation [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.PermissionIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 35
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.BranchA_User_Cannot_Access_BranchB_Order [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.PermissionIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 35
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.HeadquartersAdmin_Can_Access_All_Branches [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.PermissionIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 35
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.PaymentRecords_Are_Branch_Isolated [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.PermissionIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 35
+  失败 PRO.WebApi.Tests.PermissionIsolationTests.User_Without_CustomerManage_Cannot_EditCustomer [1 ms]
+  错误消息:
+   System.ObjectDisposedException : Cannot access a disposed object.
+Object name: 'IServiceProvider'.
+  堆栈跟踪:
+     at Microsoft.Extensions.DependencyInjection.ServiceLookup.ThrowHelper.ThrowObjectDisposedException()
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.ConfigureHostBuilder(IHostBuilder hostBuilder)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.EnsureServer()
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateDefaultClient(Uri baseAddress, DelegatingHandler[] handlers)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient(WebApplicationFactoryClientOptions options)
+   at Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory`1.CreateClient()
+   at PRO.WebApi.Tests.TestWebApplicationFactory.GetClientAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\TestWebApplicationFactory.cs:line 55
+   at PRO.WebApi.Tests.PermissionIsolationTests.InitializeAsync() in C:\Users\55160\xwechat_files\wxid_oc63s59xas9x12_a250\msg\file\2026-06\PRO项目\PRO\tests\PRO.WebApi.Tests\PermissionIsolationTests.cs:line 35
+
+失败!  - 失败:    26，通过:   165，已跳过:     0，总计:   191，持续时间: 1 s - PRO.WebApi.Tests.dll (net8.0)

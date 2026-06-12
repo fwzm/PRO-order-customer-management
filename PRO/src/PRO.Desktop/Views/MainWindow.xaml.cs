@@ -1,0 +1,161 @@
+using System.Windows;
+using System.Windows.Input;
+using PRO.Desktop.ViewModels;
+using PRO.Infrastructure.Persistence;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
+using PRO.Domain.Enums;
+
+namespace PRO.Desktop.Views;
+
+public partial class MainWindow : Window
+{
+    private readonly MainViewModel _viewModel;
+
+    public MainWindow(MainViewModel viewModel)
+    {
+        InitializeComponent();
+        _viewModel = viewModel;
+        DataContext = _viewModel;
+
+        // 订阅连接状态变更
+        App.ConnectionStatusChanged = (isConnected, message) =>
+        {
+            Dispatcher.Invoke(() =>
+            {
+                ConnectionBannerText.Text = message;
+                ConnectionBanner.Visibility = isConnected ? Visibility.Collapsed : Visibility.Visible;
+                ConnectionBanner.Background = isConnected
+                    ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(212, 237, 218)) // 绿色
+                    : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 243, 205)); // 黄色
+                ConnectionBannerText.Foreground = isConnected
+                    ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(21, 87, 36))
+                    : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(133, 100, 4));
+            });
+        };
+    }
+
+    /// <summary>显示全局加载覆盖层</summary>
+    public void ShowLoading(string? text = null) => LoadingCtrl.Show(text);
+
+    /// <summary>隐藏全局加载覆盖层</summary>
+    public void HideLoading() => LoadingCtrl.Hide();
+
+    // ======== 标签栏 ========
+
+    private void TabBorder_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is FrameworkElement element && element.DataContext is ViewModels.TabItem tab)
+        {
+            foreach (var t in _viewModel.TabItems)
+                t.IsSelected = false;
+            tab.IsSelected = true;
+            _viewModel.SelectedTab = tab;
+        }
+    }
+
+    // ======== 键盘快捷键 ========
+
+    private void Window_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.F5)
+        {
+            _viewModel.RefreshCurrentTabCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.F && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+        {
+            _viewModel.ToggleSearchCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape && _viewModel.IsSearchVisible)
+        {
+            _viewModel.ClearSearchCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.W && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+        {
+            if (_viewModel.SelectedTab != null && _viewModel.SelectedTab.IsClosable)
+                _viewModel.CloseTabCommand.Execute(_viewModel.SelectedTab);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.F1)
+        {
+            _viewModel.NavigateToDashboardCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key >= Key.D1 && e.Key <= Key.D9 && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+        {
+            var tabIndex = e.Key - Key.D1;
+            if (tabIndex < _viewModel.TabItems.Count)
+            {
+                var tab = _viewModel.TabItems[tabIndex];
+                tab.IsSelected = true;
+                _viewModel.SelectedTab = tab;
+            }
+            e.Handled = true;
+        }
+        else if (e.Key == Key.K && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+        {
+            _viewModel.OpenGlobalSearchCommand.Execute(null);
+            e.Handled = true;
+        }
+    }
+
+    // ======== 窗口状态 ========
+
+    protected override void OnStateChanged(EventArgs e)
+    {
+        base.OnStateChanged(e);
+        if (WindowState == WindowState.Normal)
+            ShowInTaskbar = true;
+    }
+
+    protected override async void OnClosing(System.ComponentModel.CancelEventArgs e)
+    {
+        try
+        {
+            await OnClosingInternalAsync(e);
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, "窗口关闭过程中发生异常");
+            // 异常时仍允许关闭，避免窗口卡死
+            base.OnClosing(e);
+        }
+    }
+
+    private async Task OnClosingInternalAsync(System.ComponentModel.CancelEventArgs e)
+    {
+        using var scope = App.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ProDbContext>();
+        var settings = await dbContext.LocalSettings.ToListAsync();
+        var closeBehavior = settings.FirstOrDefault(s => s.SettingKey == "CloseBehavior");
+
+        if (closeBehavior == null || closeBehavior.SettingValue == "0")
+        {
+            var pendingCount = await dbContext.OperationLogs
+                .CountAsync(o => o.SyncStatus == SyncStatus.Pending);
+
+            if (pendingCount > 0)
+            {
+                var pendingLogs = await dbContext.OperationLogs
+                    .Where(o => o.SyncStatus == SyncStatus.Pending)
+                    .ToListAsync();
+                foreach (var log in pendingLogs)
+                {
+                    log.SyncStatus = SyncStatus.Synced;
+                }
+                await dbContext.SaveChangesAsync();
+            }
+
+            e.Cancel = true;
+            WindowState = WindowState.Minimized;
+            Hide();
+            ShowInTaskbar = false;
+            return;
+        }
+
+        base.OnClosing(e);
+    }
+}

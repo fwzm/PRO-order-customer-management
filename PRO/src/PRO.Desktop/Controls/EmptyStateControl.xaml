@@ -1,0 +1,74 @@
+<UserControl x:Class="PRO.Desktop.Controls.EmptyStateControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <!-- 深色主题适配 -->
+        <Style TargetType="TextBlock" x:Key="EmptyStateTitleStyle">
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource LabelBrush}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="EmptyStateDescriptionStyle">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryLabelBrush}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="EmptyStateHintStyle">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{DynamicResource QuaternaryLabelBrush}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" 
+                Margin="40" MaxWidth="420">
+        <!-- 图标 -->
+        <materialDesign:PackIcon Kind="{Binding IconKind}" 
+                                  Width="64" Height="64" 
+                                  Foreground="{DynamicResource TertiaryLabelBrush}"
+                                  HorizontalAlignment="Center"/>
+
+        <!-- 标题 -->
+        <TextBlock Text="{Binding Title}" 
+                   Style="{StaticResource EmptyStateTitleStyle}"
+                   Margin="0,16,0,8"/>
+
+        <!-- 描述 -->
+        <TextBlock Text="{Binding Description}" 
+                   Style="{StaticResource EmptyStateDescriptionStyle}"
+                   Margin="0,0,0,20"/>
+
+        <!-- 操作按钮 -->
+        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+            <Button Content="{Binding PrimaryButtonText}" 
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Command="{Binding PrimaryCommand}"
+                    Visibility="{Binding HasPrimaryAction, Converter={StaticResource BoolToVisibilityConverter}}"
+                    Padding="20,10" Margin="0,0,8,0"/>
+            <Button Content="{Binding SecondaryButtonText}" 
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Command="{Binding SecondaryCommand}"
+                    Visibility="{Binding HasSecondaryAction, Converter={StaticResource BoolToVisibilityConverter}}"
+                    Padding="20,10"/>
+        </StackPanel>
+
+        <!-- 附加提示 -->
+        <TextBlock Text="{Binding HintText}" 
+                   Style="{StaticResource EmptyStateHintStyle}"
+                   Margin="0,16,0,0"
+                   Visibility="{Binding HasHint, Converter={StaticResource BoolToVisibilityConverter}}"/>
+    </StackPanel>
+</UserControl>
