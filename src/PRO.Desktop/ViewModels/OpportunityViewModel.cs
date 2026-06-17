@@ -12,13 +12,13 @@ public partial class OpportunityViewModel : ViewModelBase
 {
     private readonly ProDbContext _db;
 
-    [ObservableProperty] private ObservableCollection<OpportunityItem> _opportunities = new();
+    [ObservableProperty] private ObservableCollection<OpportunityItem> _opportunities = [];
     [ObservableProperty] private OpportunityItem? _selectedOpportunity;
-    [ObservableProperty] private ObservableCollection<CustomerItem> _customers = new();
+    [ObservableProperty] private ObservableCollection<CustomerItem> _customers = [];
     [ObservableProperty] private CustomerItem? _selectedCustomer;
-    [ObservableProperty] private ObservableCollection<EmployeeItem> _employees = new();
+    [ObservableProperty] private ObservableCollection<EmployeeItem> _employees = [];
     [ObservableProperty] private EmployeeItem? _selectedDeveloper;
-    [ObservableProperty] private ObservableCollection<ProductItem> _products = new();
+    [ObservableProperty] private ObservableCollection<ProductItem> _products = [];
     [ObservableProperty] private string _searchKeyword = string.Empty;
     [ObservableProperty] private OpportunityStage? _filterStage;
 
@@ -37,11 +37,11 @@ public partial class OpportunityViewModel : ViewModelBase
     private int? _editId;
 
     // 看板分组
-    [ObservableProperty] private ObservableCollection<OpportunityItem> _stageTrial = new();
-    [ObservableProperty] private ObservableCollection<OpportunityItem> _stageComms = new();
-    [ObservableProperty] private ObservableCollection<OpportunityItem> _stageQuote = new();
-    [ObservableProperty] private ObservableCollection<OpportunityItem> _stageWon = new();
-    [ObservableProperty] private ObservableCollection<OpportunityItem> _stageLost = new();
+    [ObservableProperty] private ObservableCollection<OpportunityItem> _stageTrial = [];
+    [ObservableProperty] private ObservableCollection<OpportunityItem> _stageComms = [];
+    [ObservableProperty] private ObservableCollection<OpportunityItem> _stageQuote = [];
+    [ObservableProperty] private ObservableCollection<OpportunityItem> _stageWon = [];
+    [ObservableProperty] private ObservableCollection<OpportunityItem> _stageLost = [];
 
     // 统计
     [ObservableProperty] private int _totalCount;
@@ -76,10 +76,15 @@ public partial class OpportunityViewModel : ViewModelBase
             var list = await query.OrderByDescending(o => o.CreatedAt).ToListAsync();
             var items = list.Select(o => new OpportunityItem
             {
-                Id = o.Id, Title = o.Title, CustomerId = o.CustomerId,
-                CustomerName = o.Customer?.Name, Stage = o.Stage,
-                ExpectedCloseDate = o.ExpectedCloseDate, ExpectedAmount = o.ExpectedAmount,
-                Requirements = o.Requirements, DeveloperName = o.Developer?.Name,
+                Id = o.Id,
+                Title = o.Title,
+                CustomerId = o.CustomerId,
+                CustomerName = o.Customer?.Name,
+                Stage = o.Stage,
+                ExpectedCloseDate = o.ExpectedCloseDate,
+                ExpectedAmount = o.ExpectedAmount,
+                Requirements = o.Requirements,
+                DeveloperName = o.Developer?.Name,
                 CustomerManagerName = o.Customer?.CustomerManager?.Name ?? o.Developer?.Name ?? "",
                 CreatedAt = o.CreatedAt
             }).ToList();
@@ -146,11 +151,19 @@ public partial class OpportunityViewModel : ViewModelBase
             {
                 _db.Opportunities.Add(new Opportunity
                 {
-                    Title = EditTitle, Stage = EditStage, ExpectedCloseDate = EditExpectedCloseDate,
-                    ExpectedAmount = EditExpectedAmount ?? 0, Requirements = EditRequirements,
-                    TrialProducts = EditTrialProducts, IntendedProducts = EditIntendedProducts, Notes = EditNotes,
-                    CustomerId = SelectedCustomer.Id, DeveloperId = SelectedDeveloper?.Id ?? CurrentSession.CurrentEmployeeId,
-                    BranchId = CurrentSession.CurrentBranchId, CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now
+                    Title = EditTitle,
+                    Stage = EditStage,
+                    ExpectedCloseDate = EditExpectedCloseDate,
+                    ExpectedAmount = EditExpectedAmount ?? 0,
+                    Requirements = EditRequirements,
+                    TrialProducts = EditTrialProducts,
+                    IntendedProducts = EditIntendedProducts,
+                    Notes = EditNotes,
+                    CustomerId = SelectedCustomer.Id,
+                    DeveloperId = SelectedDeveloper?.Id ?? CurrentSession.CurrentEmployeeId,
+                    BranchId = CurrentSession.CurrentBranchId,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
                 });
             }
             await _db.SaveChangesAsync();
@@ -199,9 +212,13 @@ public class OpportunityItem
     public OpportunityStage Stage { get; set; }
     public string StageName => Stage switch
     {
-        OpportunityStage.Trial => "试用", OpportunityStage.Communication => "沟通",
-        OpportunityStage.Quotation => "报价", OpportunityStage.Negotiation => "谈判",
-        OpportunityStage.Won => "成交", OpportunityStage.Lost => "流失", _ => ""
+        OpportunityStage.Trial => "试用",
+        OpportunityStage.Communication => "沟通",
+        OpportunityStage.Quotation => "报价",
+        OpportunityStage.Negotiation => "谈判",
+        OpportunityStage.Won => "成交",
+        OpportunityStage.Lost => "流失",
+        _ => ""
     };
     public DateTime? ExpectedCloseDate { get; set; }
     public decimal? ExpectedAmount { get; set; }

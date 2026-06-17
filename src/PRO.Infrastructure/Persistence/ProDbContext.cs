@@ -112,6 +112,24 @@ public class ProDbContext : DbContext
     public DbSet<CustomerTag> CustomerTags => Set<CustomerTag>();
     public DbSet<AppVersion> AppVersions => Set<AppVersion>();
 
+    // 导出导入历史
+    public DbSet<ExportHistory> ExportHistories => Set<ExportHistory>();
+    public DbSet<ImportHistory> ImportHistories => Set<ImportHistory>();
+
+    // P2 扩展
+    public DbSet<BusinessErrorMetric> BusinessErrorMetrics => Set<BusinessErrorMetric>();
+    public DbSet<ExportJob> ExportJobs => Set<ExportJob>();
+    public DbSet<InventoryChangeLog> InventoryChangeLogs => Set<InventoryChangeLog>();
+    public DbSet<InventoryMovement> InventoryMovements => Set<InventoryMovement>();
+    public DbSet<OrderTemplate> OrderTemplates => Set<OrderTemplate>();
+    public DbSet<OrderTemplateItem> OrderTemplateItems => Set<OrderTemplateItem>();
+    public DbSet<OrderStatusHistory> OrderStatusHistories => Set<OrderStatusHistory>();
+    public DbSet<PaymentRecord> PaymentRecords => Set<PaymentRecord>();
+    public DbSet<PaymentAllocation> PaymentAllocations => Set<PaymentAllocation>();
+    public DbSet<PaymentStatusHistory> PaymentStatusHistories => Set<PaymentStatusHistory>();
+    public DbSet<AuditLogDetail> AuditLogDetails => Set<AuditLogDetail>();
+    public DbSet<UndoableOperation> UndoableOperations => Set<UndoableOperation>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -519,6 +537,163 @@ public class ProDbContext : DbContext
             entity.HasIndex(e => e.Name);
             entity.HasOne(e => e.Branch).WithMany().HasForeignKey(e => e.BranchId);
             entity.HasMany(e => e.Products).WithOne().HasForeignKey("WarehouseId").OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // ExportHistory
+        modelBuilder.Entity<ExportHistory>(entity =>
+        {
+            entity.ToTable("ExportHistories");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.BranchId);
+            entity.HasIndex(e => e.ExportTime);
+            entity.HasIndex(e => new { e.BranchId, e.ExportTime });
+        });
+
+        // ImportHistory
+        modelBuilder.Entity<ImportHistory>(entity =>
+        {
+            entity.ToTable("ImportHistories");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.BranchId);
+            entity.HasIndex(e => e.ImportTime);
+            entity.HasIndex(e => new { e.BranchId, e.ImportTime });
+        });
+
+        // BusinessErrorMetric
+        modelBuilder.Entity<BusinessErrorMetric>(entity =>
+        {
+            entity.ToTable("BusinessErrorMetrics");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.ErrorCode);
+            entity.HasIndex(e => e.OccurredAt);
+            entity.HasIndex(e => new { e.Module, e.OccurredAt });
+        });
+
+        // ExportJob
+        modelBuilder.Entity<ExportJob>(entity =>
+        {
+            entity.ToTable("ExportJobs");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.BranchId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.CreatedAt);
+            entity.HasOne(e => e.RequestedBy).WithMany().HasForeignKey(e => e.RequestedById).OnDelete(DeleteBehavior.NoAction);
+            entity.HasOne(e => e.Branch).WithMany().HasForeignKey(e => e.BranchId);
+        });
+
+        // InventoryChangeLog
+        modelBuilder.Entity<InventoryChangeLog>(entity =>
+        {
+            entity.ToTable("InventoryChangeLogs");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.ProductId);
+            entity.HasIndex(e => e.CreatedAt);
+            entity.HasOne(e => e.Product).WithMany().HasForeignKey(e => e.ProductId);
+            entity.HasOne(e => e.RelatedOrder).WithMany().HasForeignKey(e => e.RelatedOrderId).OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // InventoryMovement
+        modelBuilder.Entity<InventoryMovement>(entity =>
+        {
+            entity.ToTable("InventoryMovements");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.ProductId);
+            entity.HasIndex(e => e.CreatedAt);
+            entity.HasOne(e => e.Product).WithMany().HasForeignKey(e => e.ProductId);
+            entity.HasOne(e => e.Order).WithMany().HasForeignKey(e => e.OrderId).OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // OrderTemplate
+        modelBuilder.Entity<OrderTemplate>(entity =>
+        {
+            entity.ToTable("OrderTemplates");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.CustomerId);
+            entity.HasIndex(e => e.CreatedById);
+            entity.HasOne(e => e.Customer).WithMany().HasForeignKey(e => e.CustomerId);
+            entity.HasOne(e => e.CreatedBy).WithMany().HasForeignKey(e => e.CreatedById).OnDelete(DeleteBehavior.NoAction);
+        });
+
+        // OrderTemplateItem
+        modelBuilder.Entity<OrderTemplateItem>(entity =>
+        {
+            entity.ToTable("OrderTemplateItems");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.OrderTemplateId);
+            entity.HasOne(e => e.OrderTemplate).WithMany(t => t.Items).HasForeignKey(e => e.OrderTemplateId);
+            entity.HasOne(e => e.Product).WithMany().HasForeignKey(e => e.ProductId);
+        });
+
+        // OrderStatusHistory
+        modelBuilder.Entity<OrderStatusHistory>(entity =>
+        {
+            entity.ToTable("OrderStatusHistories");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.OrderId);
+            entity.HasIndex(e => e.CreatedAt);
+            entity.HasOne(e => e.Order).WithMany().HasForeignKey(e => e.OrderId);
+            entity.HasOne(e => e.Operator).WithMany().HasForeignKey(e => e.OperatorId).OnDelete(DeleteBehavior.NoAction);
+        });
+
+        // PaymentRecord
+        modelBuilder.Entity<PaymentRecord>(entity =>
+        {
+            entity.ToTable("PaymentRecords");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.PaymentNo).IsUnique();
+            entity.HasIndex(e => e.CustomerId);
+            entity.HasIndex(e => e.OrderId);
+            entity.HasIndex(e => e.PaymentDate);
+            entity.HasIndex(e => new { e.CustomerId, e.PaymentDate });
+            entity.HasOne(e => e.Order).WithMany().HasForeignKey(e => e.OrderId);
+            entity.HasOne(e => e.Customer).WithMany().HasForeignKey(e => e.CustomerId);
+            entity.HasOne(e => e.ReceivedBy).WithMany().HasForeignKey(e => e.ReceivedById).OnDelete(DeleteBehavior.NoAction);
+        });
+
+        // PaymentAllocation
+        modelBuilder.Entity<PaymentAllocation>(entity =>
+        {
+            entity.ToTable("PaymentAllocations");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.PaymentRecordId);
+            entity.HasIndex(e => e.OrderId);
+            entity.HasIndex(e => new { e.PaymentRecordId, e.OrderId });
+            entity.HasOne(e => e.PaymentRecord).WithMany(p => p.Allocations).HasForeignKey(e => e.PaymentRecordId);
+            entity.HasOne(e => e.Order).WithMany().HasForeignKey(e => e.OrderId);
+            entity.HasOne(e => e.AllocatedBy).WithMany().HasForeignKey(e => e.AllocatedById).OnDelete(DeleteBehavior.NoAction);
+        });
+
+        // PaymentStatusHistory
+        modelBuilder.Entity<PaymentStatusHistory>(entity =>
+        {
+            entity.ToTable("PaymentStatusHistories");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.EntityType, e.EntityId });
+            entity.HasIndex(e => e.CreatedAt);
+            entity.HasOne(e => e.Operator).WithMany().HasForeignKey(e => e.OperatorId).OnDelete(DeleteBehavior.NoAction);
+        });
+
+        // AuditLogDetail
+        modelBuilder.Entity<AuditLogDetail>(entity =>
+        {
+            entity.ToTable("AuditLogDetails");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.EntityType, e.EntityId });
+            entity.HasIndex(e => e.BranchId);
+            entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => e.OperatorId);
+            entity.HasOne(e => e.Operator).WithMany().HasForeignKey(e => e.OperatorId).OnDelete(DeleteBehavior.NoAction);
+        });
+
+        // UndoableOperation
+        modelBuilder.Entity<UndoableOperation>(entity =>
+        {
+            entity.ToTable("UndoableOperations");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.OperatorId);
+            entity.HasIndex(e => e.OperatedAt);
+            entity.HasIndex(e => new { e.EntityType, e.EntityId });
+            entity.HasOne(e => e.Operator).WithMany().HasForeignKey(e => e.OperatorId).OnDelete(DeleteBehavior.NoAction);
         });
     }
 }

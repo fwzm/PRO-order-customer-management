@@ -43,6 +43,10 @@
         <DataTemplate DataType="{x:Type vm:VisitOpportunityViewModel}"><local:VisitOpportunityView /></DataTemplate>
         <DataTemplate DataType="{x:Type vm:DistrictTagViewModel}"><local:DistrictTagView /></DataTemplate>
         <DataTemplate DataType="{x:Type vm:OperationLogViewModel}"><local:OperationLogView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CustomerArchiveViewModel}"><local:CustomerArchiveView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PaymentRegistrationViewModel}"><local:PaymentRegistrationView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DataQualityViewModel}"><local:DataQualityView /></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ErrorDashboardViewModel}"><local:ErrorDashboardView /></DataTemplate>
     </Window.Resources>
 
     <Grid>

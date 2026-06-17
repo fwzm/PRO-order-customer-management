@@ -88,27 +88,64 @@ function statusType(status) {
   return map[status] || 'info'
 }
 
-function initCharts() {
-  // 订单趋势图
+const statusNameMap = {
+  Draft: '草稿',
+  Pending: '待分配',
+  Assigned: '已分配',
+  Delivering: '配送中',
+  Completed: '已完成',
+  Failed: '配送失败',
+  Cancelled: '已取消',
+}
+
+function initCharts(orders) {
+  // 订单趋势图 — 近7天
   if (orderTrendRef.value) {
     const trendChart = echarts.init(orderTrendRef.value)
+    const days = []
+    const orderCounts = []
+    const revenues = []
+    const now = new Date()
+
+    // 计算近7天每天的订单数和营收
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now)
+      d.setDate(d.getDate() - i)
+      const dateStr = d.toISOString().split('T')[0]
+      const dayLabel = d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
+      days.push(dayLabel)
+
+      if (orders && orders.length > 0) {
+        const dayOrders = orders.filter(o => {
+          const created = o.createdAt
+          return created && (typeof created === 'string' ? created.startsWith(dateStr) : false)
+        })
+        orderCounts.push(dayOrders.length)
+        const dayRevenue = dayOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0)
+        revenues.push(Math.round(dayRevenue / 1000 * 10) / 10)
+      } else {
+        orderCounts.push(0)
+        revenues.push(0)
+      }
+    }
+
     trendChart.setOption({
       tooltip: { trigger: 'axis' },
-      xAxis: { type: 'category', data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'] },
+      xAxis: { type: 'category', data: days },
       yAxis: { type: 'value' },
       series: [
         {
           name: '订单数',
           type: 'line',
           smooth: true,
-          data: [0, 0, 0, 0, 0, 0, 0],
+          data: orderCounts,
           areaStyle: { opacity: 0.3 },
           itemStyle: { color: '#409EFF' },
         },
         {
           name: '营收(千元)',
           type: 'bar',
-          data: [0, 0, 0, 0, 0, 0, 0],
+          data: revenues,
           itemStyle: { color: '#67C23A' },
         },
       ],
@@ -119,34 +156,75 @@ function initCharts() {
   // 订单状态分布
   if (orderStatusRef.value) {
     const statusChart = echarts.init(orderStatusRef.value)
+    const statusCounts = {
+      '待处理': 0,  // Pending + Assigned
+      '配送中': 0,
+      '已完成': 0,
+      '已取消': 0,
+    }
+
+    if (orders && orders.length > 0) {
+      orders.forEach(o => {
+        const name = statusNameMap[o.statusName] || '其他'
+        if (o.statusName === 'Pending' || o.statusName === 'Assigned') {
+          statusCounts['待处理']++
+        } else if (o.statusName === 'Delivering') {
+          statusCounts['配送中']++
+        } else if (o.statusName === 'Completed') {
+          statusCounts['已完成']++
+        } else if (o.statusName === 'Cancelled' || o.statusName === 'Failed') {
+          statusCounts['已取消']++
+        }
+      })
+    }
+
     statusChart.setOption({
       tooltip: { trigger: 'item' },
       series: [
         {
           type: 'pie',
           radius: ['40%', '70%'],
-          data: [
-            { value: 0, name: '待处理' },
-            { value: 0, name: '配送中' },
-            { value: 0, name: '已完成' },
-            { value: 0, name: '已取消' },
-          ],
+          data: Object.entries(statusCounts).map(([name, value]) => ({ value, name })),
           label: { show: true, formatter: '{b}: {c}' },
         },
       ],
     })
   }
+
+  // 更新统计卡片
+  if (orders && orders.length > 0) {
+    const today = new Date().toISOString().split('T')[0]
+    const todayOrders = orders.filter(o => {
+      const created = o.createdAt
+      return created && (typeof created === 'string' ? created.startsWith(today) : false)
+    })
+    const pendingOrders = orders.filter(o => o.statusName === 'Pending' || o.statusName === 'Assigned')
+    const monthRevenue = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0)
+
+    statCards.value[0].value = String(todayOrders.length)
+    statCards.value[1].value = `¥${monthRevenue.toLocaleString()}`
+    statCards.value[2].value = String(pendingOrders.length)
+  }
 }
 
 onMounted(async () => {
-  nextTick(initCharts)
   try {
-    const res = await orderApi.getList({ pageSize: 10 })
+    // 获取更多订单数据用于图表统计
+    const res = await orderApi.getList({ pageSize: 500, keyword: '' })
     if (res.success) {
-      recentOrders.value = res.data?.items || []
+      const orders = res.data?.items || []
+      recentOrders.value = orders.slice(0, 10)
+
+      // 更新客户总数（如果有customerApi的话，这里用占位）
+      statCards.value[3].value = res.data?.totalCount ? String(res.data.totalCount) : '—'
+
+      await nextTick()
+      initCharts(orders)
     }
   } catch (e) {
-    // 忽略初始加载错误
+    // 忽略初始加载错误，使用空图表
+    await nextTick()
+    initCharts([])
   }
 })
 </script>

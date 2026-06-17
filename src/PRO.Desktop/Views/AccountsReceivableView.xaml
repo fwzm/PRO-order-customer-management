@@ -1,5 +1,6 @@
 <UserControl x:Class="PRO.Desktop.Views.AccountsReceivableView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:controls="clr-namespace:PRO.Desktop.Controls"
         Background="{StaticResource ContentBackgroundBrush}">
     <Grid Margin="20"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
         <StackPanel><TextBlock Text="应收账款" Style="{StaticResource PageTitleStyle}"/><TextBlock FontSize="12" Foreground="{StaticResource TertiaryLabelBrush}" Margin="0,2,0,12">
@@ -31,5 +32,7 @@
                 <DataGridTextColumn Header="创建" Binding="{Binding CreatedAt, StringFormat={}{0:MM-dd}}" Width="60"/>
             </DataGrid.Columns>
         </DataGrid>
+        <controls:EmptyStateControl Grid.Row="3" DataContext="{Binding EmptyState}"
+                Visibility="{Binding ShowEmptyState, Converter={StaticResource BoolToVisibilityConverter}}"/>
     </Grid>
 </UserControl>

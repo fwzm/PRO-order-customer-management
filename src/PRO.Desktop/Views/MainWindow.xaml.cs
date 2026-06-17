@@ -73,6 +73,33 @@ public partial class MainWindow : Window
             _viewModel.ClearSearchCommand.Execute(null);
             e.Handled = true;
         }
+        else if (e.Key == Key.W && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+        {
+            if (_viewModel.SelectedTab != null && _viewModel.SelectedTab.IsClosable)
+                _viewModel.CloseTabCommand.Execute(_viewModel.SelectedTab);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.F1)
+        {
+            _viewModel.NavigateToDashboardCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key >= Key.D1 && e.Key <= Key.D9 && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+        {
+            var tabIndex = e.Key - Key.D1;
+            if (tabIndex < _viewModel.TabItems.Count)
+            {
+                var tab = _viewModel.TabItems[tabIndex];
+                tab.IsSelected = true;
+                _viewModel.SelectedTab = tab;
+            }
+            e.Handled = true;
+        }
+        else if (e.Key == Key.K && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+        {
+            _viewModel.OpenGlobalSearchCommand.Execute(null);
+            e.Handled = true;
+        }
     }
 
     // ======== 窗口状态 ========
@@ -88,38 +115,45 @@ public partial class MainWindow : Window
     {
         try
         {
-            using var scope = App.Services.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<ProDbContext>();
-            var settings = await dbContext.LocalSettings.ToListAsync();
-            var closeBehavior = settings.FirstOrDefault(s => s.SettingKey == "CloseBehavior");
-
-            if (closeBehavior == null || closeBehavior.SettingValue == "0")
-            {
-                var pendingCount = await dbContext.OperationLogs
-                    .CountAsync(o => o.SyncStatus == SyncStatus.Pending);
-
-                if (pendingCount > 0)
-                {
-                    var pendingLogs = await dbContext.OperationLogs
-                        .Where(o => o.SyncStatus == SyncStatus.Pending)
-                        .ToListAsync();
-                    foreach (var log in pendingLogs)
-                    {
-                        log.SyncStatus = SyncStatus.Synced;
-                    }
-                    await dbContext.SaveChangesAsync();
-                }
-
-                e.Cancel = true;
-                WindowState = WindowState.Minimized;
-                Hide();
-                ShowInTaskbar = false;
-                return;
-            }
+            await OnClosingInternalAsync(e);
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"窗口关闭异常: {ex.Message}");
+            Serilog.Log.Error(ex, "窗口关闭过程中发生异常");
+            // 异常时仍允许关闭，避免窗口卡死
+            base.OnClosing(e);
+        }
+    }
+
+    private async Task OnClosingInternalAsync(System.ComponentModel.CancelEventArgs e)
+    {
+        using var scope = App.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ProDbContext>();
+        var settings = await dbContext.LocalSettings.ToListAsync();
+        var closeBehavior = settings.FirstOrDefault(s => s.SettingKey == "CloseBehavior");
+
+        if (closeBehavior == null || closeBehavior.SettingValue == "0")
+        {
+            var pendingCount = await dbContext.OperationLogs
+                .CountAsync(o => o.SyncStatus == SyncStatus.Pending);
+
+            if (pendingCount > 0)
+            {
+                var pendingLogs = await dbContext.OperationLogs
+                    .Where(o => o.SyncStatus == SyncStatus.Pending)
+                    .ToListAsync();
+                foreach (var log in pendingLogs)
+                {
+                    log.SyncStatus = SyncStatus.Synced;
+                }
+                await dbContext.SaveChangesAsync();
+            }
+
+            e.Cancel = true;
+            WindowState = WindowState.Minimized;
+            Hide();
+            ShowInTaskbar = false;
+            return;
         }
 
         base.OnClosing(e);

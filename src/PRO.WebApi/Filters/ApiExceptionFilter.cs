@@ -7,14 +7,9 @@ namespace PRO.WebApi.Filters;
 /// <summary>
 /// API 异常过滤器
 /// </summary>
-public class ApiExceptionFilter : IExceptionFilter
+public class ApiExceptionFilter(ILogger<ApiExceptionFilter> logger) : IExceptionFilter
 {
-    private readonly ILogger<ApiExceptionFilter> _logger;
-
-    public ApiExceptionFilter(ILogger<ApiExceptionFilter> logger)
-    {
-        _logger = logger;
-    }
+    private readonly ILogger<ApiExceptionFilter> _logger = logger;
 
     public void OnException(ExceptionContext context)
     {
@@ -22,7 +17,7 @@ public class ApiExceptionFilter : IExceptionFilter
 
         var response = ApiResponse<object>.Fail(
             "操作失败",
-            new List<string> { context.Exception.Message });
+            [context.Exception.Message]);
 
         context.Result = new ObjectResult(response)
         {

@@ -83,6 +83,9 @@ public class OrderDistributionService : IOrderDistributionService
             if (person.CurrentLoad >= person.MaxLoad)
                 return ApiResponse<bool>.Fail("配送员已满载");
 
+            if (!OrderStatusManager.IsValidTransition(order.Status, OrderStatus.Assigned))
+                return ApiResponse<bool>.Fail($"订单不能从「{OrderStatusManager.GetStatusName(order.Status)}」直接变为「{OrderStatusManager.GetStatusName(OrderStatus.Assigned)}」");
+
             order.DeliveryPersonId = deliveryPersonId;
             order.Status = OrderStatus.Assigned;
             order.UpdatedAt = DateTime.Now;
@@ -164,6 +167,9 @@ public class OrderDistributionService : IOrderDistributionService
 
                 if (order != null && person != null)
                 {
+                    if (!OrderStatusManager.IsValidTransition(order.Status, OrderStatus.Assigned))
+                        continue;
+
                     order.DeliveryPersonId = assignment.Value;
                     order.Status = OrderStatus.Assigned;
                     order.UpdatedAt = DateTime.Now;

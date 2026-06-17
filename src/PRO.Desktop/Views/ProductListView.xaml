@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:controls="clr-namespace:PRO.Desktop.Controls"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="1000"
              Background="{StaticResource BackgroundBrush}">
@@ -27,7 +28,8 @@
                 <TextBlock Text="产品管理" Style="{StaticResource PageTitleStyle}" Margin="0"/>
                 
                 <Button Grid.Column="1" Content="新增产品" Style="{StaticResource PrimaryButtonStyle}"
-                        Command="{Binding NewProductCommand}"/>
+                        Command="{Binding NewProductCommand}"
+                        Visibility="{Binding ShowEmptyState, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
             </Grid>
         </Border>
 
@@ -70,7 +72,9 @@
             <DataGrid ItemsSource="{Binding Products}"
                       SelectedItem="{Binding SelectedProduct}"
                       Style="{StaticResource DataGridStyle}"
-                      IsReadOnly="True">
+                      IsReadOnly="True"
+                      EnableRowVirtualization="True" EnableColumnVirtualization="True"
+                      VirtualizingStackPanel.IsVirtualizing="True" VirtualizingStackPanel.VirtualizationMode="Recycling">
                 <DataGrid.InputBindings>
                     <KeyBinding Gesture="Ctrl+N" Command="{Binding NewProductCommand}"/>
                 </DataGrid.InputBindings>
@@ -106,13 +110,9 @@
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
-            <Border Background="Transparent"
-                    Visibility="{Binding Products.Count, Converter={StaticResource ZeroToVisibilityConverter}}">
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <TextBlock Text="暂无产品" FontSize="20" Foreground="{StaticResource QuaternaryLabelBrush}" HorizontalAlignment="Center"/>
-                    <TextBlock Text="点击右上角「新增产品」开始" FontSize="13" Foreground="{StaticResource QuaternaryLabelBrush}" HorizontalAlignment="Center" Margin="0,8,0,0"/>
-                </StackPanel>
-            </Border>
+            <!-- 统一空状态控件 -->
+            <controls:EmptyStateControl DataContext="{Binding EmptyState}"
+                    Visibility="{Binding ShowEmptyState, Converter={StaticResource BoolToVisibilityConverter}}"/>
             </Grid>
         </Border>
 

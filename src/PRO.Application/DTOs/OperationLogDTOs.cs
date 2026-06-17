@@ -67,8 +67,8 @@ public class OperationLogStatsDto
     public int WeekCount { get; set; }
     public int MonthCount { get; set; }
     public int FailedCount { get; set; }
-    public List<ModuleStats> ModuleStats { get; set; } = new();
-    public List<DailyStats> DailyStats { get; set; } = new();
+    public List<ModuleStats> ModuleStats { get; set; } = [];
+    public List<DailyStats> DailyStats { get; set; } = [];
 }
 
 public class ModuleStats

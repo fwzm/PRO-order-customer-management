@@ -2,6 +2,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows;
 using PRO.Desktop.ViewModels;
+using Serilog;
 
 namespace PRO.Desktop.Views;
 
@@ -14,16 +15,23 @@ public partial class WorkScheduleView : UserControl
 
     private async void DayBorder_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
-        if (sender is not FrameworkElement element ||
-            element.DataContext is not CalendarScheduleItem item ||
-            DataContext is not WorkScheduleViewModel vm)
+        try
         {
-            return;
-        }
+            if (sender is not FrameworkElement element ||
+                element.DataContext is not CalendarScheduleItem item ||
+                DataContext is not WorkScheduleViewModel vm)
+            {
+                return;
+            }
 
-        if (vm.LoadDailyPlanCommand.CanExecute(item.Date))
+            if (vm.LoadDailyPlanCommand.CanExecute(item.Date))
+            {
+                await vm.LoadDailyPlanCommand.ExecuteAsync(item.Date);
+            }
+        }
+        catch (Exception ex)
         {
-            await vm.LoadDailyPlanCommand.ExecuteAsync(item.Date);
+            Log.Error(ex, "工作日历点击处理失败");
         }
     }
 }

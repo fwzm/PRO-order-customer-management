@@ -210,17 +210,17 @@ public class DatabaseBackupService
             .ToListAsync();
 
         return records.Select(b => new BackupRecordDto
-            {
-                Id = b.Id,
-                FileName = b.FileName,
-                FilePath = ResolveBackupFilePath(b),
-                BackupType = b.BackupType,
-                FileSize = b.FileSize,
-                BackupTime = b.BackupTime,
-                ExpireTime = b.ExpireTime,
-                Status = b.Status,
-                Remark = b.Remark
-            })
+        {
+            Id = b.Id,
+            FileName = b.FileName,
+            FilePath = ResolveBackupFilePath(b),
+            BackupType = b.BackupType,
+            FileSize = b.FileSize,
+            BackupTime = b.BackupTime,
+            ExpireTime = b.ExpireTime,
+            Status = b.Status,
+            Remark = b.Remark
+        })
             .ToList();
     }
 

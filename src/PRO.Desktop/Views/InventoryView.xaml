@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:controls="clr-namespace:PRO.Desktop.Controls"
         mc:Ignorable="d" Background="{StaticResource ContentBackgroundBrush}">
 
     <TabControl Style="{StaticResource AppleSegmentedTabStyle}" Margin="12">
@@ -29,6 +30,8 @@
                         <DataGridTextColumn Header="单位" Binding="{Binding Unit}" Width="50"/>
                     </DataGrid.Columns>
                 </DataGrid>
+                <controls:EmptyStateControl Grid.Row="1" DataContext="{Binding EmptyState}"
+                        Visibility="{Binding ShowEmptyState, Converter={StaticResource BoolToVisibilityConverter}}"/>
                 <StackPanel Grid.Row="1" Visibility="{Binding IsChecking, Converter={StaticResource BoolToVisibilityConverter}}" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,12">
                     <TextBox Text="{Binding CheckRemark, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Width="200" materialDesign:HintAssist.Hint="备注" Margin="0,0,0,8"/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">

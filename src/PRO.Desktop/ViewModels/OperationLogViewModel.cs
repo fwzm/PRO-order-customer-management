@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using PRO.Application.DTOs;
 using PRO.Application.Interfaces;
 using PRO.Infrastructure.Persistence;
+using PRO.Desktop.Controls;
 using Serilog;
 using System.Collections.ObjectModel;
 
@@ -15,7 +16,6 @@ namespace PRO.Desktop.ViewModels;
 public partial class OperationLogViewModel : ViewModelBase
 {
     private readonly ProDbContext _dbContext;
-    private readonly IOperationLogService? _logService;
 
     // ─── 查询条件 ────────────────────────────────────────────
 
@@ -40,15 +40,19 @@ public partial class OperationLogViewModel : ViewModelBase
     [ObservableProperty]
     private int _retentionDays = 90;
 
+    // 空状态支持
+    [ObservableProperty] private EmptyStateViewModel? _emptyState;
+    [ObservableProperty] private bool _showEmptyState;
+
     // ─── 模块/操作类型/结果下拉 ─────────────────────────────────
 
     [ObservableProperty]
-    private List<string> _modules = new();
+    private List<string> _modules = [];
 
     [ObservableProperty]
-    private List<string> _operationTypes = new();
+    private List<string> _operationTypes = [];
 
-    public List<string> ResultOptions { get; } = new() { "全部", "Success", "Failed" };
+    public List<string> ResultOptions { get; } = ["全部", "Success", "Failed"];
 
     // ─── 分页 ────────────────────────────────────────────────
 
@@ -65,7 +69,7 @@ public partial class OperationLogViewModel : ViewModelBase
     private int _totalPages;
 
     [ObservableProperty]
-    private ObservableCollection<OperationLogDetailDto> _logs = new();
+    private ObservableCollection<OperationLogDetailDto> _logs = [];
 
     // ─── 统计 ────────────────────────────────────────────────
 
@@ -94,10 +98,9 @@ public partial class OperationLogViewModel : ViewModelBase
     public IAsyncRelayCommand CleanupCommand { get; }
     public IRelayCommand CloseDetailCommand { get; }
 
-    public OperationLogViewModel(ProDbContext dbContext, IOperationLogService? logService = null)
+    public OperationLogViewModel(ProDbContext dbContext, IOperationLogService? _logService = null)
     {
         _dbContext = dbContext;
-        _logService = logService;
 
         SearchCommand = new AsyncRelayCommand(SearchAsync);
         ResetFiltersCommand = new AsyncRelayCommand(ResetFiltersAsync);
@@ -139,6 +142,10 @@ public partial class OperationLogViewModel : ViewModelBase
     }
 
     // ─── 查询 ─────────────────────────────────────────────────
+
+    private bool HasActiveFilters() =>
+        SelectedModule != null || SelectedOperationType != null || SelectedResult != null ||
+        StartDate.HasValue || EndDate.HasValue;
 
     private async Task SearchAsync()
     {
@@ -207,13 +214,28 @@ public partial class OperationLogViewModel : ViewModelBase
 
             Logs = new ObservableCollection<OperationLogDetailDto>(items);
 
+            // 空状态
+            if (TotalCount == 0)
+            {
+                ShowEmptyState = true;
+                if (!string.IsNullOrWhiteSpace(SearchKeyword))
+                    EmptyState = EmptyStateViewModel.CreateForSearchNoResults(SearchKeyword, SearchCommand);
+                else if (HasActiveFilters())
+                    EmptyState = EmptyStateViewModel.CreateForNoResults("操作日志", ResetFiltersCommand);
+                else
+                    EmptyState = EmptyStateViewModel.CreateForEmpty("操作日志");
+            }
+            else { ShowEmptyState = false; }
+
             // 更新导航按钮
             NotifyNavigationChanged();
         }
         catch (Exception ex)
         {
             Log.Error(ex, "操作日志查询失败");
-            ShowError($"查询失败: {ex.Message}");
+            ShowBusinessException(ex, "查询操作日志");
+            ShowEmptyState = true;
+            EmptyState = EmptyStateViewModel.CreateForLoadFailed(SearchCommand);
         }
         finally
         {
@@ -302,13 +324,12 @@ public partial class OperationLogViewModel : ViewModelBase
                 .Distinct()
                 .OrderBy(m => m)
                 .ToListAsync();
-            Modules = new List<string> { "全部" };
-            Modules.AddRange(list);
+            Modules = ["全部", .. list];
         }
         catch (Exception ex)
         {
             Log.Warning(ex, "模块列表加载失败");
-            Modules = new List<string> { "全部" };
+            Modules = ["全部"];
         }
     }
 
@@ -326,27 +347,31 @@ public partial class OperationLogViewModel : ViewModelBase
                 .OrderBy(t => t)
                 .ToListAsync();
 
-            OperationTypes = new List<string> { "全部" };
-            OperationTypes.AddRange(list);
+            OperationTypes = ["全部", .. list];
         }
         catch (Exception ex)
         {
             Log.Warning(ex, "操作类型列表加载失败");
-            OperationTypes = new List<string> { "全部" };
+            OperationTypes = ["全部"];
         }
     }
 
-    private async void OnSelectModule(string? module)
+    private void OnSelectModule(string? module)
     {
         SelectedModule = module;
+        RunInBackground(OnSelectModuleAsync(), "筛选操作类型失败");
+    }
+
+    private async Task OnSelectModuleAsync()
+    {
         await LoadOperationTypesAsync();
         await SearchAsync();
     }
 
-    private async void OnSelectResult(string? result)
+    private void OnSelectResult(string? result)
     {
         SelectedResult = result;
-        await SearchAsync();
+        RunInBackground(SearchAsync(), "筛选结果失败");
     }
 
     // ─── 导出 ─────────────────────────────────────────────────
@@ -407,7 +432,7 @@ public partial class OperationLogViewModel : ViewModelBase
                 .Where(l => l.OperatedAt < cutoffDate)
                 .ToListAsync();
 
-            if (!oldLogs.Any())
+            if (oldLogs.Count == 0)
             {
                 ShowSuccess($"没有 {RetentionDays} 天之前的日志需要清理");
                 return;

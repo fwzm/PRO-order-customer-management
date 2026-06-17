@@ -7,6 +7,7 @@ using PRO.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
 using System.Windows;
+using Serilog;
 
 namespace PRO.Desktop.ViewModels;
 
@@ -23,13 +24,13 @@ public partial class WeChatCustomerViewModel : ViewModelBase
             ?? throw new InvalidOperationException("无法获取数据库上下文");
 
         IsUnlinkedTab = true;
-        _ = LoadDataAsync();
+        RunInBackground(LoadDataAsync(), "加载微信客户数据失败");
     }
 
     // ==================== 属性 ====================
 
     [ObservableProperty]
-    private ObservableCollection<WeChatCustomerListItem> _customers = new();
+    private ObservableCollection<WeChatCustomerListItem> _customers = [];
 
     [ObservableProperty]
     private WeChatCustomerListItem? _selectedCustomer;
@@ -47,7 +48,7 @@ public partial class WeChatCustomerViewModel : ViewModelBase
     private string? _searchKeyword;
 
     [ObservableProperty]
-    private ObservableCollection<BranchListItem> _branches = new();
+    private ObservableCollection<BranchListItem> _branches = [];
 
     [ObservableProperty]
     private BranchListItem? _selectedBranch;
@@ -62,7 +63,7 @@ public partial class WeChatCustomerViewModel : ViewModelBase
     private int _unidentifiableCount;
 
     [ObservableProperty]
-    private ObservableCollection<CustomerListItem> _searchableCustomers = new();
+    private ObservableCollection<CustomerListItem> _searchableCustomers = [];
 
     [ObservableProperty]
     private string? _linkSearchKeyword;
@@ -164,27 +165,27 @@ public partial class WeChatCustomerViewModel : ViewModelBase
                     Code = b.Code
                 }));
         }
-        catch { }
+        catch (Exception ex) { Serilog.Log.Warning(ex, "加载分公司列表失败"); }
     }
 
     // ==================== 属性变更处理 ====================
 
     partial void OnIsUnlinkedTabChanged(bool value)
     {
-        if (value) OnTabChanged();
+        if (value) RunInBackground(OnTabChangedAsync(), "微信客户未关联Tab切换失败");
     }
 
     partial void OnIsLinkedTabChanged(bool value)
     {
-        if (value) OnTabChanged();
+        if (value) RunInBackground(OnTabChangedAsync(), "微信客户已关联Tab切换失败");
     }
 
     partial void OnIsUnidentifiableTabChanged(bool value)
     {
-        if (value) OnTabChanged();
+        if (value) RunInBackground(OnTabChangedAsync(), "微信客户未识别Tab切换失败");
     }
 
-    private async void OnTabChanged()
+    private async Task OnTabChangedAsync()
     {
         SearchKeyword = null;
         await LoadDataAsync();
@@ -398,8 +399,9 @@ public partial class WeChatCustomerViewModel : ViewModelBase
         var seq = 1;
         if (maxNo.Length >= prefix.Length + 4)
         {
-            var lastSeqStr = maxNo.Substring(prefix.Length, 4);
-            int.TryParse(lastSeqStr, out seq);
+            var lastSeqStr = maxNo[prefix.Length..(prefix.Length + 4)];
+            if (int.TryParse(lastSeqStr, out var parsedSeq))
+                seq = parsedSeq;
             seq++;
         }
 

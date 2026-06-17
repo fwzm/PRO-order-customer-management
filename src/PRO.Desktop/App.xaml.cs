@@ -8,6 +8,7 @@ using PRO.Infrastructure.Configuration;
 using PRO.Desktop.ViewModels;
 using PRO.Desktop.Views;
 using PRO.Desktop.Services;
+using PRO.Desktop.DependencyInjection;
 using Serilog;
 using PRO.Domain.Entities;
 using PRO.Domain.Enums;
@@ -23,7 +24,9 @@ namespace PRO.Desktop;
 public partial class App : System.Windows.Application
 {
     private static IServiceProvider? _serviceProvider;
-    public static IServiceProvider Services => _serviceProvider!;
+    public static IServiceProvider Services =>
+        _serviceProvider ?? throw new InvalidOperationException(
+            "DI 容器尚未初始化，请确保在 OnStartup 中调用过 BuildServiceProvider。");
     public static Action<string, string?, bool>? ShowToast { get; set; }
     public static Action<string?>? ShowLoading { get; set; }
     public static Action? HideLoading { get; set; }
@@ -38,16 +41,41 @@ public partial class App : System.Windows.Application
 
     protected override async void OnStartup(StartupEventArgs e)
     {
+        try
+        {
+            await OnStartupAsync(e);
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "应用启动致命错误");
+            MessageBox.Show($"启动失败: {ex.Message}\n\n请检查配置后重新启动。", "致命错误",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown();
+        }
+    }
+
+    private async Task OnStartupAsync(StartupEventArgs e)
+    {
         // 解决 Npgsql 本地时间问题
         AppContext.SetSwitch("Npgsql.EnableDateTimeUtcFix", true);
 
         // 初始化配置
         HardcodedConfig.Initialize(AppDomain.CurrentDomain.BaseDirectory);
 
-        // 配置日志
+        // 配置结构化日志
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
-            .WriteTo.File("logs/pro-.log", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 30)
+            .Enrich.FromLogContext()
+            .Enrich.WithMachineName()
+            .Enrich.WithThreadId()
+            .WriteTo.File("logs/pro-.log",
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 30,
+                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] [{MachineName}] [{ThreadId}] {Message:lj}{NewLine}{Exception}")
+            .WriteTo.File(new Serilog.Formatting.Compact.CompactJsonFormatter(),
+                "logs/pro-json-.json",
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 7)
             .CreateLogger();
 
         Log.Information("PRO应用启动");
@@ -56,6 +84,9 @@ public partial class App : System.Windows.Application
         var services = new ServiceCollection();
         ConfigureServices(services);
         _serviceProvider = services.BuildServiceProvider();
+
+        // 启动期服务解析验证
+        _serviceProvider.ValidateServices();
 
         // 初始化数据库
         try
@@ -248,7 +279,11 @@ public partial class App : System.Windows.Application
                 StartHealthCheckTimer();
 
                 // 检查新版本（异步，不阻塞登录流程）
-                _ = CheckNewVersionAsync();
+                _ = Task.Run(async () =>
+                {
+                    try { await CheckNewVersionAsync(); }
+                    catch (Exception ex) { Log.Error(ex, "版本检查失败"); }
+                });
 
                 _mainWindow.Show();
                 StartAutoBackupTimer();
@@ -342,7 +377,7 @@ public partial class App : System.Windows.Application
     {
         try
         {
-            await Task.Delay(2000);
+            await Task.Delay(3000); // 延迟3秒，等应用完全启动
             using var scope = _serviceProvider!.CreateScope();
             var versionCheck = scope.ServiceProvider.GetRequiredService<VersionCheckService>();
 
@@ -352,6 +387,26 @@ public partial class App : System.Windows.Application
             if (await versionCheck.IsVersionSuppressedAsync(latest.Version))
                 return;
 
+            // 检查是否已有下载好的更新包
+            var downloadedPath = VersionCheckService.GetDownloadedUpdatePath(latest.Version);
+            if (downloadedPath != null)
+            {
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    var msg = $"新版本 v{latest.Version} 已下载完成。\n\n";
+                    if (!string.IsNullOrEmpty(latest.ReleaseNotes))
+                        msg += $"更新说明：{latest.ReleaseNotes}\n\n";
+                    msg += "是否立即安装更新？（应用将自动重启）";
+
+                    var result = MessageBox.Show(msg, "更新已就绪", MessageBoxButton.YesNo, MessageBoxImage.Information);
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        VersionCheckService.ApplyUpdate(downloadedPath);
+                    }
+                });
+                return;
+            }
+
             await Dispatcher.InvokeAsync(() =>
             {
                 var msg = $"检测到新版本 v{latest.Version}（当前 v{VersionCheckService.LocalVersion}）\n\n";
@@ -359,11 +414,74 @@ public partial class App : System.Windows.Application
                     msg += $"发布日期：{latest.ReleaseDate}\n";
                 if (!string.IsNullOrEmpty(latest.ReleaseNotes))
                     msg += $"更新说明：{latest.ReleaseNotes}\n";
-                msg += $"\n请联系管理员获取最新版本进行更新。";
 
-                var result = MessageBox.Show(msg, "发现新版本", MessageBoxButton.OKCancel, MessageBoxImage.Information);
-                if (result == MessageBoxResult.Cancel)
-                    _ = versionCheck.SuppressVersionAsync(latest.Version);
+                if (!string.IsNullOrEmpty(latest.DownloadUrl))
+                {
+                    msg += $"\n是否在后台下载新版本？下载完成后会通知您安装。";
+                    var result = MessageBox.Show(msg, "发现新版本",
+                        latest.IsRequired ? MessageBoxButton.OK : MessageBoxButton.YesNoCancel,
+                        MessageBoxImage.Information);
+
+                    if (result == MessageBoxResult.OK || result == MessageBoxResult.Yes)
+                    {
+                        // 后台下载
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                var progress = new Progress<int>(p =>
+                                {
+                                    // 可选：通过通知或托盘提示显示下载进度
+                                    if (p % 25 == 0 || p == 100)
+                                        Log.Information("版本更新下载进度: {Progress}%", p);
+                                });
+
+                                var (success, path) = await versionCheck.DownloadUpdateAsync(latest, progress);
+                                if (success)
+                                {
+                                    await Dispatcher.InvokeAsync(() =>
+                                    {
+                                        var installMsg = $"新版本 v{latest.Version} 下载完成！\n\n是否立即安装？（应用将自动重启）";
+                                        var installResult = MessageBox.Show(installMsg, "下载完成",
+                                            MessageBoxButton.YesNo, MessageBoxImage.Information);
+                                        if (installResult == MessageBoxResult.Yes)
+                                        {
+                                            VersionCheckService.ApplyUpdate(path!);
+                                        }
+                                        else
+                                        {
+                                            MessageBox.Show("新版本将在下次启动时提示安装。", "提示",
+                                                MessageBoxButton.OK, MessageBoxImage.Information);
+                                        }
+                                    });
+                                }
+                                else
+                                {
+                                    await Dispatcher.InvokeAsync(() =>
+                                    {
+                                        MessageBox.Show($"新版本下载失败，请稍后重试或联系管理员。\n版本: v{latest.Version}",
+                                            "下载失败", MessageBoxButton.OK, MessageBoxImage.Warning);
+                                    });
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Warning(ex, "后台下载更新失败");
+                            }
+                        });
+                    }
+                    else if (result == MessageBoxResult.Cancel)
+                    {
+                        _ = versionCheck.SuppressVersionAsync(latest.Version);
+                    }
+                }
+                else
+                {
+                    msg += $"\n请联系管理员获取最新版本进行更新。";
+                    var result = MessageBox.Show(msg, "发现新版本", MessageBoxButton.OKCancel, MessageBoxImage.Information);
+                    if (result == MessageBoxResult.Cancel)
+                        _ = versionCheck.SuppressVersionAsync(latest.Version);
+                }
             });
         }
         catch (Exception ex)
@@ -388,7 +506,7 @@ public partial class App : System.Windows.Application
         {
             var backupService = _serviceProvider!.GetRequiredService<DatabaseBackupService>();
             var result = await backupService.PerformAutoBackupAsync();
-            
+
             if (result.Success)
             {
                 Log.Information("自动备份完成: {FileName}", result.FileName);
@@ -432,7 +550,7 @@ public partial class App : System.Windows.Application
                     && o.DraftExpireTime <= now.AddHours(24))
                 .ToListAsync();
 
-            if (upcomingDrafts.Any())
+            if (upcomingDrafts.Count > 0)
             {
                 foreach (var draft in upcomingDrafts)
                 {
@@ -475,7 +593,7 @@ public partial class App : System.Windows.Application
             await dbContext.SaveChangesAsync();
 
             // 发送确认通知
-            if (expiredDrafts.Any())
+            if (expiredDrafts.Count > 0)
             {
                 ShowToast?.Invoke(
                     $"已自动确认 {expiredDrafts.Count} 个过期草稿订单",
@@ -494,6 +612,7 @@ public partial class App : System.Windows.Application
         _autoBackupTimer?.Stop();
         _draftConfirmTimer?.Stop();
         _healthCheckTimer?.Stop();
+        _healthCheckTimer = null;
     }
 
     private void StartHealthCheckTimer()
@@ -527,110 +646,16 @@ public partial class App : System.Windows.Application
             throw new InvalidOperationException("请在 appsettings.json 中配置 ConnectionStrings:PostgreSQL");
         }
 
-        services.AddDbContext<ProDbContext>(options =>
-            options.UseNpgsql(connStr, npgsql =>
-            {
-                npgsql.EnableRetryOnFailure(
-                    maxRetryCount: 3,
-                    maxRetryDelay: TimeSpan.FromSeconds(10),
-                    errorCodesToAdd: null);
-                npgsql.CommandTimeout(30);
-            }));
-
-        // 连接健康监控
-        services.AddSingleton<ConnectionHealthService>();
-
-        // 数据库备份服务
-        services.AddSingleton<DatabaseBackupService>();
-
-        // 草稿自动保存服务
-        services.AddScoped<DraftService>();
-
-        // 业务配置服务
-        services.AddSingleton<BusinessConfigService>();
-
-        // 基础设施服务
-        services.AddSingleton<AppInterfaces.IEncryptionService, EncryptionService>();
-
-        services.AddScoped<VersionCheckService>();
-
-        // 数据仓储
-        services.AddScoped<AppInterfaces.IBranchRepository, BranchRepository>();
-        services.AddScoped<AppInterfaces.IEmployeeRepository, EmployeeRepository>();
-        services.AddScoped<AppInterfaces.IDepartmentRepository, DepartmentRepository>();
-        services.AddScoped<AppInterfaces.ICustomerRepository, CustomerRepository>();
-        services.AddScoped<AppInterfaces.IOrderRepository, OrderRepository>();
-        services.AddScoped<AppInterfaces.IProductRepository, ProductRepository>();
-        services.AddScoped<AppInterfaces.IDeliveryPersonRepository, DeliveryPersonRepository>();
-
-        // 业务服务
-        services.AddScoped<AppInterfaces.IAuthService, AuthService>();
-        services.AddScoped<AppInterfaces.IBranchService, BranchService>();
-        services.AddScoped<AppInterfaces.IEmployeeService, EmployeeService>();
-        services.AddScoped<AppInterfaces.ICustomerService, CustomerService>();
-        services.AddScoped<AppInterfaces.IOrderService, OrderService>();
-        services.AddScoped<AppInterfaces.IProductService, ProductService>();
-        services.AddScoped<AppInterfaces.IDeliveryPersonService, DeliveryPersonService>();
-        services.AddScoped<AppInterfaces.ISettlementService, SettlementService>();
-        services.AddScoped<AppInterfaces.IWorkScheduleService, WorkScheduleService>();
-        services.AddScoped<AppInterfaces.IWorkPlanService, WorkPlanService>();
-        services.AddScoped<AppInterfaces.IPlanDraftService, PlanDraftService>();
-        services.AddScoped<AppInterfaces.IOperationLogService, OperationLogService>();
-        services.AddScoped<AppInterfaces.IOrderDistributionService, DeliveryDistributionService>();
-        services.AddScoped<AppInterfaces.IWeChatService, WeChatService>();
-
-        // HTTP 客户端（企微 API）
-        services.AddHttpClient("WeChatWork", client =>
-        {
-            client.BaseAddress = new Uri("https://qyapi.weixin.qq.com/");
-            client.DefaultRequestHeaders.Add("Accept", "application/json");
-            client.Timeout = TimeSpan.FromSeconds(30);
-        });
-
-        // 视图模型
-        services.AddTransient<LoginViewModel>();
-        services.AddTransient<MainViewModel>();
-        services.AddTransient<DashboardViewModel>();
-        services.AddTransient<CustomerListViewModel>();
-        services.AddTransient<CustomerEditViewModel>();
-        services.AddTransient<OrderListViewModel>();
-        services.AddTransient<OrderEditViewModel>();
-        services.AddTransient<ProductListViewModel>();
-        services.AddTransient<ProductEditViewModel>();
-        services.AddTransient<DeliveryPersonListViewModel>();
-        services.AddTransient<DeliveryPersonEditViewModel>();
-        services.AddTransient<SettlementListViewModel>();
-        services.AddTransient<SettlementDetailViewModel>();
-        services.AddTransient<WorkScheduleViewModel>();
-        services.AddTransient<WorkPlanViewModel>();
-        services.AddTransient<DepartmentTreeViewModel>();
-        services.AddTransient<EmployeeListViewModel>();
-        services.AddTransient<EmployeeEditViewModel>();
-        services.AddTransient<SystemSettingsViewModel>();
-        services.AddTransient<HeadquartersAdminViewModel>();
-        services.AddTransient<SyncStatusViewModel>();
-        services.AddTransient<BusinessDistrictViewModel>();
-        services.AddTransient<MapPickerViewModel>();
-        services.AddTransient<WeChatCustomerViewModel>();
-        services.AddTransient<WeChatSyncLogViewModel>();
-        services.AddTransient<PredictionDashboardViewModel>();
-        services.AddTransient<OpportunityViewModel>();
-        services.AddTransient<InventoryViewModel>();
-        services.AddTransient<WeChatVisitSyncViewModel>();
-        services.AddTransient<AccountsReceivableViewModel>();
-        services.AddTransient<TagViewModel>();
-        services.AddTransient<ReportCenterViewModel>();
-        services.AddTransient<WeChatScrmViewModel>();
-        services.AddTransient<VisitOpportunityViewModel>();
-        services.AddTransient<DistrictTagViewModel>();
-        services.AddTransient<OperationLogViewModel>();
-        services.AddTransient<WeChatSetupWizardViewModel>();
-
-        // 视图
-        services.AddTransient<LoginWindow>();
-        services.AddTransient<MainWindow>();
-        services.AddTransient<DepartmentManagementWindow>();
-        services.AddTransient<EmployeeListWindow>();
+        // === 模块化 DI 注册（使用扩展方法精简） ===
+        services.AddProDatabase(connStr);
+        services.AddProInfrastructureServices();
+        services.AddProRepositories();
+        services.AddProBusinessServices();
+        services.AddProExtendedServices();
+        services.AddProPhase3Services();
+        services.AddProHttpClients();
+        services.AddProViewModels();
+        services.AddProViews();
     }
 
     private void SetupExceptionHandling()
@@ -658,11 +683,21 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
-        _autoBackupTimer?.Stop();
-        _draftConfirmTimer?.Stop();
+        StopAllTimers();
+        StopMainViewModelTimers();
         _trayIcon?.Dispose();
+        (_serviceProvider as IDisposable)?.Dispose();
+        _serviceProvider = null;
         Log.Information("PRO应用退出");
         Log.CloseAndFlush();
         base.OnExit(e);
+    }
+
+    private void StopMainViewModelTimers()
+    {
+        if (_mainWindow?.DataContext is MainViewModel mainVm)
+        {
+            mainVm.StopAllTimers();
+        }
     }
 }

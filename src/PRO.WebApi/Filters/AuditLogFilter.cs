@@ -33,26 +33,22 @@ public class AuditLogFilter : Attribute, IAsyncActionFilter
         var result = executedContext.Exception == null ? "Success" : "Failed";
         var errorMessage = executedContext.Exception?.Message;
 
-        // 异步记录（不阻塞响应）
-        _ = Task.Run(async () =>
+        try
         {
-            try
-            {
-                await logService.CreateAsync(
-                    employeeId,
-                    $"{controllerName}Controller",
-                    $"{method} {actionName}",
-                    $"API请求: {method} /api/{controllerName}/{actionName} (耗时 {duration:F0}ms)",
-                    controllerName,
-                    null,
-                    result,
-                    errorMessage);
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning(ex, "审计日志记录失败");
-            }
-        });
+            await logService.CreateAsync(
+                employeeId,
+                $"{controllerName}Controller",
+                $"{method} {actionName}",
+                $"API请求: {method} /api/{controllerName}/{actionName} (耗时 {duration:F0}ms)",
+                controllerName,
+                null,
+                result,
+                errorMessage);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "审计日志记录失败");
+        }
 
         if (executedContext.Exception != null)
             logger.LogError(executedContext.Exception, "API请求异常 {Method} {Path} Duration={Duration:F0}ms",

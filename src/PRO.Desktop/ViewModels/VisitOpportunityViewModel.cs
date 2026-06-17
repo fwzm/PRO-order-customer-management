@@ -16,7 +16,7 @@ public partial class VisitOpportunityViewModel : ViewModelBase
     private OpportunityViewModel _opportunityVm;
 
     [ObservableProperty]
-    private ObservableCollection<string> _tabHeaders = new() { "拜访同步", "商机管理" };
+    private ObservableCollection<string> _tabHeaders = ["拜访同步", "商机管理"];
 
     public VisitOpportunityViewModel()
     {

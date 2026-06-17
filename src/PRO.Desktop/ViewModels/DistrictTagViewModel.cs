@@ -16,7 +16,7 @@ public partial class DistrictTagViewModel : ViewModelBase
     private TagViewModel _tagVm;
 
     [ObservableProperty]
-    private ObservableCollection<string> _tabHeaders = new() { "商圈管理", "标签管理" };
+    private ObservableCollection<string> _tabHeaders = ["商圈管理", "标签管理"];
 
     public DistrictTagViewModel()
     {

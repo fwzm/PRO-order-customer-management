@@ -45,7 +45,7 @@ public partial class LoginViewModel : ViewModelBase
         _dbContext = dbContext;
 
         // 异步加载保存的登录信息（不阻塞UI线程）
-        _ = LoadRememberedUserAsync();
+        RunInBackground(LoadRememberedUserAsync(), "加载登录信息失败");
     }
 
     private async Task LoadRememberedUserAsync()
@@ -62,7 +62,7 @@ public partial class LoginViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"加载记住工号失败: {ex.Message}");
+            Serilog.Log.Warning(ex, "加载记住工号失败");
         }
     }
 

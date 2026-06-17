@@ -62,6 +62,6 @@ public partial class DepartmentManagementWindow : Window
         public string Name { get; set; } = "";
         public int? ParentId { get; set; }
         public string? ManagerName { get; set; }
-        public List<DepartmentTreeNode> Children { get; set; } = new();
+        public List<DepartmentTreeNode> Children { get; set; } = [];
     }
 }

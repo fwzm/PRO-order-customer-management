@@ -110,10 +110,10 @@ public class EmployeeRepository : Repository<Employee>, IEmployeeRepository
     public async Task<PagedResult<Employee>> GetPagedAsync(int pageIndex, int pageSize, string? keyword, int? branchId)
     {
         var query = _dbSet.AsNoTracking().Include(e => e.Role).Include(e => e.Branch).Include(e => e.Department).AsQueryable();
-        
+
         if (!string.IsNullOrWhiteSpace(keyword))
             query = query.Where(e => e.Name.Contains(keyword) || e.EmployeeNo.Contains(keyword));
-        
+
         if (branchId.HasValue)
             query = query.Where(e => e.BranchId == branchId.Value);
 
@@ -170,34 +170,34 @@ public class CustomerRepository : Repository<Customer>, ICustomerRepository
     {
         // 构建多个独立查重条件，使用 OR 逻辑
         var query = _dbSet.AsNoTracking().Where(c => c.Status == CustomerStatus.Active);
-        
+
         // 用于构建 OR 条件的表达式
         Expression<Func<Customer, bool>>? combinedPredicate = null;
-        
+
         if (!string.IsNullOrWhiteSpace(phone))
         {
             Expression<Func<Customer, bool>> phonePredicate = c => c.Phone == phone;
-            combinedPredicate = combinedPredicate == null 
-                ? phonePredicate 
+            combinedPredicate = combinedPredicate == null
+                ? phonePredicate
                 : CombineOr(combinedPredicate, phonePredicate);
         }
-        
+
         if (!string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(address))
         {
             Expression<Func<Customer, bool>> nameAddressPredicate = c => c.Name == name && c.Address == address;
-            combinedPredicate = combinedPredicate == null 
-                ? nameAddressPredicate 
+            combinedPredicate = combinedPredicate == null
+                ? nameAddressPredicate
                 : CombineOr(combinedPredicate, nameAddressPredicate);
         }
-        
+
         if (!string.IsNullOrWhiteSpace(legalPerson) && !string.IsNullOrWhiteSpace(phone))
         {
             Expression<Func<Customer, bool>> legalPhonePredicate = c => c.LegalPerson == legalPerson && c.Phone == phone;
-            combinedPredicate = combinedPredicate == null 
-                ? legalPhonePredicate 
+            combinedPredicate = combinedPredicate == null
+                ? legalPhonePredicate
                 : CombineOr(combinedPredicate, legalPhonePredicate);
         }
-        
+
         if (combinedPredicate != null)
         {
             query = query.Where(combinedPredicate);
@@ -210,7 +210,7 @@ public class CustomerRepository : Repository<Customer>, ICustomerRepository
 
         return await query.Take(20).ToListAsync();
     }
-    
+
     private static Expression<Func<T, bool>> CombineOr<T>(Expression<Func<T, bool>> expr1, Expression<Func<T, bool>> expr2)
     {
         var parameter = Expression.Parameter(typeof(T));
@@ -219,7 +219,7 @@ public class CustomerRepository : Repository<Customer>, ICustomerRepository
         var body = Expression.OrElse(left, right);
         return Expression.Lambda<Func<T, bool>>(body, parameter);
     }
-    
+
     /// <summary>
     /// 表达式参数替换器 - 用于组合多个 Expression 为 OR 逻辑
     /// </summary>
@@ -227,13 +227,13 @@ public class CustomerRepository : Repository<Customer>, ICustomerRepository
     {
         private readonly ParameterExpression _oldParameter;
         private readonly ParameterExpression _newParameter;
-        
+
         public ParameterReplacer(ParameterExpression oldParameter, ParameterExpression newParameter)
         {
             _oldParameter = oldParameter;
             _newParameter = newParameter;
         }
-        
+
         protected override Expression VisitParameter(ParameterExpression node)
         {
             return node == _oldParameter ? _newParameter : base.VisitParameter(node);
@@ -243,13 +243,13 @@ public class CustomerRepository : Repository<Customer>, ICustomerRepository
     public async Task<PagedResult<Customer>> GetPagedAsync(int pageIndex, int pageSize, string? keyword, int? branchId, CustomerType? customerType)
     {
         var query = _dbSet.AsNoTracking().Include(c => c.Branch).AsQueryable();
-        
+
         if (!string.IsNullOrWhiteSpace(keyword))
             query = query.Where(c => c.Name.Contains(keyword) || (c.Phone != null && c.Phone.Contains(keyword)));
-        
+
         if (branchId.HasValue)
             query = query.Where(c => c.BranchId == branchId.Value);
-        
+
         if (customerType.HasValue)
             query = query.Where(c => c.CustomerType == customerType.Value);
 
@@ -301,16 +301,16 @@ public class OrderRepository : Repository<Order>, IOrderRepository
     public async Task<PagedResult<Order>> GetPagedAsync(int pageIndex, int pageSize, string? keyword, int? branchId, OrderStatus? status, PaymentStatus? paymentStatus)
     {
         var query = _dbSet.AsNoTracking().Include(o => o.Customer).Include(o => o.Branch).Include(o => o.DeliveryPerson).Include(o => o.Creator).AsQueryable();
-        
+
         if (!string.IsNullOrWhiteSpace(keyword))
             query = query.Where(o => o.OrderNo.Contains(keyword) || (o.Customer != null && o.Customer.Name.Contains(keyword)));
-        
+
         if (branchId.HasValue)
             query = query.Where(o => o.BranchId == branchId.Value);
-        
+
         if (status.HasValue)
             query = query.Where(o => o.Status == status.Value);
-        
+
         if (paymentStatus.HasValue)
             query = query.Where(o => o.PaymentStatus == paymentStatus.Value);
 
@@ -346,13 +346,13 @@ public class ProductRepository : Repository<Product>, IProductRepository
     public async Task<PagedResult<Product>> GetPagedAsync(int pageIndex, int pageSize, string? keyword, int? categoryId, ProductStatus? status)
     {
         var query = _dbSet.AsNoTracking().Include(p => p.Category).AsQueryable();
-        
+
         if (!string.IsNullOrWhiteSpace(keyword))
             query = query.Where(p => p.Name.Contains(keyword) || p.SKU.Contains(keyword));
-        
+
         if (categoryId.HasValue)
             query = query.Where(p => p.CategoryId == categoryId.Value);
-        
+
         if (status.HasValue)
             query = query.Where(p => p.Status == status.Value);
 
@@ -384,13 +384,13 @@ public class DeliveryPersonRepository : Repository<DeliveryPerson>, IDeliveryPer
     public async Task<PagedResult<DeliveryPerson>> GetPagedAsync(int pageIndex, int pageSize, string? keyword, int? branchId, DeliveryPersonStatus? status)
     {
         var query = _dbSet.AsNoTracking().Include(d => d.Branch).AsQueryable();
-        
+
         if (!string.IsNullOrWhiteSpace(keyword))
             query = query.Where(d => d.Name.Contains(keyword) || d.Phone.Contains(keyword));
-        
+
         if (branchId.HasValue)
             query = query.Where(d => d.BranchId == branchId.Value);
-        
+
         if (status.HasValue)
             query = query.Where(d => d.Status == status.Value);
 

@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  webapi:
+    build:
+      context: .
+      dockerfile: src/PRO.WebApi/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=pro_db;Username=pro_user;Password=pro_password
+      - Jwt__Key=CHANGE_ME_TO_A_SECURE_KEY_AT_LEAST_32_BYTES
+      - Jwt__Issuer=PRO-System
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - pro-network
+
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: pro_db
+      POSTGRES_USER: pro_user
+      POSTGRES_PASSWORD: pro_password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pro_user -d pro_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - pro-network
+
+volumes:
+  pgdata:
+
+networks:
+  pro-network:
+    driver: bridge

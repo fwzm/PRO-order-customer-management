@@ -43,15 +43,22 @@ public class DeliveryDistributionService : IOrderDistributionService
                 .OrderBy(o => o.CreatedAt)
                 .Select(o => new OrderListItem
                 {
-                    Id = o.Id, OrderNo = o.OrderNo, CustomerId = o.CustomerId,
+                    Id = o.Id,
+                    OrderNo = o.OrderNo,
+                    CustomerId = o.CustomerId,
                     CustomerName = o.Customer != null ? o.Customer.Name : "未知",
-                    BranchId = o.BranchId, BranchName = o.Branch != null ? o.Branch.Name : "",
-                    TotalAmount = o.TotalAmount, Status = o.Status, PaymentStatus = o.PaymentStatus,
+                    BranchId = o.BranchId,
+                    BranchName = o.Branch != null ? o.Branch.Name : "",
+                    TotalAmount = o.TotalAmount,
+                    Status = o.Status,
+                    PaymentStatus = o.PaymentStatus,
                     CreatedAt = o.CreatedAt,
                     DeliveryPersonName = o.DeliveryPerson != null ? o.DeliveryPerson.Name : null,
                     CreatedByName = o.Creator != null ? o.Creator.Name : "",
-                    DeliveryLongitude = o.DeliveryLongitude, DeliveryLatitude = o.DeliveryLatitude,
-                    DeliveryAddress = o.DeliveryAddress, ReceivedAmount = o.ReceivedAmount,
+                    DeliveryLongitude = o.DeliveryLongitude,
+                    DeliveryLatitude = o.DeliveryLatitude,
+                    DeliveryAddress = o.DeliveryAddress,
+                    ReceivedAmount = o.ReceivedAmount,
                     DeliveryTime = o.DeliveryTime
                 })
                 .ToListAsync();
@@ -82,6 +89,8 @@ public class DeliveryDistributionService : IOrderDistributionService
             if (person == null) return ApiResponse<bool>.Fail("配送员不存在");
             if (person.Status == DeliveryPersonStatus.Off)
                 return ApiResponse<bool>.Fail("配送员已离线，无法分配");
+            if (!OrderStatusManager.IsValidTransition(order.Status, OrderStatus.Assigned))
+                return ApiResponse<bool>.Fail($"订单不能从「{OrderStatusManager.GetStatusName(order.Status)}」直接变为「{OrderStatusManager.GetStatusName(OrderStatus.Assigned)}」");
 
             // 更新负载
             order.DeliveryPersonId = deliveryPersonId;
@@ -177,6 +186,11 @@ public class DeliveryDistributionService : IOrderDistributionService
                 }
 
                 if (selected == null) continue;
+                if (!OrderStatusManager.IsValidTransition(order.Status, OrderStatus.Assigned))
+                {
+                    failedCount++;
+                    continue;
+                }
 
                 // 分配
                 order.DeliveryPersonId = selected.Id;

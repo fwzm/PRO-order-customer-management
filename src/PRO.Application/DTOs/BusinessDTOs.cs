@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using PRO.Domain.Enums;
 
 namespace PRO.Application.DTOs;
@@ -28,6 +29,21 @@ public class OrderListItem
     public DateTime? DeliveryTime { get; set; }
     public DateTime CreatedAt { get; set; }
     public string CreatedByName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 当前状态允许的下一步操作（用于UI动态显示按钮）
+    /// </summary>
+    public List<OrderStatus> ValidNextStatuses { get; set; } = [];
+
+    /// <summary>
+    /// 是否为终态（已完成/已取消）
+    /// </summary>
+    public bool IsTerminalState => Status == OrderStatus.Completed || Status == OrderStatus.Cancelled;
+
+    /// <summary>
+    /// 是否可编辑
+    /// </summary>
+    public bool IsEditable => Status == OrderStatus.Draft || Status == OrderStatus.Pending;
 }
 
 /// <summary>
@@ -63,8 +79,8 @@ public class OrderDetailDto
     public int? SettlementId { get; set; }
     public bool IsDraft => Status == OrderStatus.Draft;
     public DateTime? DraftExpireTime { get; set; }
-    public List<OrderItemDto> Items { get; set; } = new();
-    public List<OrderModificationRecordDto> ModificationRecords { get; set; } = new();
+    public List<OrderItemDto> Items { get; set; } = [];
+    public List<OrderModificationRecordDto> ModificationRecords { get; set; } = [];
 }
 
 /// <summary>
@@ -106,16 +122,32 @@ public class OrderModificationRecordDto
 /// </summary>
 public class CreateOrderRequest
 {
+    [Required(ErrorMessage = "客户ID不能为空")]
+    [Range(1, int.MaxValue, ErrorMessage = "客户ID必须大于0")]
     public int CustomerId { get; set; }
+
+    public int? DeliveryPersonId { get; set; }
+
+    [StringLength(500, ErrorMessage = "配送地址不能超过500个字符")]
     public string? DeliveryAddress { get; set; }
+
     public double? DeliveryLongitude { get; set; }
     public double? DeliveryLatitude { get; set; }
     public DateTime? DeliveryTime { get; set; }
+
+    [Range(0, double.MaxValue, ErrorMessage = "收款金额不能为负数")]
     public decimal ReceivedAmount { get; set; }
+
     public PaymentStatus PaymentStatus { get; set; }
+
+    [StringLength(1000, ErrorMessage = "备注不能超过1000个字符")]
     public string? Remark { get; set; }
+
     public bool IsDraft { get; set; }
-    public List<CreateOrderItemRequest> Items { get; set; } = new();
+
+    [Required(ErrorMessage = "订单明细不能为空")]
+    [MinLength(1, ErrorMessage = "订单至少需要一个产品")]
+    public List<CreateOrderItemRequest> Items { get; set; } = [];
 }
 
 /// <summary>
@@ -123,9 +155,19 @@ public class CreateOrderRequest
 /// </summary>
 public class CreateOrderItemRequest
 {
+    [Required(ErrorMessage = "产品ID不能为空")]
+    [Range(1, int.MaxValue, ErrorMessage = "产品ID必须大于0")]
     public int ProductId { get; set; }
+
+    [Required(ErrorMessage = "数量不能为空")]
+    [Range(1, 99999, ErrorMessage = "数量必须在1-99999之间")]
     public int Quantity { get; set; }
+
+    [Required(ErrorMessage = "单价不能为空")]
+    [Range(0.01, 999999.99, ErrorMessage = "单价必须大于0")]
     public decimal UnitPrice { get; set; }
+
+    [StringLength(200, ErrorMessage = "备注不能超过200个字符")]
     public string? Remark { get; set; }
 }
 
@@ -136,6 +178,7 @@ public class UpdateOrderRequest
 {
     public int Id { get; set; }
     public int CustomerId { get; set; }
+    public int? DeliveryPersonId { get; set; }
     public string? DeliveryAddress { get; set; }
     public double? DeliveryLongitude { get; set; }
     public double? DeliveryLatitude { get; set; }
@@ -145,7 +188,7 @@ public class UpdateOrderRequest
     public OrderStatus Status { get; set; }
     public string? CancelReason { get; set; }
     public string? Remark { get; set; }
-    public List<CreateOrderItemRequest> Items { get; set; } = new();
+    public List<CreateOrderItemRequest> Items { get; set; } = [];
 }
 
 /// <summary>
@@ -167,6 +210,30 @@ public class UpdateOrderStatusRequest
     public string? Reason { get; set; }
     public string? Remark { get; set; }
     public string? SignPhoto { get; set; }
+}
+
+/// <summary>
+/// 批量操作汇总结果
+/// </summary>
+public class BatchOperationResult
+{
+    public int TotalCount { get; set; }
+    public int SuccessCount { get; set; }
+    public int FailedCount => Items.Count(i => !i.Success);
+    public List<BatchOperationItemResult> Items { get; set; } = [];
+    public bool AllSucceeded => FailedCount == 0;
+    public bool HasFailures => FailedCount > 0;
+}
+
+/// <summary>
+/// 批量操作单项结果（旧版 - 保持向后兼容）
+/// </summary>
+public class BatchOperationItemResult
+{
+    public int EntityId { get; set; }
+    public string EntityNo { get; set; } = string.Empty;
+    public bool Success { get; set; }
+    public string Message { get; set; } = string.Empty;
 }
 
 // ==================== 产品相关 ====================
@@ -231,7 +298,7 @@ public class ProductCategoryDto
     public string Name { get; set; } = string.Empty;
     public int? ParentId { get; set; }
     public int SortOrder { get; set; }
-    public List<ProductCategoryDto> Children { get; set; } = new();
+    public List<ProductCategoryDto> Children { get; set; } = [];
 }
 
 // ==================== 配送员相关 ====================
@@ -331,7 +398,7 @@ public class SettlementDetailDto
     public string? Remark { get; set; }
     public string? PdfPath { get; set; }
     public DateTime CreatedAt { get; set; }
-    public List<SettlementOrderDto> Orders { get; set; } = new();
+    public List<SettlementOrderDto> Orders { get; set; } = [];
 }
 
 /// <summary>
