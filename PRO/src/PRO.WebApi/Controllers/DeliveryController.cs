@@ -18,7 +18,7 @@ public class DeliveryController(
     IDeliveryPersonService deliveryService,
     IOrderDistributionService distributionService,
     IOrderService orderService,
-    BranchDataFilter branchFilter) : ControllerBase
+    BranchDataFilter branchFilter) : BaseApiController
 {
     private readonly IDeliveryPersonService _deliveryService = deliveryService;
     private readonly IOrderDistributionService _distributionService = distributionService;
@@ -137,10 +137,6 @@ public class DeliveryController(
         return null;
     }
 
-    private IActionResult BranchForbidden(string message)
-    {
-        return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Fail(message));
-    }
 }
 
 public class ManualAssignBody

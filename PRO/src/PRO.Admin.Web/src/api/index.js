@@ -1,5 +1,9 @@
 import request from './request'
 
+export const healthApi = {
+  check: () => request.get('/health'),
+}
+
 export const authApi = {
   login: (data) => request.post('/auth/login', data),
   logout: () => request.post('/auth/logout'),

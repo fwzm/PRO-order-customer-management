@@ -12,7 +12,7 @@ namespace PRO.WebApi.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class ReceivablesController(IReceivableService receivableService, BranchDataFilter branchFilter) : ControllerBase
+public class ReceivablesController(IReceivableService receivableService, BranchDataFilter branchFilter) : BaseApiController
 {
     private readonly IReceivableService _receivableService = receivableService;
     private readonly BranchDataFilter _branchFilter = branchFilter;
@@ -70,8 +70,4 @@ public class ReceivablesController(IReceivableService receivableService, BranchD
         return result.Success ? Ok(result) : BadRequest(result);
     }
 
-    private IActionResult BranchForbidden(string message)
-    {
-        return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Fail(message));
-    }
 }

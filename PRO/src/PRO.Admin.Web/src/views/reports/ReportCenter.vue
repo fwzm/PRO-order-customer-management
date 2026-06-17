@@ -66,7 +66,15 @@
 
 <script setup>
 import { ref, onMounted, watch, nextTick } from 'vue'
-import * as echarts from 'echarts'
+
+// ECharts 动态加载 — 仅在 Report 页面渲染时按需加载
+let echartsModule = null
+async function loadEcharts() {
+  if (!echartsModule) {
+    echartsModule = await import('echarts')
+  }
+  return echartsModule
+}
 
 const orderChartRef = ref(null)
 const revenueChartRef = ref(null)
@@ -82,8 +90,9 @@ const orderStatData = [120, 200, 150, 80, 70, 110, 130, 90, 160, 180, 140, 210]
 const revenueCategories = ['第1天', '第2天', '第3天', '第4天', '第5天', '第6天', '第7天']
 const revenueTrendData = [12000, 18000, 15000, 22000, 19000, 26000, 21000]
 
-function initOrderChart() {
+async function initOrderChart() {
   if (!orderChartRef.value) return
+  const echarts = await loadEcharts()
   if (orderChartInstance) orderChartInstance.dispose()
   orderChartInstance = echarts.init(orderChartRef.value)
   orderChartInstance.setOption({
@@ -109,8 +118,9 @@ function initOrderChart() {
   })
 }
 
-function initRevenueChart() {
+async function initRevenueChart() {
   if (!revenueChartRef.value) return
+  const echarts = await loadEcharts()
   if (revenueChartInstance) revenueChartInstance.dispose()
   revenueChartInstance = echarts.init(revenueChartRef.value)
   revenueChartInstance.setOption({
@@ -139,11 +149,10 @@ function initRevenueChart() {
   })
 }
 
-function initCharts() {
-  nextTick(() => {
-    initOrderChart()
-    initRevenueChart()
-  })
+async function initCharts() {
+  await nextTick()
+  initOrderChart()
+  initRevenueChart()
 }
 
 watch(orderStatPeriod, () => {

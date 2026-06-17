@@ -1294,6 +1294,134 @@ Authorization: Bearer {your_token}
 
 ---
 
+## 移动端工作台
+
+> **Controller：** `DashboardController`  
+> **Route：** `api/dashboard`
+
+### 获取移动端工作台数据
+**GET** `/api/dashboard/workbench?forceRefresh=true`
+
+**权限：** 登录即可  
+**分公司隔离：** 是
+
+**响应（200）：**
+```json
+{
+  "success": true,
+  "data": {
+    "todayOrderCount": 5,
+    "todayOrderAmount": 12000.00,
+    "pendingOrderCount": 12,
+    "deliveringOrderCount": 3,
+    "completedOrderCount": 25,
+    "unassignedOrderCount": 8,
+    "draftOrderCount": 2,
+    "overduePaymentCount": 3,
+    "overduePaymentAmount": 5000.00,
+    "pendingSettlementCount": 10,
+    "pendingSettlementAmount": 35000.00,
+    "todayDeliveryCount": 15,
+    "deliveryFailedCount": 1,
+    "overloadedDeliveryPersons": 2,
+    "newCustomerCount": 3,
+    "visitReminderCount": 5,
+    "duplicateCustomerCount": 0,
+    "syncFailedCount": 0,
+    "recentErrorCount": 2,
+    "alerts": [
+      {
+        "type": "Warning",
+        "title": "待分配订单积压",
+        "message": "当前有 12 个订单待分配配送员",
+        "actionText": "去分配",
+        "actionRoute": "order",
+        "createdAt": "2026-06-17T09:00:00"
+      }
+    ],
+    "recentOrders": [],
+    "todayTasks": [],
+    "shortcuts": []
+  }
+}
+```
+
+---
+
+## 用户信息
+
+> **Controller：** `UserController`  
+> **Route：** `api/user`
+
+### 获取当前用户信息
+**GET** `/api/user/profile`
+
+**权限：** 登录即可
+
+**响应（200）：**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "张三",
+    "employeeNo": "ADMIN",
+    "departmentName": "技术部",
+    "departmentId": 1,
+    "branchName": "总部",
+    "branchId": 1,
+    "roleName": "总部管理员",
+    "phone": "13800138000",
+    "status": 1,
+    "statusName": "正常",
+    "createdAt": "2026-01-01T00:00:00"
+  }
+}
+```
+
+---
+
+## 健康检查
+
+> 无需 Controller，由 `Program.cs` 中 `MapHealthChecks` 直接提供
+
+### API 健康检查
+**GET** `/health`
+
+**权限：** 无
+
+**响应（200）：**
+```json
+{
+  "status": "Healthy",
+  "checks": [
+    {
+      "name": "database",
+      "status": "Healthy",
+      "description": null,
+      "duration": "15ms"
+    },
+    {
+      "name": "memory_cache",
+      "status": "Healthy",
+      "description": null,
+      "duration": "1ms"
+    },
+    {
+      "name": "background_services",
+      "status": "Healthy",
+      "description": null,
+      "duration": "1ms"
+    }
+  ],
+  "totalDuration": "17ms"
+}
+```
+
+> **App 使用说明：** 移动 App 启动时调用 `/health` 检测 API 连通性。若不可达则显示"网络连接失败"提示。
+
+---
+
 ## 错误码与兼容性
 
 ### HTTP 状态码
@@ -1337,5 +1465,5 @@ Authorization: Bearer {your_token}
 
 ---
 
-**文档版本：** v2.0  
-**最后更新：** 2026年6月10日
+**文档版本：** v2.1  
+**最后更新：** 2026年6月17日（新增 Dashboard、User、Health 移动端端点）

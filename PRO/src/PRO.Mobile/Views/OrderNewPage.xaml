@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PRO.Mobile.ViewModels"
+             x:Class="PRO.Mobile.Views.OrderNewPage"
+             x:DataType="vm:OrderNewViewModel"
+             Title="新建订单"
+             BackgroundColor="{StaticResource BgColor}">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="16" Padding="16">
+
+            <!-- 选择客户 -->
+            <Label Text="选择客户 *" FontSize="14" FontAttributes="Bold" />
+            <Picker Title="请选择客户" ItemsSource="{Binding Customers}"
+                    SelectedItem="{Binding SelectedCustomer}" TitleColor="{StaticResource TextSecondary}" />
+
+            <!-- 产品明细 -->
+            <Label Text="产品明细" FontSize="14" FontAttributes="Bold" />
+            <CollectionView ItemsSource="{Binding Items}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:OrderItemEntry">
+                        <Frame Padding="8" Margin="0,4" CornerRadius="8" BackgroundColor="White">
+                            <Grid ColumnDefinitions="*,60,80,40" ColumnSpacing="8">
+                                <Picker Grid.Column="0" Title="产品" ItemsSource="{Binding Source={RelativeSource AncestorType={x:Type vm:OrderNewViewModel}}, Path=Products}" />
+                                <Entry Grid.Column="1" Text="{Binding Quantity}" Keyboard="Numeric" Placeholder="数量" />
+                                <Entry Grid.Column="2" Text="{Binding UnitPrice, StringFormat='{0:N2}'}" Keyboard="Numeric" Placeholder="单价" />
+                                <Button Grid.Column="3" Text="×" FontSize="14" TextColor="{StaticResource DangerColor}"
+                                        BackgroundColor="Transparent"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OrderNewViewModel}}, Path=RemoveItemCommand}"
+                                        CommandParameter="{Binding .}" />
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Button Text="+ 添加产品" Command="{Binding AddItemCommand}"
+                    BackgroundColor="Transparent" TextColor="{StaticResource PrimaryColor}"
+                    BorderColor="{StaticResource BorderColor}" CornerRadius="8" />
+
+            <!-- 配送地址 -->
+            <Label Text="配送地址" FontSize="14" FontAttributes="Bold" />
+            <Editor Text="{Binding DeliveryAddress}" Placeholder="请输入配送地址" HeightRequest="80"
+                    AutoSize="TextChanges" />
+
+            <!-- 备注 -->
+            <Label Text="备注" FontSize="14" />
+            <Editor Text="{Binding Remark}" Placeholder="备注信息（选填）" HeightRequest="60"
+                    AutoSize="TextChanges" />
+
+            <!-- 按钮区 -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Button Grid.Column="0" Text="保存草稿" Command="{Binding SaveDraftCommand}"
+                        BackgroundColor="White" TextColor="{StaticResource TextPrimary}"
+                        BorderColor="{StaticResource BorderColor}" CornerRadius="8" />
+                <Button Grid.Column="1" Text="提交订单" Command="{Binding SubmitCommand}"
+                        Style="{StaticResource PrimaryButton}" />
+            </Grid>
+
+            <ActivityIndicator IsRunning="{Binding IsSaving}" IsVisible="{Binding IsSaving}"
+                               Color="{StaticResource PrimaryColor}" HorizontalOptions="Center" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

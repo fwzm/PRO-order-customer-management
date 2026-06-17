@@ -441,10 +441,6 @@ public class OrdersController(
         return result.Success ? Ok(result) : BadRequest(result);
     }
 
-    private IActionResult BranchForbidden(string message)
-    {
-        return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Fail(message));
-    }
 }
 
 public class BatchAssignRequest

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PRO.Mobile.ViewModels"
+             x:Class="PRO.Mobile.Views.WorkbenchPage"
+             x:DataType="vm:WorkbenchViewModel"
+             Title="工作台"
+             BackgroundColor="{StaticResource BgColor}">
+
+    <RefreshView Command="{Binding LoadDataCommand}" IsRefreshing="{Binding IsLoading}">
+        <ScrollView>
+            <VerticalStackLayout Spacing="16" Padding="16">
+
+                <!-- 欢迎区 -->
+                <Label FontSize="22" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="你好，" />
+                            <Span Text="{Binding UserName}" FontAttributes="Bold" />
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+                <Label Text="{Binding BranchName}" FontSize="14" TextColor="{StaticResource TextSecondary}" />
+
+                <!-- 统计卡片 -->
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="12">
+                    <Frame Grid.Row="0" Grid.Column="0" Padding="16" CornerRadius="8" BackgroundColor="White" HasShadow="True">
+                        <VerticalStackLayout>
+                            <Label Text="今日订单" FontSize="13" TextColor="{StaticResource TextSecondary}" />
+                            <Label Text="{Binding TodayOrderCount}" FontSize="28" FontAttributes="Bold" TextColor="{StaticResource PrimaryColor}" />
+                        </VerticalStackLayout>
+                    </Frame>
+                    <Frame Grid.Row="0" Grid.Column="1" Padding="16" CornerRadius="8" BackgroundColor="White" HasShadow="True">
+                        <VerticalStackLayout>
+                            <Label Text="今日营收" FontSize="13" TextColor="{StaticResource TextSecondary}" />
+                            <Label Text="{Binding TodayOrderAmount, StringFormat='¥{0:N0}'}" FontSize="28" FontAttributes="Bold" TextColor="{StaticResource SuccessColor}" />
+                        </VerticalStackLayout>
+                    </Frame>
+                    <Frame Grid.Row="1" Grid.Column="0" Padding="16" CornerRadius="8" BackgroundColor="White" HasShadow="True">
+                        <VerticalStackLayout>
+                            <Label Text="待处理" FontSize="13" TextColor="{StaticResource TextSecondary}" />
+                            <Label Text="{Binding PendingOrderCount}" FontSize="28" FontAttributes="Bold" TextColor="{StaticResource WarningColor}" />
+                        </VerticalStackLayout>
+                    </Frame>
+                    <Frame Grid.Row="1" Grid.Column="1" Padding="16" CornerRadius="8" BackgroundColor="White" HasShadow="True">
+                        <VerticalStackLayout>
+                            <Label Text="配送中" FontSize="13" TextColor="{StaticResource TextSecondary}" />
+                            <Label Text="{Binding DeliveringOrderCount}" FontSize="28" FontAttributes="Bold" TextColor="{StaticResource InfoColor}" />
+                        </VerticalStackLayout>
+                    </Frame>
+                </Grid>
+
+                <!-- 快捷入口 -->
+                <Label Text="快捷入口" Style="{StaticResource SubtitleLabel}" Margin="0,4,0,0" />
+                <HorizontalStackLayout Spacing="12">
+                    <Button Text="📋 新订单" Command="{Binding NavigateToNewOrderCommand}"
+                            BackgroundColor="{StaticResource PrimaryColor}" TextColor="White" CornerRadius="8"
+                            Padding="16,10" FontSize="14" />
+                    <Button Text="🔍 客户" Command="{Binding NavigateToCustomersCommand}"
+                            BackgroundColor="White" TextColor="{StaticResource TextPrimary}" CornerRadius="8"
+                            Padding="16,10" FontSize="14" BorderColor="{StaticResource BorderColor}" />
+                </HorizontalStackLayout>
+
+                <!-- 加载/空状态/错误 -->
+                <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                                   Color="{StaticResource PrimaryColor}" HorizontalOptions="Center" />
+
+                <VerticalStackLayout IsVisible="{Binding IsEmpty}" HorizontalOptions="Center" Spacing="8" Padding="0,20">
+                    <Label Text="暂无数据" FontSize="16" TextColor="{StaticResource TextSecondary}" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+
+                <Label Text="{Binding ErrorMessage}" TextColor="{StaticResource DangerColor}"
+                       IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullConverter}}"
+                       HorizontalOptions="Center" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
+
+</ContentPage>

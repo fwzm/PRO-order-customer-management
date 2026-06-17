@@ -12,7 +12,7 @@ namespace PRO.WebApi.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class PaymentsController(IPaymentService paymentService, BranchDataFilter branchFilter) : ControllerBase
+public class PaymentsController(IPaymentService paymentService, BranchDataFilter branchFilter) : BaseApiController
 {
     private readonly IPaymentService _paymentService = paymentService;
     private readonly BranchDataFilter _branchFilter = branchFilter;
@@ -109,8 +109,4 @@ public class PaymentsController(IPaymentService paymentService, BranchDataFilter
         return claim != null && int.TryParse(claim.Value, out var id) ? id : 0;
     }
 
-    private IActionResult BranchForbidden(string message)
-    {
-        return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Fail(message));
-    }
 }

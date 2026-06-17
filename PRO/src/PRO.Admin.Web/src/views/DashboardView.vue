@@ -69,8 +69,16 @@
 
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
-import * as echarts from 'echarts'
 import { orderApi } from '@/api'
+
+// ECharts 动态加载 — 仅 Dashboard 首屏渲染时按需加载，不进入首屏 bundle
+let echartsModule = null
+async function loadEcharts() {
+  if (!echartsModule) {
+    echartsModule = await import('echarts')
+  }
+  return echartsModule
+}
 
 const statCards = ref([
   { label: '今日订单', value: '0', trend: 0, icon: 'ShoppingCart', color: '#409EFF' },
@@ -98,7 +106,9 @@ const statusNameMap = {
   Cancelled: '已取消',
 }
 
-function initCharts(orders) {
+async function initCharts(orders) {
+  const echarts = await loadEcharts()
+
   // 订单趋势图 — 近7天
   if (orderTrendRef.value) {
     const trendChart = echarts.init(orderTrendRef.value)
@@ -107,7 +117,6 @@ function initCharts(orders) {
     const revenues = []
     const now = new Date()
 
-    // 计算近7天每天的订单数和营收
     for (let i = 6; i >= 0; i--) {
       const d = new Date(now)
       d.setDate(d.getDate() - i)
@@ -157,7 +166,7 @@ function initCharts(orders) {
   if (orderStatusRef.value) {
     const statusChart = echarts.init(orderStatusRef.value)
     const statusCounts = {
-      '待处理': 0,  // Pending + Assigned
+      '待处理': 0,
       '配送中': 0,
       '已完成': 0,
       '已取消': 0,
@@ -165,7 +174,6 @@ function initCharts(orders) {
 
     if (orders && orders.length > 0) {
       orders.forEach(o => {
-        const name = statusNameMap[o.statusName] || '其他'
         if (o.statusName === 'Pending' || o.statusName === 'Assigned') {
           statusCounts['待处理']++
         } else if (o.statusName === 'Delivering') {
@@ -209,20 +217,15 @@ function initCharts(orders) {
 
 onMounted(async () => {
   try {
-    // 获取更多订单数据用于图表统计
     const res = await orderApi.getList({ pageSize: 500, keyword: '' })
     if (res.success) {
       const orders = res.data?.items || []
       recentOrders.value = orders.slice(0, 10)
-
-      // 更新客户总数（如果有customerApi的话，这里用占位）
       statCards.value[3].value = res.data?.totalCount ? String(res.data.totalCount) : '—'
-
       await nextTick()
       initCharts(orders)
     }
   } catch (e) {
-    // 忽略初始加载错误，使用空图表
     await nextTick()
     initCharts([])
   }

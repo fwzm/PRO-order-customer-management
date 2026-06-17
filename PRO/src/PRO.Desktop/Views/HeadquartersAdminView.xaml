@@ -4,7 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             xmlns:enums="clr-namespace:PRO.Domain.Enums;assembly=PRO.Domain"
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="900"
              Background="{StaticResource BackgroundBrush}">
@@ -313,10 +312,10 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="冲突解决策略：" VerticalAlignment="Center"/>
                                 <ComboBox Grid.Column="1" Width="200" HorizontalAlignment="Left"
-                                          SelectedValue="{Binding SyncConfig.ConflictResolution}" SelectedValuePath="Tag">
-                                    <ComboBoxItem Content="时间优先" Tag="{x:Static enums:ConflictResolution.TimestampFirst}"/>
-                                    <ComboBoxItem Content="总部优先" Tag="{x:Static enums:ConflictResolution.HeadquartersFirst}"/>
-                                    <ComboBoxItem Content="手动处理" Tag="{x:Static enums:ConflictResolution.Manual}"/>
+                                          SelectedIndex="{Binding SyncConfig.ConflictResolution}">
+                                    <ComboBoxItem Content="时间优先"/>
+                                    <ComboBoxItem Content="总部优先"/>
+                                    <ComboBoxItem Content="手动处理"/>
                                 </ComboBox>
                             </Grid>
                             

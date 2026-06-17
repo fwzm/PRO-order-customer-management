@@ -23,7 +23,7 @@ public class OrderController(
     IDeliveryPersonService deliveryPersonService,
     IOrderDistributionService distributionService,
     IAuthorizationService authorizationService,
-    BranchDataFilter branchFilter) : ControllerBase
+    BranchDataFilter branchFilter) : BaseApiController
 {
     private readonly IOrderService _orderService = orderService;
     private readonly ICustomerService _customerService = customerService;
@@ -276,8 +276,4 @@ public class OrderController(
         return null;
     }
 
-    private IActionResult BranchForbidden(string message)
-    {
-        return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Fail(message));
-    }
 }

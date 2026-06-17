@@ -87,4 +87,12 @@ public abstract class BaseApiController : ControllerBase
     {
         return BadRequest(Application.DTOs.ApiResponse<object>.Fail(message, errors));
     }
+
+    /// <summary>
+    /// 分公司权限拒绝响应 (403 Forbidden)
+    /// </summary>
+    protected IActionResult BranchForbidden(string message)
+    {
+        return StatusCode(StatusCodes.Status403Forbidden, Application.DTOs.ApiResponse<object>.Fail(message));
+    }
 }

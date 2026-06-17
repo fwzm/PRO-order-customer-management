@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PRO.Mobile.ViewModels"
+             x:Class="PRO.Mobile.Views.LoginPage"
+             x:DataType="vm:LoginViewModel"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource BgColor}">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="32" VerticalOptions="Center">
+
+            <!-- Logo / 标题 -->
+            <Label Text="PRO" FontSize="36" FontAttributes="Bold"
+                   HorizontalOptions="Center" TextColor="{StaticResource PrimaryColor}" />
+            <Label Text="订单与客户管理系统" FontSize="16"
+                   HorizontalOptions="Center" TextColor="{StaticResource TextSecondary}"
+                   Margin="0,0,0,20" />
+
+            <!-- 工号 -->
+            <Label Text="工号" FontSize="14" TextColor="{StaticResource TextPrimary}" />
+            <Entry Text="{Binding EmployeeNo}" Placeholder="请输入工号" Keyboard="Text"
+                   ClearButtonVisibility="WhileEditing" />
+
+            <!-- 密码 -->
+            <Label Text="密码" FontSize="14" TextColor="{StaticResource TextPrimary}" />
+            <Entry Text="{Binding Password}" Placeholder="请输入密码" IsPassword="True" />
+
+            <!-- 错误提示 -->
+            <Label Text="{Binding ErrorMessage}" TextColor="{StaticResource DangerColor}"
+                   FontSize="14" IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullConverter}}" />
+
+            <!-- 登录按钮 -->
+            <Button Text="登 录" Command="{Binding LoginCommand}"
+                    Style="{StaticResource PrimaryButton}" HeightRequest="48"
+                    Margin="0,12,0,0" />
+
+            <!-- Loading -->
+            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                               Color="{StaticResource PrimaryColor}" HorizontalOptions="Center" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

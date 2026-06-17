@@ -216,10 +216,6 @@ public class CustomersController(ICustomerService customerService, AuditService 
         return null;
     }
 
-    private IActionResult BranchForbidden(string message)
-    {
-        return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Fail(message));
-    }
 }
 
 public class DuplicateCheckRequest

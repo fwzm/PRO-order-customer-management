@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PRO.Mobile.ViewModels"
+             x:Class="PRO.Mobile.Views.CustomerListPage"
+             x:DataType="vm:CustomerListViewModel"
+             Title="客户管理"
+             BackgroundColor="{StaticResource BgColor}">
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- 搜索栏 -->
+        <SearchBar Grid.Row="0" Placeholder="搜索客户名称/手机号" Text="{Binding Keyword}"
+                   SearchCommand="{Binding SearchCommand}" />
+
+        <!-- 列表 -->
+        <RefreshView Grid.Row="1" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
+            <CollectionView ItemsSource="{Binding Customers}"
+                            SelectionMode="Single"
+                            SelectionChangedCommand="{Binding SelectCustomerCommand}"
+                            SelectionChangedCommandParameter="{Binding Source={RelativeSource Self}, Path=SelectedItem}"
+                            RemainingItemsThreshold="5"
+                            RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}">
+
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="8" Padding="32">
+                        <Label Text="{Binding ErrorMessage, TargetNullValue='暂无客户数据'}"
+                               FontSize="16" TextColor="{StaticResource TextSecondary}" HorizontalOptions="Center" />
+                        <Label Text="下拉刷新重试" FontSize="13" TextColor="{StaticResource InfoColor}" HorizontalOptions="Center"
+                               IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullConverter}}" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="x:Object">
+                        <Frame Padding="16" Margin="8,4" CornerRadius="8" BackgroundColor="White" HasShadow="True">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="4">
+                                <Label Grid.Row="0" Grid.Column="0" FontSize="16" FontAttributes="Bold"
+                                       TextColor="{StaticResource TextPrimary}" LineBreakMode="TailTruncation" />
+                                <Label Grid.Row="0" Grid.Column="1" FontSize="12" TextColor="{StaticResource InfoColor}" />
+                                <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" FontSize="13"
+                                       TextColor="{StaticResource TextSecondary}" LineBreakMode="TailTruncation" />
+                                <Label Grid.Row="2" Grid.Column="0" FontSize="12" TextColor="{StaticResource InfoColor}" />
+                                <Label Grid.Row="2" Grid.Column="1" FontSize="12" TextColor="{StaticResource SuccessColor}" />
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+            </CollectionView>
+        </RefreshView>
+
+        <!-- Loading -->
+        <ActivityIndicator Grid.Row="1" IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                           Color="{StaticResource PrimaryColor}" VerticalOptions="Center" HorizontalOptions="Center" />
+    </Grid>
+
+</ContentPage>

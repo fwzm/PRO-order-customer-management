@@ -17,7 +17,7 @@ namespace PRO.WebApi.Controllers;
 [Authorize]
 [Obsolete("请使用 CustomersController (api/Customers)。此控制器将在未来版本移除。")]
 [ApiExplorerSettings(IgnoreApi = true)]
-public class CustomerController(ICustomerService customerService, BranchDataFilter branchFilter) : ControllerBase
+public class CustomerController(ICustomerService customerService, BranchDataFilter branchFilter) : BaseApiController
 {
     private readonly ICustomerService _customerService = customerService;
     private readonly BranchDataFilter _branchFilter = branchFilter;
@@ -182,10 +182,6 @@ public class CustomerController(ICustomerService customerService, BranchDataFilt
         return null;
     }
 
-    private IActionResult BranchForbidden(string message)
-    {
-        return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Fail(message));
-    }
 }
 
 /// <summary>查重请求体</summary>

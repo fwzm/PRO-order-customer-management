@@ -70,7 +70,15 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
-import * as echarts from 'echarts'
+
+// ECharts 动态加载 — 仅在 Forecast 页面渲染时按需加载
+let echartsModule = null
+async function loadEcharts() {
+  if (!echartsModule) {
+    echartsModule = await import('echarts')
+  }
+  return echartsModule
+}
 
 const forecastChartRef = ref(null)
 const forecastPeriod = ref(7)
@@ -112,12 +120,13 @@ function generateMockData(days) {
 
 let chartInstance = null
 
-function initChart() {
+async function initChart() {
   forecastDetails.value = generateMockData(forecastPeriod.value)
-  nextTick(() => {
-    if (!forecastChartRef.value) return
-    if (chartInstance) chartInstance.dispose()
-    chartInstance = echarts.init(forecastChartRef.value)
+  await nextTick()
+  const echarts = await loadEcharts()
+  if (!forecastChartRef.value) return
+  if (chartInstance) chartInstance.dispose()
+  chartInstance = echarts.init(forecastChartRef.value)
     const dates = forecastDetails.value.map(d => d.date)
     const actualData = forecastDetails.value.map(d => d.actualSales)
     const forecastData = forecastDetails.value.map(d => d.forecastSales)
@@ -165,7 +174,6 @@ function initChart() {
         },
       ],
     })
-  })
 }
 
 onMounted(() => {

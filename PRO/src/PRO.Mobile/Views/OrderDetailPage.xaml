@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PRO.Mobile.ViewModels"
+             x:Class="PRO.Mobile.Views.OrderDetailPage"
+             x:DataType="vm:OrderDetailViewModel"
+             Title="订单详情"
+             BackgroundColor="{StaticResource BgColor}">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="12" Padding="16">
+
+            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                               Color="{StaticResource PrimaryColor}" HorizontalOptions="Center" />
+
+            <!-- 订单基本信息 -->
+            <Frame Padding="16" CornerRadius="8" BackgroundColor="White" HasShadow="True">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="订单信息" FontSize="16" FontAttributes="Bold" />
+                    <Label TextColor="{StaticResource TextSecondary}" FontSize="14" />
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="4">
+                        <Label Grid.Row="0" Grid.Column="0" Text="客户:" FontSize="14" TextColor="{StaticResource InfoColor}" />
+                        <Label Grid.Row="0" Grid.Column="1" FontSize="14" TextColor="{StaticResource TextPrimary}" />
+                        <Label Grid.Row="1" Grid.Column="0" Text="状态:" FontSize="14" TextColor="{StaticResource InfoColor}" />
+                        <Label Grid.Row="1" Grid.Column="1" FontSize="14" />
+                        <Label Grid.Row="2" Grid.Column="0" Text="金额:" FontSize="14" TextColor="{StaticResource InfoColor}" />
+                        <Label Grid.Row="2" Grid.Column="1" FontSize="14" />
+                        <Label Grid.Row="3" Grid.Column="0" Text="地址:" FontSize="14" TextColor="{StaticResource InfoColor}" />
+                        <Label Grid.Row="3" Grid.Column="1" FontSize="14" TextColor="{StaticResource TextPrimary}" LineBreakMode="WordWrap" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- 订单明细 -->
+            <Frame Padding="16" CornerRadius="8" BackgroundColor="White" HasShadow="True">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="订单明细" FontSize="16" FontAttributes="Bold" />
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

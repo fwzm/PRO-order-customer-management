@@ -9,12 +9,23 @@ node_modules/
 publish/
 artifacts/
 logs/
+dist/
 
 *.user
 *.suo
 *.pdb
 *.log
+*.trx
 run_out.txt
 
 appsettings.local.json
 *.local.json
+
+# PWA build output
+src/PRO.Admin.Web/dist/
+
+# MAUI build artifacts
+*.apk
+*.aab
+*.ipa
+*.keystore

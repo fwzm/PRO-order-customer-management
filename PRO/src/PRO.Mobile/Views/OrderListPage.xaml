@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PRO.Mobile.ViewModels"
+             x:Class="PRO.Mobile.Views.OrderListPage"
+             x:DataType="vm:OrderListViewModel"
+             Title="订单管理"
+             BackgroundColor="{StaticResource BgColor}">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+        <!-- 搜索栏 -->
+        <SearchBar Grid.Row="0" Placeholder="搜索订单号/客户" Text="{Binding Keyword}"
+                   SearchCommand="{Binding SearchCommand}" />
+        <!-- 状态筛选 -->
+        <Picker Grid.Row="1" Title="全部状态" SelectedIndex="{Binding SelectedStatus}" Margin="8,0">
+            <Picker.ItemsSource>
+                <x:Array Type="{x:Type x:String}">
+                    <x:String>全部</x:String><x:String>草稿</x:String><x:String>待分配</x:String>
+                    <x:String>配送中</x:String><x:String>已完成</x:String><x:String>已取消</x:String>
+                </x:Array>
+            </Picker.ItemsSource>
+        </Picker>
+
+        <!-- 列表 -->
+        <RefreshView Grid.Row="2" Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
+            <CollectionView ItemsSource="{Binding Orders}" SelectionMode="Single"
+                            SelectionChangedCommand="{Binding SelectOrderCommand}"
+                            SelectionChangedCommandParameter="{Binding Source={RelativeSource Self}, Path=SelectedItem}"
+                            RemainingItemsThreshold="5"
+                            RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}">
+
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="8" Padding="32">
+                        <Label Text="{Binding ErrorMessage, TargetNullValue='暂无订单'}"
+                               FontSize="16" TextColor="{StaticResource TextSecondary}" HorizontalOptions="Center" />
+                        <Button Text="新建订单" Command="{Binding NewOrderCommand}"
+                                BackgroundColor="{StaticResource PrimaryColor}" TextColor="White" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="x:Object">
+                        <Frame Padding="12" Margin="8,4" CornerRadius="8" BackgroundColor="White" HasShadow="True">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="4">
+                                <Label Grid.Row="0" Grid.Column="0" FontSize="16" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" />
+                                <Label Grid.Row="0" Grid.Column="1" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource DangerColor}" />
+                                <Label Grid.Row="1" Grid.Column="0" FontSize="13" TextColor="{StaticResource TextSecondary}" />
+                                <Label Grid.Row="2" Grid.Column="0" FontSize="12" TextColor="{StaticResource InfoColor}" />
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+            </CollectionView>
+        </RefreshView>
+
+        <ActivityIndicator Grid.Row="2" IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                           Color="{StaticResource PrimaryColor}" VerticalOptions="Center" HorizontalOptions="Center" />
+    </Grid>
+
+</ContentPage>

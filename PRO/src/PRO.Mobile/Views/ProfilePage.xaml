@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PRO.Mobile.ViewModels"
+             x:Class="PRO.Mobile.Views.ProfilePage"
+             x:DataType="vm:ProfileViewModel"
+             Title="我的"
+             BackgroundColor="{StaticResource BgColor}">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="16" Padding="16">
+
+            <!-- 头像占位 + 名称 -->
+            <Frame HeightRequest="80" WidthRequest="80" CornerRadius="40" BackgroundColor="{StaticResource PrimaryColor}"
+                   HorizontalOptions="Center" IsClippedToBounds="True">
+                <Label Text="👤" FontSize="36" HorizontalOptions="Center" VerticalOptions="Center" />
+            </Frame>
+            <Label Text="{Binding UserName}" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" />
+            <Label Text="{Binding BranchName}" FontSize="14" TextColor="{StaticResource TextSecondary}" HorizontalOptions="Center" />
+
+            <!-- 信息卡片 -->
+            <Frame Padding="16" CornerRadius="8" BackgroundColor="White" HasShadow="True">
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="Auto,*" RowSpacing="8">
+                        <Label Grid.Row="0" Grid.Column="0" Text="角色" FontSize="14" TextColor="{StaticResource InfoColor}" />
+                        <Label Grid.Row="0" Grid.Column="1" Text="{Binding RoleName}" FontSize="14" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- 操作 -->
+            <Button Text="服务健康检查" Command="{Binding CheckApiHealthCommand}"
+                    BackgroundColor="White" TextColor="{StaticResource PrimaryColor}" BorderColor="{StaticResource BorderColor}" CornerRadius="8" />
+
+            <Button Text="退出登录" Command="{Binding LogoutCommand}"
+                    Style="{StaticResource DangerButton}" Margin="0,20,0,0" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

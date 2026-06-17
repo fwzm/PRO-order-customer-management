@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="PRO.Mobile.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:PRO.Mobile.Views"
+    FlyoutBehavior="Disabled"
+    Shell.FlyoutBehavior="Disabled">
+
+    <!-- 登录页（非 Tab） -->
+    <ShellContent
+        Route="login"
+        ContentTemplate="{DataTemplate views:LoginPage}" />
+
+    <!-- 底部 Tab 主页 -->
+    <TabBar Route="main">
+        <ShellContent
+            Route="workbench"
+            Title="工作台"
+            Icon="icon_home.png"
+            ContentTemplate="{DataTemplate views:WorkbenchPage}" />
+        <ShellContent
+            Route="orders"
+            Title="订单"
+            Icon="icon_orders.png"
+            ContentTemplate="{DataTemplate views:OrderListPage}" />
+        <ShellContent
+            Route="customers"
+            Title="客户"
+            Icon="icon_customers.png"
+            ContentTemplate="{DataTemplate views:CustomerListPage}" />
+        <ShellContent
+            Route="profile"
+            Title="我的"
+            Icon="icon_profile.png"
+            ContentTemplate="{DataTemplate views:ProfilePage}" />
+    </TabBar>
+
+</Shell>
