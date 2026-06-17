@@ -3,7 +3,7 @@ namespace PRO.Mobile.Services;
 /// <summary>
 /// 网络连接检测（使用 MAUI Connectivity API）
 /// </summary>
-public class ConnectivityService : IConnectivityService
+public class ConnectivityService : IConnectivityService, IDisposable
 {
     public bool IsConnected => Connectivity.Current.NetworkAccess == NetworkAccess.Internet;
 
@@ -18,6 +18,11 @@ public class ConnectivityService : IConnectivityService
     {
         var isConnected = e.NetworkAccess == NetworkAccess.Internet;
         ConnectivityChanged?.Invoke(this, isConnected);
+    }
+
+    public void Dispose()
+    {
+        Connectivity.Current.ConnectivityChanged -= OnConnectivityChanged;
     }
 }
 
@@ -38,8 +43,7 @@ public class SecureTokenStore : ISecureTokenStore
 
     public Task RemoveAsync(string key)
     {
-        SecureStorage.Default.Remove(key);
-        return Task.CompletedTask;
+        return SecureStorage.Default.SetAsync(key, null!);
     }
 }
 

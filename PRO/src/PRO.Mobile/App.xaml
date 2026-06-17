@@ -1,9 +1,14 @@
 <?xml version = "1.0" encoding = "UTF-8" ?>
 <Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:PRO.Mobile"
              x:Class="PRO.Mobile.App">
     <Application.Resources>
         <ResourceDictionary>
+            <!-- 值转换器 -->
+            <local:InvertBoolConverter x:Key="InvertBoolConverter" />
+            <local:IsNotNullConverter x:Key="IsNotNullConverter" />
+
             <!-- 品牌色 -->
             <Color x:Key="PrimaryColor">#409EFF</Color>
             <Color x:Key="SuccessColor">#67C23A</Color>

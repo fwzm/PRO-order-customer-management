@@ -35,8 +35,12 @@ public static class MauiProgram
         builder.Services.AddSingleton<IMobileToastService, MobileToastService>();
         builder.Services.AddSingleton<IApiClient, ApiClient>();
         builder.Services.AddSingleton<IAuthService, AuthServiceProxy>();
+        builder.Services.AddSingleton<IDashboardMobileService, DashboardMobileService>();
+        builder.Services.AddSingleton<IHealthCheckService, HealthCheckService>();
         builder.Services.AddSingleton<ICustomerMobileService, CustomerMobileService>();
         builder.Services.AddSingleton<IOrderMobileService, OrderMobileService>();
+        builder.Services.AddSingleton<IProductMobileService, ProductMobileService>();
+        builder.Services.AddSingleton<IBranchMobileService, BranchMobileService>();
 
         // ─── Stores (状态管理) ─────────────────────────
         builder.Services.AddSingleton<TokenStore>();
@@ -61,6 +65,9 @@ public static class MauiProgram
         builder.Services.AddTransient<OrderDetailPage>();
         builder.Services.AddTransient<OrderNewPage>();
         builder.Services.AddTransient<ProfilePage>();
+
+        // ─── Shell ────────────────────────────────────
+        builder.Services.AddTransient<AppShell>();
 
 #if DEBUG
         builder.Logging.AddDebug();

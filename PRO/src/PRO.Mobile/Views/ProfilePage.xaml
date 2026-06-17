@@ -10,30 +10,76 @@
     <ScrollView>
         <VerticalStackLayout Spacing="16" Padding="16">
 
-            <!-- 头像占位 + 名称 -->
-            <Frame HeightRequest="80" WidthRequest="80" CornerRadius="40" BackgroundColor="{StaticResource PrimaryColor}"
+            <!-- 用户头像 + 名称 -->
+            <Frame HeightRequest="80" WidthRequest="80" CornerRadius="40"
+                   BackgroundColor="{StaticResource PrimaryColor}"
                    HorizontalOptions="Center" IsClippedToBounds="True">
                 <Label Text="👤" FontSize="36" HorizontalOptions="Center" VerticalOptions="Center" />
             </Frame>
-            <Label Text="{Binding UserName}" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" />
-            <Label Text="{Binding BranchName}" FontSize="14" TextColor="{StaticResource TextSecondary}" HorizontalOptions="Center" />
+            <Label Text="{Binding UserName}" FontSize="20" FontAttributes="Bold"
+                   HorizontalOptions="Center" />
+            <Label Text="{Binding BranchName}" FontSize="14"
+                   TextColor="{StaticResource TextSecondary}" HorizontalOptions="Center" />
 
-            <!-- 信息卡片 -->
+            <!-- 用户信息卡片 -->
             <Frame Padding="16" CornerRadius="8" BackgroundColor="White" HasShadow="True">
-                <VerticalStackLayout Spacing="12">
+                <VerticalStackLayout Spacing="10">
                     <Grid ColumnDefinitions="Auto,*" RowSpacing="8">
-                        <Label Grid.Row="0" Grid.Column="0" Text="角色" FontSize="14" TextColor="{StaticResource InfoColor}" />
-                        <Label Grid.Row="0" Grid.Column="1" Text="{Binding RoleName}" FontSize="14" />
+                        <Label Grid.Row="0" Grid.Column="0" Text="工号"
+                               FontSize="14" TextColor="{StaticResource TextSecondary}" />
+                        <Label Grid.Row="0" Grid.Column="1" Text="{Binding EmployeeNo}" FontSize="14" />
+
+                        <Label Grid.Row="1" Grid.Column="0" Text="角色"
+                               FontSize="14" TextColor="{StaticResource TextSecondary}" />
+                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding RoleName}" FontSize="14" />
                     </Grid>
                 </VerticalStackLayout>
             </Frame>
 
-            <!-- 操作 -->
-            <Button Text="服务健康检查" Command="{Binding CheckApiHealthCommand}"
-                    BackgroundColor="White" TextColor="{StaticResource PrimaryColor}" BorderColor="{StaticResource BorderColor}" CornerRadius="8" />
+            <!-- 服务状态卡片 -->
+            <Frame Padding="16" CornerRadius="8" BackgroundColor="White" HasShadow="True">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="系统状态" FontSize="16" FontAttributes="Bold" />
+                    <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto">
+                        <BoxView Grid.Column="0" WidthRequest="10" HeightRequest="10"
+                                 CornerRadius="5" Color="{Binding ApiStatusColor}"
+                                 VerticalOptions="Center" Margin="0,0,8,0" />
+                        <Label Grid.Column="1" Text="{Binding ApiStatus}" FontSize="14"
+                               VerticalOptions="Center" />
+                        <Button Grid.Column="2" Text="检测" FontSize="12"
+                                Padding="8,4" BackgroundColor="{StaticResource PrimaryColor}"
+                                TextColor="White" CornerRadius="4"
+                                Command="{Binding CheckApiHealthCommand}"
+                                IsEnabled="{Binding IsCheckingHealth, Converter={StaticResource InvertBoolConverter}}" />
+                    </Grid>
+                    <ActivityIndicator IsRunning="{Binding IsCheckingHealth}" IsVisible="{Binding IsCheckingHealth}"
+                                       HorizontalOptions="Start" Color="{StaticResource PrimaryColor}" />
+                </VerticalStackLayout>
+            </Frame>
 
+            <!-- 修改密码卡片 -->
+            <Frame Padding="16" CornerRadius="8" BackgroundColor="White" HasShadow="True">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="修改密码" FontSize="16" FontAttributes="Bold" />
+
+                    <Entry Placeholder="原密码" Text="{Binding OldPassword}" IsPassword="True"
+                           ClearButtonVisibility="WhileEditing" />
+                    <Entry Placeholder="新密码（至少6位）" Text="{Binding NewPassword}" IsPassword="True"
+                           ClearButtonVisibility="WhileEditing" />
+                    <Entry Placeholder="确认新密码" Text="{Binding ConfirmPassword}" IsPassword="True"
+                           ClearButtonVisibility="WhileEditing" />
+
+                    <Button Text="修改密码" Command="{Binding ChangePasswordCommand}"
+                            Style="{StaticResource PrimaryButton}"
+                            IsEnabled="{Binding IsChangingPassword, Converter={StaticResource InvertBoolConverter}}" />
+                    <ActivityIndicator IsRunning="{Binding IsChangingPassword}" IsVisible="{Binding IsChangingPassword}"
+                                       HorizontalOptions="Center" Color="{StaticResource PrimaryColor}" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- 退出登录 -->
             <Button Text="退出登录" Command="{Binding LogoutCommand}"
-                    Style="{StaticResource DangerButton}" Margin="0,20,0,0" />
+                    Style="{StaticResource DangerButton}" Margin="0,8,0,20" />
 
         </VerticalStackLayout>
     </ScrollView>

@@ -86,6 +86,25 @@ public class ApiClient : IApiClient
                 return ApiResponse<T>.Fail("登录已过期，请重新登录");
             }
 
+            if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            {
+                return ApiResponse<T>.Fail("无权访问该资源");
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync();
+                // 尝试解析为 ApiResponse 格式，失败则使用 HTTP 状态描述
+                try
+                {
+                    var errorResponse = JsonSerializer.Deserialize<ApiResponse<T>>(errorBody, JsonOptions);
+                    if (errorResponse != null && !string.IsNullOrEmpty(errorResponse.Message))
+                        return errorResponse;
+                }
+                catch { /* 服务端返回非 JSON 格式（如 HTML 错误页） */ }
+                return ApiResponse<T>.Fail($"请求失败 ({(int)response.StatusCode}): {response.ReasonPhrase}");
+            }
+
             var json = await response.Content.ReadAsStringAsync();
             var apiResponse = JsonSerializer.Deserialize<ApiResponse<T>>(json, JsonOptions);
             return apiResponse ?? ApiResponse<T>.Fail("解析响应失败");

@@ -13,25 +13,44 @@ public interface IApiClient
     Task<ApiResponse<T>> DeleteAsync<T>(string endpoint);
     Task<ApiResponse<T>> SendAsync<T>(HttpMethod method, string endpoint, object? body = null, Dictionary<string, string>? queryParams = null);
 
-    /// <summary>设置 Bearer Token 并持久化</summary>
     Task SetTokenAsync(string token);
-
-    /// <summary>清除 Token</summary>
     Task ClearTokenAsync();
-
-    /// <summary>获取当前 Token</summary>
     Task<string?> GetTokenAsync();
 }
 
 /// <summary>
-/// 移动端认证服务 — 登录、登出、Token 刷新
+/// 移动端认证服务
 /// </summary>
 public interface IAuthService
 {
     Task<ApiResponse<LoginResponse>> LoginAsync(string employeeNo, string password);
     Task LogoutAsync();
     Task<ApiResponse<LoginResponse>> RefreshTokenAsync();
+    Task<ApiResponse<bool>> ChangePasswordAsync(string oldPassword, string newPassword);
     Task<bool> IsLoggedInAsync();
+}
+
+/// <summary>
+/// 移动端工作台服务
+/// </summary>
+public interface IDashboardMobileService
+{
+    Task<ApiResponse<BusinessDashboardDto>> GetWorkbenchDataAsync(bool forceRefresh = false);
+}
+
+/// <summary>
+/// 移动端健康检查服务
+/// </summary>
+public interface IHealthCheckService
+{
+    Task<ApiResponse<HealthCheckResult>> CheckAsync();
+}
+
+public class HealthCheckResult
+{
+    public string Status { get; set; } = "unknown";
+    public string Database { get; set; } = "unknown";
+    public string Timestamp { get; set; } = "";
 }
 
 /// <summary>
@@ -41,6 +60,9 @@ public interface ICustomerMobileService
 {
     Task<ApiResponse<PagedResult<CustomerListItem>>> GetListAsync(int pageIndex = 1, int pageSize = 20, string? keyword = null, int? customerType = null);
     Task<ApiResponse<CustomerDetailDto>> GetDetailAsync(int id);
+    Task<ApiResponse<int>> CreateAsync(CreateCustomerRequest request);
+    Task<ApiResponse<bool>> UpdateAsync(int id, UpdateCustomerRequest request);
+    Task<ApiResponse<bool>> DeleteAsync(int id);
 }
 
 /// <summary>
@@ -51,6 +73,26 @@ public interface IOrderMobileService
     Task<ApiResponse<PagedResult<OrderListItem>>> GetListAsync(int pageIndex = 1, int pageSize = 20, string? keyword = null, int? status = null, int? paymentStatus = null);
     Task<ApiResponse<OrderDetailDto>> GetDetailAsync(int id);
     Task<ApiResponse<int>> CreateAsync(CreateOrderRequest request);
+    Task<ApiResponse<bool>> UpdateAsync(int id, UpdateOrderRequest request);
+    Task<ApiResponse<bool>> DeleteAsync(int id);
+    Task<ApiResponse<bool>> UpdateStatusAsync(int id, UpdateOrderStatusRequest request);
+}
+
+/// <summary>
+/// 移动端产品服务
+/// </summary>
+public interface IProductMobileService
+{
+    Task<ApiResponse<PagedResult<ProductListItem>>> GetListAsync(int pageIndex = 1, int pageSize = 20, string? keyword = null);
+    Task<ApiResponse<ProductListItem>> GetDetailAsync(int id);
+}
+
+/// <summary>
+/// 移动端分公司服务
+/// </summary>
+public interface IBranchMobileService
+{
+    Task<ApiResponse<PagedResult<BranchListItem>>> GetListAsync(int pageIndex = 1, int pageSize = 50);
 }
 
 /// <summary>

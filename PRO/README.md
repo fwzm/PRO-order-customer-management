@@ -3,9 +3,11 @@
 > 面向多分公司企业的原生 Windows 桌面管理系统，整合客户、订单、库存、配送、财务、工作计划等核心业务流程，支持企业微信集成与 RESTful API 扩展。
 
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
-[![Platform](https://img.shields.io/badge/platform-Windows-0078D6?logo=windows)](https://www.microsoft.com/windows)
+[![Platform](https://img.shields.io/badge/platform-Windows_|_Android_|_iOS-0078D6?logo=dotnet)](https://dotnet.microsoft.com/)
+[![MAUI](https://img.shields.io/badge/MAUI-8.0-blue?logo=dotnet)](https://dotnet.microsoft.com/apps/maui)
+[![PWA](https://img.shields.io/badge/PWA-ready-5A0FC8?logo=pwa)](https://web.dev/progressive-web-apps/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Status](https://img.shields.io/badge/status-stable-brightgreen)]()
+[![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/fwzm/PRO-order-customer-management/actions)
 
 ---
 
@@ -48,7 +50,7 @@ PRO 是为这类企业打造的**一站式原生桌面管理系统**。它以订
 | **效率提升** | 订单模板、批量操作、快捷键，日常操作提效 50%+ |
 | **数据质量** | 自动检测重复客户、空数据、地址不规范，数据完整性 > 95% |
 | **财务精准** | 收款登记 + 应收核销 + 账龄分析，账实一致 |
-| **移动扩展** | 企业微信集成，实现移动端客户绑定与拜访记录 |
+| **移动扩展** | 企业微信集成 + .NET MAUI 原生 App (Android/iOS) + PWA Web 端，全平台覆盖 |
 | **安全合规** | 分层权限、密码策略、操作审计、敏感信息加密存储 |
 
 ---
@@ -432,7 +434,7 @@ PRO/
 │   │   └── Services/                 # 领域服务
 │   │       └── OrderStatusManager.cs # 订单状态流转规则
 │   │
-│   ├── PRO.Application/              # 应用层
+│   ├── PRO.Application/              # 应用层（DTO 复用 — WPF/Mobile/PWA 共享）
 │   │   ├── DTOs/                     # 数据传输对象（15+ 文件）
 │   │   ├── Interfaces/               # 服务接口定义
 │   │   │   ├── IServices.cs          # 核心服务接口
@@ -447,20 +449,18 @@ PRO/
 │   │   ├── Services/                 # 服务实现
 │   │   │   ├── CustomerService.cs    # 客户服务
 │   │   │   ├── OrderService.cs       # 订单服务
-│   │   │   ├── ProductService.cs     # 产品服务
-│   │   │   ├── DataQualityService.cs # 数据质量服务
-│   │   │   ├── AuditService.cs       # 审计服务
-│   │   │   ├── UndoService.cs        # 撤销服务
+│   │   │   ├── DashboardService.cs   # 工作台聚合服务
+│   │   │   ├── EmployeeService.cs    # 员工服务
 │   │   │   └── WeChatService.cs      # 企业微信服务
 │   │   ├── Repositories/             # 仓储模式实现
 │   │   └── DependencyInjection.cs    # 基础设施层 DI 注册
 │   │
-│   ├── PRO.Desktop/                  # WPF 桌面应用
+│   ├── PRO.Desktop/                  # WPF 桌面应用（Windows）
 │   │   ├── Views/                    # XAML 视图（30+ 页面）
 │   │   │   ├── MainWindow.xaml       # 主窗口
 │   │   │   ├── LoginWindow.xaml      # 登录窗口
 │   │   │   ├── OrderListView.xaml    # 订单列表页
-│   │   │   ├── OrderEditWindow.xaml  # 订单编辑窗口
+│   │   │   └── OrderEditWindow.xaml  # 订单编辑窗口
 │   │   │   ├── CustomerEditWindow.xaml # 客户编辑窗口
 │   │   │   ├── MapPickerWindow.xaml  # 地图选点窗口
 │   │   │   └── ReportCenterView.xaml # 报表中心
@@ -470,14 +470,48 @@ PRO/
 │   │   ├── appsettings.json          # 桌面端配置
 │   │   └── App.xaml                  # 应用入口
 │   │
+│   │
+│   ├── PRO.Mobile/                   # .NET MAUI 手机 App (Android/iOS)
+│   │   ├── Services/                 # 移动端专属服务
+│   │   │   ├── ApiClient.cs          # HTTP 客户端 (JWT + 401 + 状态码)
+│   │   │   ├── AuthServiceProxy.cs   # 登录/登出/改密/刷新 Token
+│   │   │   ├── MobileServices.cs     # 工作台/客户/订单/产品/分公司
+│   │   │   ├── PlatformServices.cs   # 网络检测/SecureStorage/Toast
+│   │   │   └── Interfaces.cs         # 移动端全部服务接口
+│   │   ├── Stores/                   # 状态管理
+│   │   │   ├── TokenStore.cs         # Token 内存 + 持久化
+│   │   │   └── UserStore.cs          # 当前用户信息
+│   │   ├── ViewModels/               # MVVM ViewModel (8 个)
+│   │   ├── Views/                    # XAML 页面 (8 个)
+│   │   ├── Platforms/Android/         # Android 入口
+│   │   ├── Platforms/iOS/             # iOS 入口
+│   │   ├── MauiProgram.cs            # DI + HttpClient 配置
+│   │   ├── App.xaml                  # 全局样式 + 转换器
+│   │   ├── AppShell.xaml             # TabBar 导航
+│   │   └── Converters.cs             # 值转换器
+│   │
+│   ├── PRO.Admin.Web/                # PWA Web 管理端 (Vue 3 + Element Plus)
+│   │   ├── src/views/                # 15+ 业务页面
+│   │   ├── src/api/                  # API 封装层
+│   │   ├── src/layouts/              # 布局组件
+│   │   └── vite.config.js            # 构建优化（按需加载/ECharts 动态导入）
+│   │
 │   └── PRO.WebApi/                   # RESTful API
-│       ├── Controllers/              # API 控制器
+│       ├── Controllers/              # API 控制器 (12+ 控制器)
+│       │   ├── BaseApiController.cs  # 基类（统一 BranchForbidden 等公共方法）
+│       │   ├── AuthController.cs     # 认证 (登录/登出/改密/刷新)
+│       │   ├── DashboardController.cs # 移动端工作台 (GET /api/dashboard/workbench)
+│       │   ├── UserController.cs     # 当前用户信息 (GET /api/user/profile)
+│       │   └── ...
 │       ├── Middleware/               # 中间件
 │       ├── appsettings.json          # API 配置
 │       └── Program.cs                # 启动配置
 │
+├── .github/workflows/                # CI/CD
+│   └── ci.yml                        # 构建→测试→审计→发布（含 mobile-build）
+│
 └── tests/
-    └── PRO.WebApi.Tests/             # API 集成测试
+    └── PRO.WebApi.Tests/             # API 集成测试 (255 用例)
         ├── BranchIsolationTests.cs   # 分公司数据隔离测试
         └── AuditTests.cs             # 审计日志测试
 ```
@@ -489,14 +523,14 @@ PRO/
 ### 架构模式：Clean Architecture（整洁架构）
 
 ```
-┌────────────────────────────────────┐
-│        src/PRO.Desktop (WPF)       │  ← 表现层
-│        src/PRO.WebApi (REST)       │
-├────────────────────────────────────┤
-│     src/PRO.Application            │  ← 应用层（DTO / 接口）
-├────────────────────────────────────┤
-│     src/PRO.Infrastructure          │  ← 基础设施（EF Core / WeChat）
-├────────────────────────────────────┤
+┌───────────────────────────────────────────────────┐
+│  src/PRO.Desktop (WPF) │ PRO.Mobile (MAUI)        │  ← 表现层
+│  src/PRO.Admin.Web (PWA/Vue)  │  src/PRO.WebApi   │
+├───────────────────────────────────────────────────┤
+│              src/PRO.Application                   │  ← 应用层（DTO 复用）
+├───────────────────────────────────────────────────┤
+│            src/PRO.Infrastructure                  │  ← 基础设施（EF Core）
+├───────────────────────────────────────────────────┤
 │     src/PRO.Domain                 │  ← 领域层（实体 / 枚举）
 └────────────────────────────────────┘
 ```
@@ -819,6 +853,27 @@ dotnet test PRO.sln --logger "console;verbosity=detailed"
 ---
 
 ## 13. 版本历史
+
+### v2.1（2026-06-17）
+
+**新增功能：**
+- .NET MAUI 手机 App MVP 骨架（Android/iOS），MVVM 架构，8 页面完整导航
+- 移动端 API: Dashboard 工作台 (`GET /api/dashboard/workbench`)、用户信息 (`GET /api/user/profile`)
+- PWA 健康检查 API 集成、Element Plus 按需加载、ECharts 动态导入
+
+**重构优化：**
+- `BranchForbidden` 统一提取到 `BaseApiController`，消除 8 个控制器中的重复代码
+- 5 个 `ControllerBase` 子类统一改为 `BaseApiController`
+- MAUI 移动端服务层完善：健康检查、修改密码、完整 CRUD、防重复点击
+- ProfileViewModel 修复（伪健康检查、UserStore 事件订阅）
+- ApiClient 增强非 2xx 状态码处理、403 响应识别
+- ConnectivityService 实现 IDisposable 防止内存泄漏
+- CI 新增 `pwa-build` 和条件 `mobile-build` (tags/mobile-*) 作业
+
+**文档：**
+- `docs/native-mobile-app-plan.md` — MAUI vs Flutter 技术评估
+- `docs/frontend-performance.md` — PWA 包体积优化策略
+- API 文档更新至 v2.1
 
 ### v2.0（2026-06-09）
 
