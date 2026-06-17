@@ -6,6 +6,8 @@
 bin/
 obj/
 node_modules/
+dist/
+src/**/dist/
 publish/
 artifacts/
 logs/

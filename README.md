@@ -35,6 +35,30 @@ PRO 适合需要统一管理订单、客户、库存和应收款的中小型贸�
 | 企业微信 | 配置向导、通讯录/客户同步、拜访数据同步、回调配置 |
 | WebApi | RESTful API、JWT 认证、细粒度权限、Swagger、审计与监控 |
 
+## 下载即用
+
+### Windows 电脑端
+
+业务电脑优先使用 GitHub Release 的 Windows 压缩包：
+
+1. 打开 [v2.0.0 Release](https://github.com/fwzm/PRO-order-customer-management/releases/tag/v2.0.0)。
+2. 下载 `PRO-desktop-v2.0.0-win-x64.zip`。
+3. 解压后运行 `app\PRO.exe`。
+4. 首次使用前配置 PostgreSQL 连接串，或连接已部署好的公司数据库。
+
+压缩包是自包含发布包，业务电脑无需安装 .NET Runtime。数据库仍需要提前准备；多台电脑连接同一个 PostgreSQL 数据库后，客户、订单、库存和应收数据会互通。
+
+### 手机端
+
+手机端当前以 PWA 形式提供，适合 Android、iPhone、iPad 和微信/浏览器访问：
+
+1. 部署 `PRO.WebApi`。
+2. 部署 `src/PRO.Admin.Web` 构建产物，或下载 Release 中的 `PRO-mobile-pwa-v2.0.0.zip` 后部署到 Web 服务器。
+3. 手机浏览器访问部署地址。
+4. 在浏览器菜单中选择 `添加到主屏幕`，即可像手机应用一样打开。
+
+手机端不是原生 APK 或 App Store 应用；它通过 WebApi 与桌面端共享同一套业务数据。后续如果需要原生 App，可基于现有 WebApi 开发 .NET MAUI 或 Flutter 客户端。
+
 ## 快速开始
 
 ### 方式一：本地源码运行
@@ -70,7 +94,7 @@ dotnet run --project src/PRO.Desktop -c Release
 
 默认 Docker 连接参数仅用于本地体验，生产环境请替换为强密码和独立密钥。
 
-### 方式三：生成 Windows 交付包
+### 方式三：本地生成 Windows 交付包
 
 适合给业务电脑安装使用。
 
@@ -85,7 +109,15 @@ dotnet run --project src/PRO.Desktop -c Release
 | `publish\PRO.exe` | 桌面客户端主程序 |
 | `artifacts\PRO-delivery-*.zip` | 可分发压缩包 |
 
-当前 GitHub Release `v2.0.0` 暂未附带安装包资产。如需安装包，请在本地运行 `publish.bat` 生成。
+### 方式四：构建手机端 PWA
+
+```powershell
+cd src/PRO.Admin.Web
+npm ci
+npm run build
+```
+
+构建产物位于 `src/PRO.Admin.Web/dist/`。生产环境建议与 WebApi 同域部署，或通过 Nginx/IIS 反向代理让 `/api` 和 `/health` 转发到 WebApi。
 
 ## 首次使用
 
@@ -322,6 +354,16 @@ http://localhost:8080/swagger
 
 如果本地端口不同，以控制台输出为准。
 
+### 手机端联调
+
+```powershell
+cd src/PRO.Admin.Web
+npm ci
+npm run dev -- --host 0.0.0.0
+```
+
+手机与电脑在同一局域网时，可访问电脑 IP 对应的 Vite 地址。正式部署时请使用 HTTPS，否则部分浏览器不会允许 PWA 安装和后台缓存能力。
+
 ## 文档索引
 
 | 文档 | 用途 |
@@ -329,6 +371,7 @@ http://localhost:8080/swagger
 | [用户手册](docs/user-manual.md) | 面向业务用户的详细操作说明 |
 | [管理员配置说明](docs/admin-configuration.md) | 系统设置、业务规则、权限和配置项 |
 | [部署文档](docs/deployment.md) | WebApi、Desktop、Docker、IIS、Windows 服务部署 |
+| [移动端 PWA 部署说明](docs/mobile-pwa.md) | 手机端安装、部署、互通和限制说明 |
 | [API 文档](docs/api-documentation.md) | 控制器、认证、请求响应和错误码 |
 | [数据库迁移说明](docs/database-migration.md) | EF Core 迁移、SQL 脚本、回滚 |
 | [冒烟测试](docs/smoke-test.md) | 发布前快速验证清单 |
@@ -373,7 +416,7 @@ docker compose logs postgres
 
 ### Release 没有安装包怎么办
 
-当前 Release 标签用于标识源码版本。需要 Windows 客户端安装包时，在本地运行：
+Release 会优先附带 Windows 桌面端压缩包。如果后续某个版本没有安装包，也可以在本地运行：
 
 ```powershell
 .\publish.bat

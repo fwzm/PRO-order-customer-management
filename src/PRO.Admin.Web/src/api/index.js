@@ -1,4 +1,12 @@
 import request from './request'
+import axios from 'axios'
+
+export const healthApi = {
+  check: async () => {
+    const response = await axios.get('/health', { timeout: 5000 })
+    return response.data
+  },
+}
 
 export const authApi = {
   login: (data) => request.post('/auth/login', data),

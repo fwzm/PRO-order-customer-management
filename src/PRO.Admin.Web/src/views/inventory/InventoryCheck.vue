@@ -4,7 +4,7 @@
       <el-tab-pane label="仓库管理" name="warehouse">
         <el-card shadow="never">
           <div class="action-bar">
-            <el-button type="primary" @click="showWarehouseDialog = true; warehouseForm = { name: '', address: '', contactPerson: '' }; isEditWarehouse = false">
+            <el-button type="primary" @click="openCreateWarehouse">
               <el-icon><Plus /></el-icon>新增仓库
             </el-button>
           </div>
@@ -26,7 +26,7 @@
       <el-tab-pane label="库存盘点" name="check">
         <el-card shadow="never">
           <div class="action-bar">
-            <el-button type="primary" @click="showCheckDialog = true; checkForm = { warehouseId: null, productName: '', currentStock: 0, actualStock: 0 }">
+            <el-button type="primary" @click="openCreateCheck">
               <el-icon><Plus /></el-icon>新增盘点
             </el-button>
           </div>
@@ -117,6 +117,26 @@ const checkForm = reactive({ warehouseId: null, productName: '', currentStock: 0
 
 let warehouseIdCounter = 1
 let checkIdCounter = 1
+
+function resetWarehouseForm() {
+  Object.assign(warehouseForm, { name: '', address: '', contactPerson: '' })
+}
+
+function resetCheckForm() {
+  Object.assign(checkForm, { warehouseId: null, productName: '', currentStock: 0, actualStock: 0 })
+}
+
+function openCreateWarehouse() {
+  resetWarehouseForm()
+  isEditWarehouse.value = false
+  editWarehouseIndex.value = -1
+  showWarehouseDialog.value = true
+}
+
+function openCreateCheck() {
+  resetCheckForm()
+  showCheckDialog.value = true
+}
 
 function handleEditWarehouse(row, index) {
   isEditWarehouse.value = true

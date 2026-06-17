@@ -1,6 +1,7 @@
 <template>
   <el-container class="main-layout">
-    <el-aside :width="isCollapse ? '68px' : '240px'" class="sidebar">
+    <div v-if="isMobile && !isCollapse" class="mobile-backdrop" @click="isCollapse = true"></div>
+    <el-aside :width="sidebarWidth" class="sidebar" :class="{ 'mobile-open': isMobile && !isCollapse }">
       <div class="logo">
         <span v-if="!isCollapse" class="logo-text">PRO Studio</span>
         <span v-else class="logo-text-collapsed">P</span>
@@ -82,7 +83,7 @@
     <el-container class="content-container">
       <el-header class="header">
         <div class="header-left">
-          <el-icon class="collapse-btn" @click="isCollapse = !isCollapse">
+          <el-icon class="collapse-btn" @click="toggleSidebar">
             <Fold v-if="!isCollapse" />
             <Expand v-else />
           </el-icon>
@@ -143,7 +144,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { healthApi } from '@/api'
@@ -152,10 +153,30 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const isCollapse = ref(false)
+const isMobile = ref(false)
 const tabs = ref([])
 const syncStatus = ref('connecting')
 const syncStatusText = ref('连接中...')
 let healthInterval = null
+
+const sidebarWidth = computed(() => {
+  if (isMobile.value) {
+    return isCollapse.value ? '0px' : '240px'
+  }
+
+  return isCollapse.value ? '68px' : '240px'
+})
+
+function updateViewportState() {
+  isMobile.value = window.innerWidth <= 768
+  if (isMobile.value) {
+    isCollapse.value = true
+  }
+}
+
+function toggleSidebar() {
+  isCollapse.value = !isCollapse.value
+}
 
 async function checkHealth() {
   try {
@@ -212,12 +233,19 @@ watch(
         tabs.value.push({ path: baseKey, title })
       }
     }
+
+    if (isMobile.value) {
+      isCollapse.value = true
+    }
   },
   { immediate: true }
 )
 
 function switchTab(tab) {
   router.push(tab.path)
+  if (isMobile.value) {
+    isCollapse.value = true
+  }
 }
 
 function closeTab(tab) {
@@ -242,11 +270,14 @@ function handleCommand(command) {
 }
 
 onMounted(() => {
+  updateViewportState()
+  window.addEventListener('resize', updateViewportState)
   checkHealth()
   healthInterval = setInterval(checkHealth, 30000)
 })
 
 onUnmounted(() => {
+  window.removeEventListener('resize', updateViewportState)
   if (healthInterval) {
     clearInterval(healthInterval)
   }
@@ -609,5 +640,73 @@ onUnmounted(() => {
 .status-text {
   color: #424245;
   font-weight: 400;
+}
+
+.mobile-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(2px);
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    box-shadow: 16px 0 40px rgba(0, 0, 0, 0.16);
+  }
+
+  .sidebar:not(.mobile-open) {
+    box-shadow: none;
+    border-right: none !important;
+  }
+
+  .content-container {
+    width: 100%;
+  }
+
+  .header {
+    padding: 0 14px;
+    height: 50px !important;
+  }
+
+  .header-left {
+    min-width: 0;
+    gap: 12px;
+  }
+
+  .apple-breadcrumb {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .username,
+  .dropdown-arrow {
+    display: none;
+  }
+
+  .tab-bar {
+    height: 40px;
+    padding: 0 8px;
+  }
+
+  .tab-item {
+    height: 30px;
+    padding: 5px 10px;
+  }
+
+  .main-content {
+    padding: 12px;
+  }
+
+  .status-bar {
+    justify-content: flex-start;
+    padding: 0 12px;
+  }
 }
 </style>

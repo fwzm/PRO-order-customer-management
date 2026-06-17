@@ -8,6 +8,7 @@ on:
 
 env:
   DOTNET_VERSION: '8.0.x'
+  NODE_VERSION: '24.x'
 
 jobs:
   build-and-test:
@@ -23,6 +24,13 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: src/PRO.Admin.Web/package-lock.json
+
       - name: Restore
         run: dotnet restore PRO.sln
 
@@ -31,6 +39,15 @@ jobs:
 
       - name: Test
         run: dotnet test PRO.sln --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+
+      - name: Install Web dependencies
+        run: npm ci --prefix src/PRO.Admin.Web
+
+      - name: Audit Web dependencies
+        run: npm audit --prefix src/PRO.Admin.Web --audit-level=low
+
+      - name: Build Web PWA
+        run: npm run build --prefix src/PRO.Admin.Web
 
       - name: Upload test results
         uses: actions/upload-artifact@v7

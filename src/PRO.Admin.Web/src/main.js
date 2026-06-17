@@ -17,3 +17,11 @@ app.use(createPinia())
 app.use(router)
 app.use(ElementPlus, { locale: undefined })
 app.mount('#app')
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((error) => {
+      console.warn('PRO PWA service worker registration failed:', error)
+    })
+  })
+}

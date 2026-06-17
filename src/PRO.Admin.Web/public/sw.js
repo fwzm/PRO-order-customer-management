@@ -6,8 +6,8 @@ const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/src/main.js',
-  '/src/App.vue'
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png'
 ];
 
 // 安装 - 缓存静态资源
