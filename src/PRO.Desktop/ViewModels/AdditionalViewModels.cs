@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PRO.Application.DTOs;
 using PRO.Application.Interfaces;
+using PRO.Desktop.Controls;
 using PRO.Domain.Entities;
 using PRO.Domain.Enums;
 using PRO.Infrastructure.Persistence;
@@ -25,6 +26,8 @@ public partial class ProductEditViewModel : ViewModelBase
         get => _onSaveCompleted;
         set => _onSaveCompleted = value;
     }
+
+    public bool IsDirty => false;
 
     [ObservableProperty]
     private string _sku = string.Empty;
@@ -80,9 +83,9 @@ public partial class ProductEditViewModel : ViewModelBase
 
     public ProductEditViewModel()
     {
-        _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext 
+        _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext
             ?? throw new InvalidOperationException("无法获取数据库上下文");
-        
+
         _productId = null;
         IsEdit = false;
         WindowTitle = "新增产品";
@@ -208,6 +211,8 @@ public partial class DeliveryPersonEditViewModel : ViewModelBase
         set => _onSaveCompleted = value;
     }
 
+    public bool IsDirty => false;
+
     [ObservableProperty]
     private string _name = string.Empty;
 
@@ -243,9 +248,9 @@ public partial class DeliveryPersonEditViewModel : ViewModelBase
 
     public DeliveryPersonEditViewModel()
     {
-        _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext 
+        _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext
             ?? throw new InvalidOperationException("无法获取数据库上下文");
-        
+
         _deliveryPersonId = null;
         IsEdit = false;
         WindowTitle = "新增配送员";
@@ -359,7 +364,7 @@ public partial class SettlementDetailViewModel : ViewModelBase
 
     public SettlementDetailViewModel()
     {
-        _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext 
+        _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext
             ?? throw new InvalidOperationException("无法获取数据库上下文");
     }
 
@@ -403,9 +408,9 @@ public partial class DepartmentTreeViewModel : ViewModelBase
 
     public DepartmentTreeViewModel()
     {
-        _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext 
+        _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext
             ?? throw new InvalidOperationException("无法获取数据库上下文");
-        
+
         _ = LoadDepartmentsAsync();
     }
 
@@ -447,12 +452,16 @@ public partial class EmployeeListViewModel : ViewModelBase
     [ObservableProperty]
     private string? _searchKeyword;
 
+    // 空状态支持
+    [ObservableProperty] private EmptyStateViewModel? _emptyState;
+    [ObservableProperty] private bool _showEmptyState;
+
     public EmployeeListViewModel()
     {
-        _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext 
+        _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext
             ?? throw new InvalidOperationException("无法获取数据库上下文");
         _employeeService = App.Services.GetRequiredService<IEmployeeService>();
-        
+
         _ = LoadEmployeesAsync();
     }
 
@@ -481,9 +490,30 @@ public partial class EmployeeListViewModel : ViewModelBase
                     })
                     .ToList();
                 Employees = new ObservableCollection<EmployeeListItem>(filtered);
+                UpdateEmptyState();
             }
         }
-        catch (Exception ex) { Log.Error(ex, "员工列表加载失败"); }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "员工列表加载失败");
+            ShowEmptyState = true;
+            EmptyState = EmptyStateViewModel.CreateForLoadFailed(SearchCommand);
+        }
+    }
+
+    private void UpdateEmptyState()
+    {
+        if (Employees.Count > 0)
+        {
+            ShowEmptyState = false;
+            return;
+        }
+
+        ShowEmptyState = true;
+        if (!string.IsNullOrWhiteSpace(SearchKeyword))
+            EmptyState = EmptyStateViewModel.CreateForSearchNoResults(SearchKeyword!, SearchCommand);
+        else
+            EmptyState = EmptyStateViewModel.CreateForEmpty("员工", NewEmployeeCommand);
     }
 
     [RelayCommand]
@@ -497,9 +527,9 @@ public partial class EmployeeListViewModel : ViewModelBase
     {
         var editVm = App.Services.GetService(typeof(EmployeeEditViewModel)) as EmployeeEditViewModel
             ?? throw new InvalidOperationException("无法创建员工编辑视图模型");
-        
+
         editVm.OnSaveCompleted = async () => { await LoadEmployeesAsync(); };
-        
+
         var dialog = new Views.EmployeeEditWindow(editVm) { Owner = System.Windows.Application.Current.MainWindow };
         dialog.ShowDialog();
     }
@@ -508,13 +538,13 @@ public partial class EmployeeListViewModel : ViewModelBase
     private void EditEmployee(EmployeeListItem? employee)
     {
         if (employee == null) return;
-        
+
         var editVm = App.Services.GetService(typeof(EmployeeEditViewModel)) as EmployeeEditViewModel
             ?? throw new InvalidOperationException("无法创建员工编辑视图模型");
-        
+
         editVm.LoadEmployee(employee.Id);
         editVm.OnSaveCompleted = async () => { await LoadEmployeesAsync(); };
-        
+
         var dialog = new Views.EmployeeEditWindow(editVm) { Owner = System.Windows.Application.Current.MainWindow };
         dialog.ShowDialog();
     }
@@ -636,6 +666,8 @@ public partial class EmployeeEditViewModel : ViewModelBase
         set => _onSaveCompleted = value;
     }
 
+    public bool IsDirty => false;
+
     [ObservableProperty]
     private string _name = string.Empty;
 
@@ -680,9 +712,9 @@ public partial class EmployeeEditViewModel : ViewModelBase
 
     public EmployeeEditViewModel()
     {
-        _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext 
+        _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext
             ?? throw new InvalidOperationException("无法获取数据库上下文");
-        
+
         _employeeId = null;
         IsEdit = false;
         WindowTitle = "新增员工";
@@ -784,32 +816,32 @@ public partial class EmployeeEditViewModel : ViewModelBase
                     employee.Email = Email;
                     employee.Gender = Gender;
                     employee.Status = Status;
-                    
+
                     // 工号只有总部管理员可以修改
                     if (CurrentSession.Current.IsHeadquartersAdmin)
                     {
                         employee.EmployeeNo = EmployeeNo;
                     }
-                    
+
                     if (!string.IsNullOrWhiteSpace(Password))
                     {
-                        var encryption = App.Services.GetService(typeof(PRO.Application.Interfaces.IEncryptionService)) 
+                        var encryption = App.Services.GetService(typeof(PRO.Application.Interfaces.IEncryptionService))
                             as PRO.Application.Interfaces.IEncryptionService;
                         if (encryption != null)
                             employee.PasswordHash = encryption.HashPassword(Password);
                     }
-                    
+
                     await _dbContext.SaveChangesAsync();
                 }
             }
             else
             {
-                var encryption = App.Services.GetService(typeof(PRO.Application.Interfaces.IEncryptionService)) 
+                var encryption = App.Services.GetService(typeof(PRO.Application.Interfaces.IEncryptionService))
                     as PRO.Application.Interfaces.IEncryptionService;
-                
+
                 // 密码为空时默认使用工号
                 var password = !string.IsNullOrWhiteSpace(Password) ? Password : EmployeeNo;
-                
+
                 var employee = new Employee
                 {
                     Name = Name,
@@ -882,9 +914,9 @@ public partial class WeChatSyncLogViewModel : ViewModelBase
 
     public WeChatSyncLogViewModel()
     {
-        _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext 
+        _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext
             ?? throw new InvalidOperationException("无法获取数据库上下文");
-        
+
         _ = LoadLogsAsync();
     }
 

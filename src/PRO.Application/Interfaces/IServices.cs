@@ -58,7 +58,18 @@ public interface ICustomerService
     Task<ApiResponse<bool>> DeleteAsync(int id);
     Task<ApiResponse<CustomerDuplicateCheckResult>> CheckDuplicatesAsync(string? phone, string? name, string? address, string? legalPerson);
     Task<ApiResponse<bool>> MergeCustomersAsync(MergeCustomerRequest request);
+    Task<ApiResponse<bool>> BulkAssignCustomersAsync(BulkAssignRequest request);
+    /// <summary>批量分配客户（带进度和取消支持）</summary>
+    Task<ApiResponse<BatchOperationResult>> BulkAssignWithProgressAsync(BulkAssignRequest request, BatchOperationContext? context = null, IProgress<BatchOperationProgress>? progress = null);
     Task<ApiResponse<string>> ExportToExcelAsync(PagedRequest request, int? branchId = null);
+    /// <summary>为指定分公司生成新的客户编号 (K{date}{branchCode}{seq:D4})</summary>
+    Task<string> GenerateCustomerNoAsync(int branchId, CancellationToken cancellationToken = default);
+    /// <summary>获取活跃商圈列表</summary>
+    Task<List<BusinessDistrict>> GetBusinessDistrictsAsync(int? branchId = null);
+    /// <summary>获取主客户列表（用于父客户选择）</summary>
+    Task<List<CustomerListItem>> GetMajorCustomersAsync(int branchId);
+    /// <summary>获取客户实体（用于编辑填充）</summary>
+    Task<Customer?> GetEntityByIdAsync(int id);
 }
 
 // ==================== 订单管理服务 ====================
@@ -73,8 +84,39 @@ public interface IOrderService
     Task<ApiResponse<bool>> AssignAsync(AssignOrderRequest request, int assignedById);
     Task<ApiResponse<bool>> UpdateStatusAsync(UpdateOrderStatusRequest request, int modifiedById);
     Task<ApiResponse<bool>> ConfirmDraftAsync(int orderId, int modifiedById);
+    Task<ApiResponse<BatchOperationResult>> BatchAssignAsync(IEnumerable<int> orderIds, int deliveryPersonId, int assignedById);
+    Task<ApiResponse<BatchOperationResult>> BatchUpdateStatusAsync(IEnumerable<int> orderIds, OrderStatus newStatus, int modifiedById, string? reason = null);
+    Task<ApiResponse<BatchOperationResult>> BatchConfirmDraftsAsync(IEnumerable<int> orderIds, int modifiedById);
+    /// <summary>批量分配（带进度和取消支持）</summary>
+    Task<ApiResponse<BatchOperationResult>> BatchAssignWithProgressAsync(IEnumerable<int> orderIds, int deliveryPersonId, int assignedById, BatchOperationContext? context = null, IProgress<BatchOperationProgress>? progress = null);
+    /// <summary>批量状态变更（带进度和取消支持）</summary>
+    Task<ApiResponse<BatchOperationResult>> BatchUpdateStatusWithProgressAsync(IEnumerable<int> orderIds, OrderStatus newStatus, int modifiedById, string? reason = null, BatchOperationContext? context = null, IProgress<BatchOperationProgress>? progress = null);
+    /// <summary>批量确认草稿（带进度和取消支持）</summary>
+    Task<ApiResponse<BatchOperationResult>> BatchConfirmDraftsWithProgressAsync(IEnumerable<int> orderIds, int modifiedById, BatchOperationContext? context = null, IProgress<BatchOperationProgress>? progress = null);
     Task<ApiResponse<string>> ExportToExcelAsync(PagedRequest request, int? branchId = null, bool forGaode = false);
     Task<ApiResponse<string>> ExportDeliveryPlanAsync(List<int> orderIds, string groupName);
+    /// <summary>获取客户列表（用于订单选择）</summary>
+    Task<List<CustomerListItem>> GetCustomersForSelectionAsync(int branchId);
+    /// <summary>获取产品列表（用于订单选择）</summary>
+    Task<List<ProductListItem>> GetProductsForSelectionAsync();
+    /// <summary>获取配送员列表（用于订单指派）</summary>
+    Task<List<DeliveryPersonListItem>> GetDeliveryPersonsForSelectionAsync(int branchId);
+    /// <summary>获取订单实体（用于编辑填充）</summary>
+    Task<Order?> GetEntityByIdAsync(int id);
+}
+
+public interface IOrderNumberService
+{
+    Task<string> GenerateAsync(int branchId, DateTime now, CancellationToken cancellationToken = default);
+}
+
+public interface IInventoryService
+{
+    Task<ApiResponse<PagedResult<InventoryChangeLogDto>>> GetChangeLogsAsync(PagedRequest request, int? productId = null, string? changeType = null, DateTime? startDate = null, DateTime? endDate = null);
+    Task<ApiResponse<List<InventoryStockDto>>> GetStockInventoryAsync();
+    Task<ApiResponse<bool>> AdjustStockAsync(InventoryAdjustRequest request, int operatorId);
+    Task<ApiResponse<int>> BatchStockTakeAsync(List<InventoryAdjustRequest> adjustments, int operatorId);
+    Task<ApiResponse<InventoryChangeStatsDto>> GetChangeStatsAsync(DateTime startDate, DateTime endDate);
 }
 
 // ==================== 产品管理服务 ====================
@@ -326,7 +368,7 @@ public class WeChatGroupChatDetail
 {
     public string ChatId { get; set; } = "";
     public string Name { get; set; } = "";
-    public List<GroupChatMember> Members { get; set; } = new();
+    public List<GroupChatMember> Members { get; set; } = [];
     public int MemberCount { get; set; }
 }
 

@@ -15,12 +15,13 @@ public partial class WeChatConfigWizardViewModel : ViewModelBase
 {
     private readonly ProDbContext _dbContext;
     private readonly IEncryptionService _encryptionService;
+    private readonly System.Net.Http.IHttpClientFactory _httpClientFactory;
 
     [ObservableProperty]
     private WeChatWizardStep _currentStep = WeChatWizardStep.Welcome;
 
     [ObservableProperty]
-    private ObservableCollection<WeChatWizardStepDto> _steps = new();
+    private ObservableCollection<WeChatWizardStepDto> _steps = [];
 
     // 步骤1: 应用信息
     [ObservableProperty]
@@ -88,15 +89,17 @@ public partial class WeChatConfigWizardViewModel : ViewModelBase
             ?? throw new InvalidOperationException("无法获取数据库上下文");
         _encryptionService = App.Services.GetService(typeof(IEncryptionService)) as IEncryptionService
             ?? throw new InvalidOperationException("无法获取加密服务");
+        _httpClientFactory = App.Services.GetService(typeof(System.Net.Http.IHttpClientFactory)) as System.Net.Http.IHttpClientFactory
+            ?? throw new InvalidOperationException("无法获取HttpClientFactory");
 
-        _ = LoadExistingConfigAsync();
+        RunInBackground(LoadExistingConfigAsync(), "加载微信配置失败");
         InitializeSteps();
     }
 
     private void InitializeSteps()
     {
-        Steps = new ObservableCollection<WeChatWizardStepDto>
-        {
+        Steps =
+        [
             new() { Step = WeChatWizardStep.Welcome, Title = "欢迎", Description = "企业微信集成向导", IsAccessible = true },
             new() { Step = WeChatWizardStep.CreateApp, Title = "创建应用", Description = "在企业微信后台创建应用", IsAccessible = true },
             new() { Step = WeChatWizardStep.ConfigureCredentials, Title = "配置凭证", Description = "输入应用凭证信息" },
@@ -104,7 +107,7 @@ public partial class WeChatConfigWizardViewModel : ViewModelBase
             new() { Step = WeChatWizardStep.SyncContacts, Title = "通讯录同步", Description = "同步企业通讯录" },
             new() { Step = WeChatWizardStep.SyncCustomers, Title = "客户同步", Description = "同步客户数据" },
             new() { Step = WeChatWizardStep.Complete, Title = "完成", Description = "配置完成" }
-        };
+        ];
         UpdateStepStates();
     }
 
@@ -119,7 +122,7 @@ public partial class WeChatConfigWizardViewModel : ViewModelBase
                 // 解密密钥
                 if (!string.IsNullOrEmpty(config.AppSecret))
                 {
-                    try { CorpSecret = _encryptionService.Decrypt(config.AppSecret); } catch { }
+                    try { CorpSecret = _encryptionService.Decrypt(config.AppSecret); } catch (Exception ex) { Serilog.Log.Warning(ex, "解密企业微信密钥失败"); }
                 }
                 AgentId = config.AgentId.ToString();
                 Token = config.Token ?? "";
@@ -193,7 +196,7 @@ public partial class WeChatConfigWizardViewModel : ViewModelBase
 
         try
         {
-            using var httpClient = new System.Net.Http.HttpClient();
+            using var httpClient = _httpClientFactory.CreateClient("WeChatWork");
             var url = $"https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid={CorpId}&corpsecret={CorpSecret}";
             var response = await httpClient.GetStringAsync(url);
             var json = System.Text.Json.JsonDocument.Parse(response);
@@ -251,7 +254,7 @@ public partial class WeChatConfigWizardViewModel : ViewModelBase
 
         try
         {
-            using var httpClient = new System.Net.Http.HttpClient();
+            using var httpClient = _httpClientFactory.CreateClient("WeChatWork");
             var response = await httpClient.GetAsync(CallbackUrl);
             if (response.IsSuccessStatusCode)
             {

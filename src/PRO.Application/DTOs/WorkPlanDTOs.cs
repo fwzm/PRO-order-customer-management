@@ -68,7 +68,7 @@ public class CalendarScheduleItem
     public string ScheduleType { get; set; } = string.Empty;
     public bool HasChanged { get; set; }
     public string? Remark { get; set; }
-    public List<WorkPlanDto> Plans { get; set; } = new();
+    public List<WorkPlanDto> Plans { get; set; } = [];
 }
 
 /// <summary>
@@ -157,7 +157,7 @@ public class DailyPlanView
     public int EmployeeId { get; set; }
     public string EmployeeName { get; set; } = string.Empty;
     public WorkScheduleListItem? Schedule { get; set; }
-    public List<WorkPlanDto> Plans { get; set; } = new();
+    public List<WorkPlanDto> Plans { get; set; } = [];
     public int TotalWorkMinutes { get; set; }
     public int TotalPlanMinutes { get; set; }
 }
@@ -216,7 +216,7 @@ public class PermissionTreeNode
     public bool IsAllowed { get; set; }
     public bool IsFieldLevel { get; set; }
     public string? FieldName { get; set; }
-    public List<PermissionTreeNode> Children { get; set; } = new();
+    public List<PermissionTreeNode> Children { get; set; } = [];
 }
 
 /// <summary>
@@ -226,7 +226,7 @@ public class RolePermissionConfig
 {
     public int RoleId { get; set; }
     public string RoleName { get; set; } = string.Empty;
-    public List<PermissionTreeNode> Permissions { get; set; } = new();
+    public List<PermissionTreeNode> Permissions { get; set; } = [];
 }
 
 /// <summary>
@@ -235,7 +235,7 @@ public class RolePermissionConfig
 public class UpdateRolePermissionRequest
 {
     public int RoleId { get; set; }
-    public List<RolePermissionItem> Permissions { get; set; } = new();
+    public List<RolePermissionItem> Permissions { get; set; } = [];
 }
 
 /// <summary>
@@ -262,6 +262,8 @@ public class WeChatConfigDto
     public string AppSecretMasked { get; set; } = string.Empty;
     public int AgentId { get; set; }
     public string? WebhookUrl { get; set; }
+    public string? Token { get; set; }
+    public string? EncodingAESKey { get; set; }
     public bool IsEnabled { get; set; }
     public string? Remark { get; set; }
 }
@@ -304,18 +306,21 @@ public class WebhookListItem
 /// </summary>
 public class SyncConfigDto
 {
+    /// <summary>是否启用</summary>
+    public bool IsEnabled { get; set; } = true;
+
     /// <summary>是否启用自动同步</summary>
     public bool AutoSyncEnabled { get; set; }
-    
+
     /// <summary>同步间隔（分钟）</summary>
     public int SyncIntervalMinutes { get; set; } = 30;
-    
+
     /// <summary>冲突解决策略</summary>
     public ConflictResolution ConflictResolution { get; set; } = ConflictResolution.TimestampFirst;
-    
+
     /// <summary>组织架构同步开关</summary>
     public bool OrganizationSyncEnabled { get; set; }
-    
+
     /// <summary>组织架构同步频率（小时）</summary>
     public int OrganizationSyncIntervalHours { get; set; } = 24;
 }
@@ -333,10 +338,10 @@ public class BackupRecordDto
     public DateTime BackupTime { get; set; }
     public DateTime ExpireTime { get; set; }
     public string Status { get; set; } = string.Empty;
-    
+
     private static string FormatFileSize(long bytes)
     {
-        string[] sizes = { "B", "KB", "MB", "GB" };
+        string[] sizes = ["B", "KB", "MB", "GB"];
         int order = 0;
         double size = bytes;
         while (size >= 1024 && order < sizes.Length - 1)
@@ -430,11 +435,15 @@ public class OperationLogDto
 /// </summary>
 public class LocalSettingDto
 {
+    public int? EmployeeId { get; set; }
     public CloseBehavior CloseBehavior { get; set; } = CloseBehavior.MinimizeToTray;
     public bool EnableNotification { get; set; } = true;
     public bool EnableSound { get; set; } = true;
     public bool AutoSyncOnStartup { get; set; } = true;
     public int SyncIntervalMinutes { get; set; } = 30;
+
+    /// <summary>通用设置键值对</summary>
+    public Dictionary<string, string> Settings { get; set; } = new();
 }
 
 /// <summary>
@@ -447,4 +456,7 @@ public class SaveLocalSettingRequest
     public bool EnableSound { get; set; }
     public bool AutoSyncOnStartup { get; set; }
     public int SyncIntervalMinutes { get; set; }
+
+    /// <summary>通用设置键值对</summary>
+    public Dictionary<string, string> Settings { get; set; } = new();
 }

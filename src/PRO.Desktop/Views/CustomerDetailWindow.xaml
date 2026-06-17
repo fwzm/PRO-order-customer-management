@@ -19,6 +19,8 @@
                         <StackPanel Orientation="Horizontal">
                             <Button Content="编辑客户" Style="{StaticResource PrimaryButtonStyle}"
                                     Command="{Binding EditCustomerCommand}" Margin="0,0,8,0"/>
+                            <Button Content="查看档案" Style="{StaticResource SecondaryButtonStyle}"
+                                    Command="{Binding OpenArchiveCommand}" Margin="0,0,8,0"/>
                             <Button Content="返回列表" Style="{StaticResource SecondaryButtonStyle}"
                                     Command="{Binding GoBackCommand}"/>
                         </StackPanel>

@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:controls="clr-namespace:PRO.Desktop.Controls"
              mc:Ignorable="d"
              Background="{StaticResource BackgroundBrush}">
 
@@ -93,6 +94,8 @@
                 <DataGridTextColumn Header="结果" Binding="{Binding Result}" Width="60"/>
             </DataGrid.Columns>
         </DataGrid>
+        <controls:EmptyStateControl Grid.Row="2" DataContext="{Binding EmptyState}"
+                Visibility="{Binding ShowEmptyState, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
         <!-- 分页 -->
         <Border Grid.Row="3" Style="{StaticResource CardStyle}" Margin="0,16,0,0">

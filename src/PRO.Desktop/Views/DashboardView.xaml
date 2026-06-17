@@ -5,15 +5,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d"
-             d:DesignHeight="600" d:DesignWidth="900"
+             d:DesignHeight="700" d:DesignWidth="1100"
              Background="{StaticResource WindowBackgroundBrush}">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
         <StackPanel>
-            <!-- 欢迎区域 (Apple Today 风格) -->
-            <Border Margin="0,0,0,16" Padding="24"
-                    CornerRadius="12"
-                    Effect="{StaticResource AppleShadow}">
+            <!-- ========== 欢迎区域 ========== -->
+            <Border Margin="0,0,0,16" Padding="24" CornerRadius="12">
                 <Border.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                         <GradientStop Color="#007AFF" Offset="0"/>
@@ -27,66 +25,155 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
                         <TextBlock FontSize="20" FontWeight="SemiBold" Foreground="White">
-                            <Run Text="工作辛苦了，"/>
+                            <Run Text="今天该处理这些，"/>
                             <Run Text="{Binding CurrentUserName}" FontWeight="Bold"/>
                         </TextBlock>
-                        <TextBlock Text="{Binding WelcomeMessage}" Foreground="#BBFFFFFF" 
-                                   Margin="0,6,0,0" FontSize="13"/>
+                        <TextBlock Text="{Binding WelcomeMessage}" Foreground="#BBFFFFFF" Margin="0,6,0,0" FontSize="13"/>
                     </StackPanel>
-                    <Border Grid.Column="1" Background="#33FFFFFF" CornerRadius="8" Padding="12,8"
-                            VerticalAlignment="Center">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="CalendarToday" Width="14" Height="14" 
-                                                     Foreground="White" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding CurrentDateDisplay}" 
-                                       Foreground="White" FontSize="12" Margin="6,0,0,0"/>
-                        </StackPanel>
-                    </Border>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="刷新" Style="{StaticResource SecondaryButtonStyle}" 
+                                Command="{Binding RefreshCommand}" Padding="12,6" Margin="0,0,8,0"
+                                Background="#33FFFFFF" BorderThickness="0" Foreground="White"/>
+                        <Border Background="#33FFFFFF" CornerRadius="8" Padding="12,8">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="CalendarToday" Width="14" Height="14" Foreground="White" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding CurrentDateDisplay}" Foreground="White" FontSize="12" Margin="6,0,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- 统计卡片 (Apple 健康App风格) -->
+            <!-- ========== 告警横幅（有告警时显示） ========== -->
+            <ItemsControl ItemsSource="{Binding Alerts}" Margin="0,0,0,16">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="0,0,0,6" Padding="14,10" CornerRadius="8" Cursor="Hand"
+                                MouseLeftButtonDown="Alert_Click">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="#FFF3CD"/>
+                                    <Setter Property="BorderBrush" Value="#FFEEBA"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Type}" Value="Error">
+                                            <Setter Property="Background" Value="#F8D7DA"/>
+                                            <Setter Property="BorderBrush" Value="#F5C6CB"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Type}" Value="Info">
+                                            <Setter Property="Background" Value="#D1ECF1"/>
+                                            <Setter Property="BorderBrush" Value="#BEE5EB"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <materialDesign:PackIcon Grid.Column="0" VerticalAlignment="Center" Width="18" Height="18" Margin="0,0,10,0">
+                                    <materialDesign:PackIcon.Style>
+                                        <Style TargetType="materialDesign:PackIcon">
+                                            <Setter Property="Kind" Value="InformationOutline"/>
+                                            <Setter Property="Foreground" Value="#856404"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Type}" Value="Error">
+                                                    <Setter Property="Kind" Value="AlertCircle"/>
+                                                    <Setter Property="Foreground" Value="#721C24"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Type}" Value="Warning">
+                                                    <Setter Property="Kind" Value="Alert"/>
+                                                    <Setter Property="Foreground" Value="#856404"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </materialDesign:PackIcon.Style>
+                                </materialDesign:PackIcon>
+
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#856404"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Type}" Value="Error">
+                                                        <Setter Property="Foreground" Value="#721C24"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding Message}" FontSize="12" Margin="0,2,0,0">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#A67C00"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Type}" Value="Error">
+                                                        <Setter Property="Foreground" Value="#8B1A1A"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+
+                                <TextBlock Grid.Column="2" Text="{Binding ActionText}" VerticalAlignment="Center"
+                                           Foreground="{StaticResource AccentBrush}" FontSize="12" FontWeight="Medium"
+                                           Cursor="Hand" Margin="12,0,0,0"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- ========== 核心指标卡片 ========== -->
             <UniformGrid Rows="1" Margin="0,0,0,16">
                 <Border Style="{StaticResource AppleCardStyle}" Margin="0,0,8,0">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <Border Background="{StaticResource AccentBrush}" CornerRadius="7" Padding="8">
-                                <materialDesign:PackIcon Kind="AccountGroup" Width="20" Height="20" Foreground="White"/>
+                                <materialDesign:PackIcon Kind="ShoppingCart" Width="20" Height="20" Foreground="White"/>
                             </Border>
-                            <TextBlock Text="客户总数" Foreground="{StaticResource TertiaryLabelBrush}" 
-                                       FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                            <TextBlock Text="今日订单" Foreground="{StaticResource TertiaryLabelBrush}" FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0"/>
                         </StackPanel>
-                        <TextBlock Text="{Binding CustomerCount}" FontSize="34" FontWeight="Bold" 
-                                   Foreground="{StaticResource LabelBrush}" Margin="0,10,0,0"/>
+                        <TextBlock FontSize="34" FontWeight="Bold" Foreground="{StaticResource LabelBrush}" Margin="0,10,0,0">
+                            <Run Text="{Binding TodayOrderCount}"/>
+                            <Run Text=" 单" FontSize="14" Foreground="{StaticResource TertiaryLabelBrush}"/>
+                        </TextBlock>
+                        <TextBlock FontSize="12" Foreground="{StaticResource TertiaryLabelBrush}">
+                            <Run Text="¥"/><Run Text="{Binding TodayOrderAmount, StringFormat=N0}"/>
+                        </TextBlock>
                     </StackPanel>
                 </Border>
 
                 <Border Style="{StaticResource AppleCardStyle}" Margin="4,0,4,0">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
-                            <Border Background="{StaticResource SuccessBrush}" CornerRadius="7" Padding="8">
-                                <materialDesign:PackIcon Kind="ClipboardText" Width="20" Height="20" Foreground="White"/>
+                            <Border Background="#F39C12" CornerRadius="7" Padding="8">
+                                <materialDesign:PackIcon Kind="ClipboardClock" Width="20" Height="20" Foreground="White"/>
                             </Border>
-                            <TextBlock Text="本月订单" Foreground="{StaticResource TertiaryLabelBrush}" 
-                                       FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                            <TextBlock Text="待分配" Foreground="{StaticResource TertiaryLabelBrush}" FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0"/>
                         </StackPanel>
-                        <TextBlock Text="{Binding MonthlyOrderCount}" FontSize="34" FontWeight="Bold" 
-                                   Foreground="{StaticResource LabelBrush}" Margin="0,10,0,0"/>
+                        <TextBlock Text="{Binding UnassignedOrderCount}" FontSize="34" FontWeight="Bold" Foreground="{StaticResource LabelBrush}" Margin="0,10,0,0"/>
+                        <TextBlock Text="需要分配配送员" FontSize="12" Foreground="{StaticResource TertiaryLabelBrush}"/>
                     </StackPanel>
                 </Border>
 
                 <Border Style="{StaticResource AppleCardStyle}" Margin="4,0,4,0">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
-                            <Border Background="{StaticResource WarningBrush}" CornerRadius="7" Padding="8">
-                                <materialDesign:PackIcon Kind="CurrencyCny" Width="20" Height="20" Foreground="White"/>
+                            <Border Background="{StaticResource ErrorBrush}" CornerRadius="7" Padding="8">
+                                <materialDesign:PackIcon Kind="AlertCircle" Width="20" Height="20" Foreground="White"/>
                             </Border>
-                            <TextBlock Text="本月收款" Foreground="{StaticResource TertiaryLabelBrush}" 
-                                       FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                            <TextBlock Text="超期应收" Foreground="{StaticResource TertiaryLabelBrush}" FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0"/>
                         </StackPanel>
-                        <TextBlock FontSize="34" FontWeight="Bold" 
-                                   Foreground="{StaticResource LabelBrush}" Margin="0,10,0,0">
-                            <Run Text="¥"/><Run Text="{Binding MonthlyReceivedAmount, StringFormat=N2}"/>
+                        <TextBlock FontSize="34" FontWeight="Bold" Foreground="{StaticResource ErrorBrush}" Margin="0,10,0,0">
+                            <Run Text="¥"/><Run Text="{Binding OverduePaymentAmount, StringFormat=N0}"/>
+                        </TextBlock>
+                        <TextBlock FontSize="12" Foreground="{StaticResource TertiaryLabelBrush}">
+                            <Run Text="{Binding OverduePaymentCount}"/><Run Text=" 笔超7天"/>
                         </TextBlock>
                     </StackPanel>
                 </Border>
@@ -94,43 +181,137 @@
                 <Border Style="{StaticResource AppleCardStyle}" Margin="8,0,0,0">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
-                            <Border Background="{StaticResource ErrorBrush}" CornerRadius="7" Padding="8">
+                            <Border Background="#9B59B6" CornerRadius="7" Padding="8">
                                 <materialDesign:PackIcon Kind="TruckDelivery" Width="20" Height="20" Foreground="White"/>
                             </Border>
-                            <TextBlock Text="待配送" Foreground="{StaticResource TertiaryLabelBrush}" 
-                                       FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                            <TextBlock Text="配送中" Foreground="{StaticResource TertiaryLabelBrush}" FontSize="12" VerticalAlignment="Center" Margin="10,0,0,0"/>
                         </StackPanel>
-                        <TextBlock Text="{Binding PendingDeliveryCount}" FontSize="34" FontWeight="Bold" 
-                                   Foreground="{StaticResource LabelBrush}" Margin="0,10,0,0"/>
+                        <TextBlock Text="{Binding DeliveringOrderCount}" FontSize="34" FontWeight="Bold" Foreground="{StaticResource LabelBrush}" Margin="0,10,0,0"/>
+                        <TextBlock FontSize="12" Foreground="{StaticResource TertiaryLabelBrush}">
+                            <Run Text="今日完成 "/><Run Text="{Binding TodayDeliveryCount}"/>
+                        </TextBlock>
                     </StackPanel>
                 </Border>
             </UniformGrid>
 
-            <!-- 最近订单 + 快捷操作 (Apple 双栏布局) -->
+            <!-- ========== 今日待办 ========== -->
+            <Border Style="{StaticResource AppleCardStyle}" Margin="0,0,0,16">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <materialDesign:PackIcon Kind="FormatListChecks" Width="20" Height="20" Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="今日待办" FontSize="16" FontWeight="SemiBold" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <ItemsControl ItemsSource="{Binding TodayTasks}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,0,0,6" Padding="14,10" CornerRadius="8" Cursor="Hand"
+                                        Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                                        MouseLeftButtonDown="Task_Click">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- 优先级指示器 -->
+                                        <Border Grid.Column="0" Width="4" CornerRadius="2" Margin="0,0,12,0"
+                                                VerticalAlignment="Stretch" Background="{StaticResource FillBrush}">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Priority}" Value="High">
+                                                            <Setter Property="Background" Value="{StaticResource ErrorBrush}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Priority}" Value="Normal">
+                                                            <Setter Property="Background" Value="#F39C12"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                        </Border>
+
+                                        <!-- 任务信息 -->
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13"/>
+                                            <TextBlock Text="{Binding Description}" FontSize="12" Foreground="{StaticResource SecondaryLabelBrush}" Margin="0,2,0,0"/>
+                                            <ItemsControl ItemsSource="{Binding QuickActions}" Margin="0,8,0,0">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Button Command="{Binding DataContext.ExecuteDashboardActionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                CommandParameter="{Binding}"
+                                                                Style="{StaticResource SecondaryButtonStyle}"
+                                                                Padding="8,3"
+                                                                FontSize="11"
+                                                                Margin="0,0,6,4">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock Text="{Binding Icon}" Margin="0,0,4,0"/>
+                                                                <TextBlock Text="{Binding Name}"/>
+                                                            </StackPanel>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+
+                                        <!-- 数量 -->
+                                        <Border Grid.Column="2" Background="{StaticResource AccentLightBrush}" CornerRadius="10" Padding="10,4" Margin="12,0">
+                                            <TextBlock Text="{Binding Count}" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" FontSize="14"/>
+                                        </Border>
+
+                                        <!-- 箭头 -->
+                                        <materialDesign:PackIcon Grid.Column="3" Kind="ChevronRight" Width="16" Height="16"
+                                                                  Foreground="{StaticResource TertiaryLabelBrush}" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- 无待办时的提示 -->
+                    <Border Visibility="{Binding TodayTasks.Count, Converter={StaticResource ZeroToVisibilityConverter}}"
+                            Padding="20" HorizontalAlignment="Stretch">
+                        <StackPanel HorizontalAlignment="Center">
+                            <materialDesign:PackIcon Kind="CheckCircle" Width="40" Height="40" Foreground="{StaticResource SuccessBrush}"/>
+                            <TextBlock Text="今日待办已全部完成" FontSize="14" Foreground="{StaticResource SecondaryLabelBrush}" Margin="0,8,0,0" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- ========== 最近订单 + 快捷入口 ========== -->
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="300"/>
+                    <ColumnDefinition Width="280"/>
                 </Grid.ColumnDefinitions>
 
                 <!-- 左侧：最近订单 -->
                 <Border Grid.Column="0" Style="{StaticResource AppleCardStyle}" Margin="0,0,8,0">
                     <StackPanel>
-                        <TextBlock Text="最近订单" Style="{StaticResource AppleSectionTitleStyle}" Margin="0,0,0,12"/>
-                        <DataGrid ItemsSource="{Binding RecentOrders}"
-                                  Style="{StaticResource AppleDataGridStyle}"
-                                  MaxHeight="300"
-                                  IsReadOnly="True">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <materialDesign:PackIcon Kind="Receipt" Width="20" Height="20" Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Text="最近订单" FontSize="16" FontWeight="SemiBold" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <DataGrid ItemsSource="{Binding RecentOrders}" Style="{StaticResource AppleDataGridStyle}" MaxHeight="350" IsReadOnly="True">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="订单号" Binding="{Binding OrderNo}" Width="120"/>
+                                <DataGridTextColumn Header="订单号" Binding="{Binding OrderNo}" Width="130"/>
                                 <DataGridTextColumn Header="客户" Binding="{Binding CustomerName}" Width="*"/>
                                 <DataGridTextColumn Header="金额" Binding="{Binding TotalAmount, StringFormat=¥{0:N2}}" Width="90"/>
                                 <DataGridTemplateColumn Header="状态" Width="80">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Border Style="{StaticResource AppleTagStyle}"
-                                                    Background="{Binding StatusColor, Converter={StaticResource ColorStringToBrushConverter}}">
-                                                <TextBlock Text="{Binding StatusName}" Foreground="White" FontSize="11"/>
+                                            <Border Padding="6,3" CornerRadius="4"
+                                                    Background="{Binding Status, Converter={StaticResource OrderStatusColorConverter}}">
+                                                <TextBlock Text="{Binding StatusName}" Foreground="White" FontSize="11" HorizontalAlignment="Center"/>
                                             </Border>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
@@ -141,65 +322,33 @@
                     </StackPanel>
                 </Border>
 
-                <!-- 右侧：快捷操作 -->
+                <!-- 右侧：快捷入口 -->
                 <Border Grid.Column="1" Style="{StaticResource AppleCardStyle}" Margin="8,0,0,0">
                     <StackPanel>
-                        <TextBlock Text="快捷操作" Style="{StaticResource AppleSectionTitleStyle}" Margin="0,0,0,12"/>
-                        
-                        <Button Style="{StaticResource AppleSecondaryButtonStyle}" 
-                                HorizontalAlignment="Stretch" Margin="0,0,0,8"
-                                Command="{Binding QuickCreateOrderCommand}">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <materialDesign:PackIcon Kind="Plus" VerticalAlignment="Center" Width="16" Height="16"/>
-                                <TextBlock Text="新建订单" Margin="8,0,0,0" FontSize="13"/>
-                            </StackPanel>
-                        </Button>
-                        
-                        <Button Style="{StaticResource AppleSecondaryButtonStyle}" 
-                                HorizontalAlignment="Stretch" Margin="0,0,0,8"
-                                Command="{Binding QuickCreateCustomerCommand}">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <materialDesign:PackIcon Kind="AccountPlus" VerticalAlignment="Center" Width="16" Height="16"/>
-                                <TextBlock Text="新增客户" Margin="8,0,0,0" FontSize="13"/>
-                            </StackPanel>
-                        </Button>
-                        
-                        <Button Style="{StaticResource AppleSecondaryButtonStyle}" 
-                                HorizontalAlignment="Stretch" Margin="0,0,0,8"
-                                Command="{Binding ViewPendingOrdersCommand}">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <materialDesign:PackIcon Kind="ClipboardList" VerticalAlignment="Center" Width="16" Height="16"/>
-                                <TextBlock Text="待分配订单" Margin="8,0,0,0" FontSize="13"/>
-                            </StackPanel>
-                        </Button>
-                        
-                        <Button Style="{StaticResource ApplePrimaryButtonStyle}" 
-                                HorizontalAlignment="Stretch"
-                                Command="{Binding RefreshCommand}">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <materialDesign:PackIcon Kind="Refresh" VerticalAlignment="Center" Width="16" Height="16"/>
-                                <TextBlock Text="刷新数据" Margin="8,0,0,0" FontSize="13"/>
-                            </StackPanel>
-                        </Button>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <materialDesign:PackIcon Kind="LightningBolt" Width="20" Height="20" Foreground="#F39C12" VerticalAlignment="Center"/>
+                            <TextBlock Text="快捷入口" FontSize="16" FontWeight="SemiBold" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <ItemsControl ItemsSource="{Binding Shortcuts}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button HorizontalAlignment="Stretch" Margin="0,0,0,6"
+                                            Style="{StaticResource AppleSecondaryButtonStyle}"
+                                            Command="{Binding DataContext.NavigateToShortcutCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="8,0">
+                                            <materialDesign:PackIcon Kind="ArrowRightBoldCircle" Width="16" Height="16" 
+                                                                      Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Title}" Margin="8,0,0,0" FontSize="13"/>
+                                        </StackPanel>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
                 </Border>
             </Grid>
-
-            <!-- 同步状态 -->
-            <Border Style="{StaticResource AppleCardStyle}" Margin="0,16,0,0" Padding="14,10">
-                <StackPanel Orientation="Horizontal">
-                    <materialDesign:PackIcon Kind="CloudSync" Width="16" Height="16" 
-                                              Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center"/>
-                    <TextBlock Text="数据同步：" Foreground="{StaticResource TertiaryLabelBrush}" 
-                               Margin="8,0,0,0" VerticalAlignment="Center" FontSize="12"/>
-                    <TextBlock Text="{Binding SyncStatusText}" FontWeight="SemiBold" 
-                               VerticalAlignment="Center" FontSize="12"/>
-                    <TextBlock Text=" · 最后同步：" Foreground="{StaticResource TertiaryLabelBrush}" 
-                               Margin="12,0,0,0" VerticalAlignment="Center" FontSize="12"/>
-                    <TextBlock Text="{Binding LastSyncTime, StringFormat=yyyy-MM-dd HH:mm:ss}" 
-                               VerticalAlignment="Center" FontSize="12"/>
-                </StackPanel>
-            </Border>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

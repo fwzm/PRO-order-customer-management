@@ -1,5 +1,6 @@
 using System.Windows.Controls;
 using PRO.Desktop.ViewModels;
+using Serilog;
 
 namespace PRO.Desktop.Views;
 
@@ -15,11 +16,18 @@ public partial class WeChatCustomerView : UserControl
 
     private async void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
     {
-        if (_viewModel == null && DataContext is WeChatCustomerViewModel vm)
+        try
         {
-            _viewModel = vm;
-            await vm.InitAsync();
-            await vm.SimulateMockDataAsync();
+            if (_viewModel == null && DataContext is WeChatCustomerViewModel vm)
+            {
+                _viewModel = vm;
+                await vm.InitAsync();
+                await vm.SimulateMockDataAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "微信客户视图加载失败");
         }
     }
 }

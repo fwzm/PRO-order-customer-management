@@ -54,6 +54,20 @@
                                 </StackPanel>
                             </StackPanel>
 
+                            <StackPanel Margin="0,0,0,16">
+                                <TextBlock Text="订单草稿" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="草稿有效期：" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBox Text="{Binding OrderDraftExpireMinutes, UpdateSourceTrigger=PropertyChanged}"
+                                             Style="{StaticResource ModernTextBoxStyle}"
+                                             Width="100"
+                                             IsEnabled="{Binding CanEditSettings}"/>
+                                    <TextBlock Text="分钟" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                </StackPanel>
+                                <TextBlock Text="新建草稿订单会按该时间计算过期时间；无效配置自动按30分钟处理"
+                                           FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+                            </StackPanel>
+
                             <Button Content="保存设置" Style="{StaticResource PrimaryButtonStyle}"
                                     Command="{Binding SaveSettingsCommand}" HorizontalAlignment="Left"
                                     IsEnabled="{Binding CanEditSettings}"/>
@@ -627,6 +641,254 @@
                                 </StackPanel>
                             </Border>
                         </Grid>
+                    </Border>
+                </TabItem>
+
+                <!-- ==================== 业务规则 ==================== -->
+                <TabItem Header="业务规则">
+                    <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0" Padding="20">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="580">
+                            <StackPanel MaxWidth="700">
+                                <TextBlock Text="业务规则" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <TextBlock Text="配置系统核心业务参数，修改后立即生效" FontSize="12"
+                                           Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,20"/>
+
+                                <Border Style="{StaticResource CardStyle}" Padding="16" Margin="0,0,0,12"
+                                        Background="#F8F9FA">
+                                    <StackPanel>
+                                        <TextBlock Text="订单与数据" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,12"/>
+                                        <Grid Margin="0,0,0,12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="180"/>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="草稿有效期（分钟）" VerticalAlignment="Center"/>
+                                            <TextBox Grid.Column="1" Text="{Binding DraftExpireMinutes, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBoxStyle}"
+                                                     IsEnabled="{Binding CanEditSettings}"/>
+                                            <TextBlock Grid.Column="2" Text="分钟" VerticalAlignment="Center" Margin="8,0,0,0"
+                                                       Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
+                                        </Grid>
+                                        <Grid Margin="0,0,0,12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="180"/>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="最大批量处理数" VerticalAlignment="Center"/>
+                                            <TextBox Grid.Column="1" Text="{Binding MaxBatchCount, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBoxStyle}"
+                                                     IsEnabled="{Binding CanEditSettings}"/>
+                                            <TextBlock Grid.Column="2" Text="条" VerticalAlignment="Center" Margin="8,0,0,0"
+                                                       Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
+                                        </Grid>
+                                        <Grid Margin="0,0,0,12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="180"/>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="最大导出行数" VerticalAlignment="Center"/>
+                                            <TextBox Grid.Column="1" Text="{Binding MaxExportRows, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBoxStyle}"
+                                                     IsEnabled="{Binding CanEditSettings}"/>
+                                            <TextBlock Grid.Column="2" Text="行" VerticalAlignment="Center" Margin="8,0,0,0"
+                                                       Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
+                                        </Grid>
+                                        <Grid Margin="0,0,0,12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="180"/>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="自动保存间隔" VerticalAlignment="Center"/>
+                                            <TextBox Grid.Column="1" Text="{Binding AutoSaveIntervalSeconds, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBoxStyle}"
+                                                     IsEnabled="{Binding CanEditSettings}"/>
+                                            <TextBlock Grid.Column="2" Text="秒" VerticalAlignment="Center" Margin="8,0,0,0"
+                                                       Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
+                                        </Grid>
+                                        <Grid Margin="0,0,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="180"/>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="默认分页大小" VerticalAlignment="Center"/>
+                                            <TextBox Grid.Column="1" Text="{Binding DefaultPageSize, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBoxStyle}"
+                                                     IsEnabled="{Binding CanEditSettings}"/>
+                                            <TextBlock Grid.Column="2" Text="条/页" VerticalAlignment="Center" Margin="8,0,0,0"
+                                                       Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource CardStyle}" Padding="16" Margin="0,0,0,12"
+                                        Background="#F8F9FA">
+                                    <StackPanel>
+                                        <TextBlock Text="客户管理" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,12"/>
+                                        <Grid Margin="0,0,0,12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="180"/>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="沉默客户天数" VerticalAlignment="Center"/>
+                                            <TextBox Grid.Column="1" Text="{Binding SilentCustomerDays, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBoxStyle}"
+                                                     IsEnabled="{Binding CanEditSettings}"/>
+                                            <TextBlock Grid.Column="2" Text="天" VerticalAlignment="Center" Margin="8,0,0,0"
+                                                       Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
+                                        </Grid>
+                                        <Grid Margin="0,0,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="180"/>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="流失风险天数" VerticalAlignment="Center"/>
+                                            <TextBox Grid.Column="1" Text="{Binding ChurnRiskDays, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBoxStyle}"
+                                                     IsEnabled="{Binding CanEditSettings}"/>
+                                            <TextBlock Grid.Column="2" Text="天" VerticalAlignment="Center" Margin="8,0,0,0"
+                                                       Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource CardStyle}" Padding="16" Margin="0,0,0,12"
+                                        Background="#F8F9FA">
+                                    <StackPanel>
+                                        <TextBlock Text="库存管理" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,12"/>
+                                        <Grid Margin="0,0,0,12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="180"/>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="库存告警阈值" VerticalAlignment="Center"/>
+                                            <TextBox Grid.Column="1" Text="{Binding StockWarningThreshold, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBoxStyle}"
+                                                     IsEnabled="{Binding CanEditSettings}"/>
+                                            <TextBlock Grid.Column="2" Text="件" VerticalAlignment="Center" Margin="8,0,0,0"
+                                                       Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
+                                        </Grid>
+                                        <Grid Margin="0,0,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="180"/>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="库存严重告警阈值" VerticalAlignment="Center"/>
+                                            <TextBox Grid.Column="1" Text="{Binding StockCriticalThreshold, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBoxStyle}"
+                                                     IsEnabled="{Binding CanEditSettings}"/>
+                                            <TextBlock Grid.Column="2" Text="件" VerticalAlignment="Center" Margin="8,0,0,0"
+                                                       Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource CardStyle}" Padding="16" Margin="0,0,0,12"
+                                        Background="#F8F9FA">
+                                    <StackPanel>
+                                        <TextBlock Text="安全策略" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,12"/>
+                                        <Grid Margin="0,0,0,12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="180"/>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="密码最小长度" VerticalAlignment="Center"/>
+                                            <TextBox Grid.Column="1" Text="{Binding PasswordMinLength, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBoxStyle}"
+                                                     IsEnabled="{Binding CanEditSettings}"/>
+                                            <TextBlock Grid.Column="2" Text="位" VerticalAlignment="Center" Margin="8,0,0,0"
+                                                       Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
+                                        </Grid>
+                                        <Grid Margin="0,0,0,12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="180"/>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="密码过期天数" VerticalAlignment="Center"/>
+                                            <TextBox Grid.Column="1" Text="{Binding PasswordExpireDays, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBoxStyle}"
+                                                     IsEnabled="{Binding CanEditSettings}"/>
+                                            <TextBlock Grid.Column="2" Text="天" VerticalAlignment="Center" Margin="8,0,0,0"
+                                                       Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
+                                        </Grid>
+                                        <Grid Margin="0,0,0,12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="180"/>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="最大登录失败次数" VerticalAlignment="Center"/>
+                                            <TextBox Grid.Column="1" Text="{Binding MaxLoginFailCount, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBoxStyle}"
+                                                     IsEnabled="{Binding CanEditSettings}"/>
+                                            <TextBlock Grid.Column="2" Text="次" VerticalAlignment="Center" Margin="8,0,0,0"
+                                                       Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
+                                        </Grid>
+                                        <Grid Margin="0,0,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="180"/>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="账户锁定分钟数" VerticalAlignment="Center"/>
+                                            <TextBox Grid.Column="1" Text="{Binding AccountLockoutMinutes, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBoxStyle}"
+                                                     IsEnabled="{Binding CanEditSettings}"/>
+                                            <TextBlock Grid.Column="2" Text="分钟" VerticalAlignment="Center" Margin="8,0,0,0"
+                                                       Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource CardStyle}" Padding="16" Margin="0,0,0,12"
+                                        Background="#F8F9FA">
+                                    <StackPanel>
+                                        <TextBlock Text="数据保留" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,12"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="180"/>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="备份保留天数" VerticalAlignment="Center"/>
+                                            <TextBox Grid.Column="1" Text="{Binding BackupRetentionDays, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBoxStyle}"
+                                                     IsEnabled="{Binding CanEditSettings}"/>
+                                            <TextBlock Grid.Column="2" Text="天" VerticalAlignment="Center" Margin="8,0,0,0"
+                                                       Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <Button Content="保存业务规则" Style="{StaticResource PrimaryButtonStyle}"
+                                        Command="{Binding SaveBusinessRulesCommand}" HorizontalAlignment="Left"
+                                        IsEnabled="{Binding CanEditSettings}" Width="140"/>
+                            </StackPanel>
+                        </ScrollViewer>
                     </Border>
                 </TabItem>
 

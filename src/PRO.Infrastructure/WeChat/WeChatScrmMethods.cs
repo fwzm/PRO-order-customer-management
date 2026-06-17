@@ -141,8 +141,8 @@ public partial class WeChatService
         catch (Exception ex) { return ApiResponse<string>.Fail($"创建联系我失败: {ex.Message}"); }
     }
 
-    public async Task<ApiResponse<bool>> UpdateContactWayAsync(string configId, string? remark = null) { await Task.CompletedTask; return ApiResponse<bool>.Ok(true); }
-    public async Task<ApiResponse<bool>> DeleteContactWayAsync(string configId) { await Task.CompletedTask; return ApiResponse<bool>.Ok(true); }
+    public Task<ApiResponse<bool>> UpdateContactWayAsync(string configId, string? remark = null) { Serilog.Log.Warning("UpdateContactWayAsync 未实现"); return Task.FromResult(ApiResponse<bool>.Fail("该功能暂未实现，请通过企业微信后台操作")); }
+    public Task<ApiResponse<bool>> DeleteContactWayAsync(string configId) { Serilog.Log.Warning("DeleteContactWayAsync 未实现"); return Task.FromResult(ApiResponse<bool>.Fail("该功能暂未实现，请通过企业微信后台操作")); }
 
     public async Task<ApiResponse<string>> CreateMassMessageAsync(string content, string? tagIds = null, bool sendToAll = false)
     {
@@ -161,7 +161,7 @@ public partial class WeChatService
         catch (Exception ex) { return ApiResponse<string>.Fail($"创建群发失败: {ex.Message}"); }
     }
 
-    public async Task<ApiResponse<MassMessageResult>> GetMassMessageResultAsync(string msgId) { await Task.CompletedTask; return ApiResponse<MassMessageResult>.Ok(new MassMessageResult { MsgId = msgId }); }
+    public Task<ApiResponse<MassMessageResult>> GetMassMessageResultAsync(string msgId) { Serilog.Log.Warning("GetMassMessageResultAsync 未实现"); return Task.FromResult(ApiResponse<MassMessageResult>.Fail("该功能暂未实现")); }
 
     public async Task<ApiResponse<List<string>>> GetUnassignedCustomersAsync(int offset = 0, int limit = 100)
     {

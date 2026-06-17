@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:controls="clr-namespace:PRO.Desktop.Controls"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="1000"
              Background="{StaticResource BackgroundBrush}">
@@ -27,8 +28,15 @@
                 <TextBlock Text="订单管理" Style="{StaticResource PageTitleStyle}" Margin="0"/>
                 
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="保存视图" Style="{StaticResource SecondaryButtonStyle}"
+                            Command="{Binding SaveCurrentViewCommand}" Margin="0,0,8,0"/>
+                    <Button Content="清除视图" Style="{StaticResource SecondaryButtonStyle}"
+                            Command="{Binding ClearSavedViewCommand}" Margin="0,0,8,0"/>
+                    <Button Content="批量模式" Style="{StaticResource SecondaryButtonStyle}"
+                            Command="{Binding ToggleBatchModeCommand}" Margin="0,0,8,0"/>
                     <Button Content="新建订单" Style="{StaticResource PrimaryButtonStyle}"
-                            Command="{Binding NewOrderCommand}" Margin="0,0,8,0"/>
+                            Command="{Binding NewOrderCommand}" Margin="0,0,8,0"
+                            Visibility="{Binding ShowEmptyState, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
                     <Button Content="导出Excel" Style="{StaticResource SecondaryButtonStyle}"
                             Command="{Binding ExportToExcelCommand}" Margin="0,0,8,0"/>
                     <Button Content="高德规划" Style="{StaticResource SecondaryButtonStyle}"
@@ -40,7 +48,7 @@
         <!-- 筛选栏 -->
         <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" Padding="24,12"
                 BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
-            <StackPanel Orientation="Horizontal">
+            <WrapPanel>
                 <TextBox Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}"
                          Style="{StaticResource ModernTextBoxStyle}"
                          Width="200" Margin="0,0,8,0"
@@ -84,30 +92,67 @@
                 
                 <Button Content="刷新" Style="{StaticResource SecondaryButtonStyle}"
                         Command="{Binding RefreshCommand}" Margin="6,0,0,0"/>
-            </StackPanel>
+                <ItemsControl ItemsSource="{Binding QuickFilters}" Margin="12,0,0,0">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Content="{Binding Name}"
+                                    Command="{Binding DataContext.ApplyQuickFilterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Padding="10,6"
+                                    Margin="0,0,4,4"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Button Content="批量分配" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding BatchAssignCommand}" Margin="8,0,0,0"/>
+                <Button Content="批量确认草稿" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding BatchConfirmDraftsCommand}" Margin="6,0,0,0"/>
+                <CheckBox Content="全选"
+                          IsChecked="{Binding IsAllSelected, Mode=TwoWay}"
+                          VerticalAlignment="Center"
+                          Margin="10,0,0,0"/>
+                <TextBlock VerticalAlignment="Center" Margin="10,0,0,0" Foreground="{StaticResource SecondaryLabelBrush}">
+                    <Run Text="已选 "/><Run Text="{Binding SelectedCount}"/><Run Text=" 条"/>
+                </TextBlock>
+            </WrapPanel>
         </Border>
 
         <!-- 数据表格 -->
         <Border Grid.Row="2" Margin="24,16" Style="{StaticResource CardStyle}" Padding="0">
             <Grid>
-            <DataGrid ItemsSource="{Binding Orders}"
-                      SelectedItem="{Binding SelectedOrder}"
+            <DataGrid ItemsSource="{Binding SelectableOrders}"
                       Style="{StaticResource DataGridStyle}"
-                      IsReadOnly="True" CanUserResizeColumns="True">
+                      IsReadOnly="False" CanUserResizeColumns="True"
+                      EnableRowVirtualization="True" EnableColumnVirtualization="True"
+                      VirtualizingStackPanel.IsVirtualizing="True" VirtualizingStackPanel.VirtualizationMode="Recycling">
                 <DataGrid.InputBindings>
                     <KeyBinding Gesture="Ctrl+N" Command="{Binding NewOrderCommand}"/>
                 </DataGrid.InputBindings>
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="订单号" Binding="{Binding OrderNo}" Width="120"/>
-                    <DataGridTextColumn Header="客户" Binding="{Binding CustomerName}" Width="*"/>
-                    <DataGridTextColumn Header="总金额" Binding="{Binding TotalAmount, StringFormat=¥{0:N2}}" Width="80"/>
-                    <DataGridTextColumn Header="收款金额" Binding="{Binding ReceivedAmount, StringFormat=¥{0:N2}}" Width="80"/>
+                    <DataGridTemplateColumn Header="" Width="42">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          HorizontalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="订单号" Binding="{Binding Data.OrderNo}" Width="120" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="客户" Binding="{Binding Data.CustomerName}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="总金额" Binding="{Binding Data.TotalAmount, StringFormat=¥{0:N2}}" Width="80" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="收款金额" Binding="{Binding Data.ReceivedAmount, StringFormat=¥{0:N2}}" Width="80" IsReadOnly="True"/>
                     <DataGridTemplateColumn Header="收款状态" Width="80">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Border Style="{StaticResource StatusTagStyle}"
-                                        Background="{Binding PaymentStatus, Converter={StaticResource PaymentStatusColorConverter}}">
-                                    <TextBlock Text="{Binding PaymentStatusName}" Foreground="White" FontSize="11"/>
+                                        Background="{Binding Data.PaymentStatus, Converter={StaticResource PaymentStatusColorConverter}}">
+                                    <TextBlock Text="{Binding Data.PaymentStatusName}" Foreground="White" FontSize="11"/>
                                 </Border>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
@@ -116,26 +161,31 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Border Style="{StaticResource StatusTagStyle}"
-                                        Background="{Binding Status, Converter={StaticResource OrderStatusColorConverter}}">
-                                    <TextBlock Text="{Binding StatusName}" Foreground="White" FontSize="11"/>
+                                        Background="{Binding Data.Status, Converter={StaticResource OrderStatusColorConverter}}">
+                                    <TextBlock Text="{Binding Data.StatusName}" Foreground="White" FontSize="11"/>
                                 </Border>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="配送员" Binding="{Binding DeliveryPersonName}" Width="80"/>
-                    <DataGridTextColumn Header="配送地址" Binding="{Binding DeliveryAddress}" Width="*"/>
-                    <DataGridTextColumn Header="创建时间" Binding="{Binding CreatedAt, StringFormat=MM-dd HH:mm}" Width="110"/>
-                    <DataGridTemplateColumn Header="操作" Width="120">
+                    <DataGridTextColumn Header="配送员" Binding="{Binding Data.DeliveryPersonName}" Width="80" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="配送地址" Binding="{Binding Data.DeliveryAddress}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="创建时间" Binding="{Binding Data.CreatedAt, StringFormat=MM-dd HH:mm}" Width="110" IsReadOnly="True"/>
+                    <DataGridTemplateColumn Header="操作" Width="170">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
                                     <Button Content="查看" Padding="8,4" FontSize="11"
                                             Command="{Binding DataContext.ViewOrderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                            CommandParameter="{Binding}"
+                                            CommandParameter="{Binding Data}"
                                             Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,4,0"/>
                                     <Button Content="分配" Padding="8,4" FontSize="11"
                                             Command="{Binding DataContext.AssignOrderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                            CommandParameter="{Binding}"
+                                            CommandParameter="{Binding Data}"
+                                            Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,4,0"/>
+                                    <Button Content="状态" Padding="8,4" FontSize="11"
+                                            Command="{Binding DataContext.UpdateStatusCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding Data}"
+                                            Visibility="{Binding Data.ValidNextStatuses.Count, Converter={StaticResource GreaterThanZeroToVisibilityConverter}}"
                                             Style="{StaticResource SecondaryButtonStyle}"/>
                                 </StackPanel>
                             </DataTemplate>
@@ -143,13 +193,9 @@
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
-            <Border Background="Transparent"
-                    Visibility="{Binding Orders.Count, Converter={StaticResource ZeroToVisibilityConverter}}">
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <TextBlock Text="暂无订单" FontSize="20" Foreground="{StaticResource QuaternaryLabelBrush}" HorizontalAlignment="Center"/>
-                    <TextBlock Text="点击右上角「新建订单」开始" FontSize="13" Foreground="{StaticResource QuaternaryLabelBrush}" HorizontalAlignment="Center" Margin="0,8,0,0"/>
-                </StackPanel>
-            </Border>
+            <!-- 统一空状态控件 -->
+            <controls:EmptyStateControl DataContext="{Binding EmptyState}"
+                    Visibility="{Binding ShowEmptyState, Converter={StaticResource BoolToVisibilityConverter}}"/>
             </Grid>
         </Border>
 
@@ -192,6 +238,14 @@
                     </ComboBox>
                 </StackPanel>
             </Grid>
+        </Border>
+
+        <!-- 批量操作进度 -->
+        <Border Grid.RowSpan="4" Background="#CC000000" Panel.ZIndex="100"
+                Visibility="{Binding IsBatchOperating, Converter={StaticResource BoolToVisibilityConverter}}">
+            <controls:BatchProgressControl DataContext="{Binding BatchProgress}"
+                    VerticalAlignment="Center" HorizontalAlignment="Center"
+                    MaxWidth="560" MinWidth="420"/>
         </Border>
 
         <!-- 加载中 -->

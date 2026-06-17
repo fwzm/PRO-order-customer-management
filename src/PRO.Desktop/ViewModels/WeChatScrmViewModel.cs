@@ -1,4 +1,12 @@
-using CommunityToolkit.Mvvm.ComponentModel; using CommunityToolkit.Mvvm.Input; using Microsoft.EntityFrameworkCore; using PRO.Application.Interfaces; using PRO.Domain.Entities; using PRO.Domain.Enums; using PRO.Infrastructure.Persistence; using Serilog; using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.EntityFrameworkCore;
+using PRO.Application.Interfaces;
+using PRO.Domain.Entities;
+using PRO.Domain.Enums;
+using PRO.Infrastructure.Persistence;
+using Serilog;
+using System.Collections.ObjectModel;
 
 namespace PRO.Desktop.ViewModels;
 
@@ -16,18 +24,18 @@ public partial class WeChatScrmViewModel : ViewModelBase
     [ObservableProperty] private bool _isTransferTab;
 
     // WeChat Customers
-    [ObservableProperty] private ObservableCollection<WeChatCustomerItem> _customers = new();
+    [ObservableProperty] private ObservableCollection<WeChatCustomerItem> _customers = [];
     [ObservableProperty] private WeChatCustomerItem? _selectedCustomer;
 
     // Tags
-    [ObservableProperty] private ObservableCollection<WeChatTagDisplay> _tags = new();
+    [ObservableProperty] private ObservableCollection<WeChatTagDisplay> _tags = [];
     [ObservableProperty] private string _newTagName = "";
     [ObservableProperty] private string _newTagGroup = "默认分组";
 
     // Group Chats
-    [ObservableProperty] private ObservableCollection<WeChatGroupChatItem> _groupChats = new();
+    [ObservableProperty] private ObservableCollection<WeChatGroupChatItem> _groupChats = [];
     [ObservableProperty] private WeChatGroupChatItem? _selectedGroupChat;
-    [ObservableProperty] private ObservableCollection<GroupChatMemberItem> _groupChatMembers = new();
+    [ObservableProperty] private ObservableCollection<GroupChatMemberItem> _groupChatMembers = [];
 
     // Messages
     [ObservableProperty] private string _messageContent = "";
@@ -39,8 +47,8 @@ public partial class WeChatScrmViewModel : ViewModelBase
     [ObservableProperty] private string _contactWayRemark = "";
 
     // Transfer
-    [ObservableProperty] private ObservableCollection<UnassignedCustomerItem> _unassignedCustomers = new();
-    [ObservableProperty] private ObservableCollection<EmployeeItem> _takeoverEmployees = new();
+    [ObservableProperty] private ObservableCollection<UnassignedCustomerItem> _unassignedCustomers = [];
+    [ObservableProperty] private ObservableCollection<EmployeeItem> _takeoverEmployees = [];
     [ObservableProperty] private EmployeeItem? _selectedTakeover;
 
     // 状态
@@ -52,8 +60,9 @@ public partial class WeChatScrmViewModel : ViewModelBase
     public WeChatScrmViewModel()
     {
         _db = App.Services.GetService(typeof(ProDbContext)) as ProDbContext ?? throw new();
-        _weChat = App.Services.GetService(typeof(IWeChatService)) as IWeChatService;
-        _ = InitAsync();
+        _weChat = App.Services.GetService(typeof(IWeChatService)) as IWeChatService
+            ?? throw new InvalidOperationException("IWeChatService 未注册，请检查 DI 配置");
+        RunInBackground(InitAsync(), "初始化SCRM数据失败");
     }
 
     private async Task InitAsync()
@@ -79,9 +88,15 @@ public partial class WeChatScrmViewModel : ViewModelBase
             var list = await _db.WeChatCustomers.AsNoTracking().Include(w => w.LinkedCustomer).Include(w => w.AssignedBranch).OrderByDescending(w => w.CreatedAt).ToListAsync();
             Customers = new ObservableCollection<WeChatCustomerItem>(list.Select(w => new WeChatCustomerItem
             {
-                Id = w.Id, Name = w.Name, AddUserName = w.AddUserName, AddUserDepartmentName = w.AddUserDepartmentName,
-                Status = w.Status, LinkedCustomerName = w.LinkedCustomer?.Name, AssignedBranchName = w.AssignedBranchName,
-                CreatedAt = w.CreatedAt, AvatarUrl = w.AvatarUrl,
+                Id = w.Id,
+                Name = w.Name,
+                AddUserName = w.AddUserName,
+                AddUserDepartmentName = w.AddUserDepartmentName,
+                Status = w.Status,
+                LinkedCustomerName = w.LinkedCustomer?.Name,
+                AssignedBranchName = w.AssignedBranchName,
+                CreatedAt = w.CreatedAt,
+                AvatarUrl = w.AvatarUrl,
                 StatusBadge = w.Status switch { "Linked" => "已关联", "Unlinked" => "未关联", "Unidentifiable" => "未识别", _ => w.Status }
             }));
         }
@@ -90,10 +105,10 @@ public partial class WeChatScrmViewModel : ViewModelBase
     }
 
     // Tab切换
-    partial void OnIsCustomersTabChanged(bool value) { if (value) _ = LoadCustomersAsync(); }
-    partial void OnIsTagsTabChanged(bool value) { if (value) _ = LoadTagsAsync(); }
-    partial void OnIsGroupChatsTabChanged(bool value) { if (value) _ = LoadGroupChatsAsync(); }
-    partial void OnIsTransferTabChanged(bool value) { if (value) _ = LoadUnassignedAsync(); }
+    partial void OnIsCustomersTabChanged(bool value) { if (value) RunInBackground(LoadCustomersAsync(), "加载客户列表失败"); }
+    partial void OnIsTagsTabChanged(bool value) { if (value) RunInBackground(LoadTagsAsync(), "加载标签列表失败"); }
+    partial void OnIsGroupChatsTabChanged(bool value) { if (value) RunInBackground(LoadGroupChatsAsync(), "加载群聊列表失败"); }
+    partial void OnIsTransferTabChanged(bool value) { if (value) RunInBackground(LoadUnassignedAsync(), "加载未分配列表失败"); }
 
     // ═══════════════════ 标签管理 ═══════════════════
     private async Task LoadTagsAsync()
@@ -158,7 +173,7 @@ public partial class WeChatScrmViewModel : ViewModelBase
     // ═══════════════════ 客户群 ═══════════════════
     private async Task LoadGroupChatsAsync()
     {
-        GroupChats = new ObservableCollection<WeChatGroupChatItem>();
+        GroupChats = [];
         if (_weChat == null) { ShowError("企业微信未配置"); return; }
         try
         {

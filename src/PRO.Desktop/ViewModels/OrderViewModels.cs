@@ -8,22 +8,32 @@ using PRO.Infrastructure.Persistence;
 using PRO.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 using Microsoft.Win32;
 using ClosedXML.Excel;
 using Serilog;
 
 namespace PRO.Desktop.ViewModels;
 
+/// <summary>
+/// 订单列表ViewModel - 负责列表展示、筛选、批量操作
+/// </summary>
 public partial class OrderListViewModel : PagedViewModelBase
 {
     private readonly ProDbContext _dbContext;
     private readonly IOrderService _orderService;
+    private readonly ViewMemoryService _viewMemoryService;
+    private readonly AuditService _auditService;
+    private const string ViewKey = "order_list";
+    private bool _suppressNextAutoSave;
+
+    protected override string EntityTypeName => "订单";
 
     [ObservableProperty]
-    private ObservableCollection<OrderListItem> _orders = new();
+    private ObservableCollection<OrderListItem> _orders = [];
 
     [ObservableProperty]
-    private ObservableCollection<SelectableItem<OrderListItem>> _selectableOrders = new();
+    private ObservableCollection<SelectableItem<OrderListItem>> _selectableOrders = [];
 
     [ObservableProperty]
     private OrderListItem? _selectedOrder;
@@ -49,20 +59,186 @@ public partial class OrderListViewModel : PagedViewModelBase
     [ObservableProperty]
     private bool _showOnlyDrafts;
 
-    // Draft notification
     [ObservableProperty]
     private int _pendingDraftCount;
 
+    [ObservableProperty]
+    private bool _hasSavedView;
+
+    [ObservableProperty]
+    private bool _isExporting;
+
+    [ObservableProperty]
+    private int _exportProgress;
+
+    [ObservableProperty]
+    private string _exportStatusText = string.Empty;
+
     public bool HasPendingDrafts => PendingDraftCount > 0;
+
+    protected override bool HasActiveFilters() =>
+        FilterStatus != null || FilterPaymentStatus != null || FilterStartDate != null || FilterEndDate != null || ShowOnlyDrafts;
+
+    [RelayCommand]
+    private void ClearAllFilters()
+    {
+        FilterStatus = null;
+        FilterPaymentStatus = null;
+        FilterStartDate = null;
+        FilterEndDate = null;
+        ShowOnlyDrafts = false;
+        SearchKeyword = null;
+        InvalidateCountCache();
+        RunInBackground(ResetToFirstPageAndLoadAsync(), "清除筛选失败");
+    }
+
+    private ICommand? _clearFiltersCommand;
+    protected override ICommand? ClearFiltersCommand => _clearFiltersCommand ??= new RelayCommand(ClearAllFilters);
+
+    private ICommand? _createNewCommand;
+    protected override ICommand? CreateNewCommand => _createNewCommand ??= new RelayCommand(NewOrder);
+
+    // 快速筛选预设
+    public List<QuickFilter> QuickFilters { get; } =
+    [
+        new("今日订单", () => DateTime.Today, () => DateTime.Today.AddDays(1)),
+        new("本周订单", () => DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + 1), () => DateTime.Today.AddDays(1)),
+        new("本月订单", () => new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1), () => DateTime.Today.AddDays(1)),
+        new("待分配", filterStatus: OrderStatus.Pending),
+        new("配送中", filterStatus: OrderStatus.Delivering),
+        new("已完成", filterStatus: OrderStatus.Completed),
+        new("未收款", filterPaymentStatus: PaymentStatus.Unpaid),
+        new("部分收款", filterPaymentStatus: PaymentStatus.PartialPaid),
+    ];
 
     public OrderListViewModel()
     {
-        _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext 
+        _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext
             ?? throw new InvalidOperationException("无法获取数据库上下文");
         _orderService = App.Services.GetService(typeof(IOrderService)) as IOrderService
             ?? throw new InvalidOperationException("无法获取订单服务");
-        
-        RunInBackground(LoadDataAsync(), "订单列表加载失败");
+        _viewMemoryService = App.Services.GetService(typeof(ViewMemoryService)) as ViewMemoryService
+            ?? throw new InvalidOperationException("无法获取视图记忆服务");
+        _auditService = App.Services.GetService(typeof(AuditService)) as AuditService
+            ?? throw new InvalidOperationException("无法获取审计服务");
+
+        RunInBackground(InitializeAsync(), "初始化订单列表失败");
+    }
+
+    private async Task InitializeAsync()
+    {
+        await LoadSavedViewAsync();
+        await LoadDataAsync();
+    }
+
+    /// <summary>
+    /// 加载保存的视图
+    /// </summary>
+    private async Task LoadSavedViewAsync()
+    {
+        try
+        {
+            var memory = await _viewMemoryService.LoadViewAsync<OrderListViewMemory>(ViewKey, CurrentSession.CurrentEmployeeId);
+            if (memory != null)
+            {
+                HasSavedView = true;
+                SearchKeyword = memory.SearchKeyword;
+                PageSize = memory.PageSize;
+
+                if (!string.IsNullOrEmpty(memory.FilterStatus) && Enum.TryParse<OrderStatus>(memory.FilterStatus, out var status))
+                    FilterStatus = status;
+                if (!string.IsNullOrEmpty(memory.FilterPaymentStatus) && Enum.TryParse<PaymentStatus>(memory.FilterPaymentStatus, out var payStatus))
+                    FilterPaymentStatus = payStatus;
+
+                FilterStartDate = memory.FilterStartDate;
+                FilterEndDate = memory.FilterEndDate;
+                ShowOnlyDrafts = memory.ShowOnlyDrafts;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "加载订单视图记忆失败");
+        }
+    }
+
+    /// <summary>
+    /// 保存当前视图
+    /// </summary>
+    [RelayCommand]
+    private async Task SaveCurrentViewAsync()
+    {
+        try
+        {
+            await SaveCurrentViewCoreAsync();
+            ShowSuccess("视图已保存");
+        }
+        catch (Exception ex)
+        {
+            ShowError($"保存视图失败: {ex.Message}");
+        }
+    }
+
+    private async Task SaveCurrentViewCoreAsync()
+    {
+        var memory = new OrderListViewMemory
+        {
+            FilterStatus = FilterStatus?.ToString(),
+            FilterPaymentStatus = FilterPaymentStatus?.ToString(),
+            FilterStartDate = FilterStartDate,
+            FilterEndDate = FilterEndDate,
+            SearchKeyword = SearchKeyword,
+            PageSize = PageSize,
+            ShowOnlyDrafts = ShowOnlyDrafts
+        };
+
+        await _viewMemoryService.SaveViewAsync(ViewKey, memory, CurrentSession.CurrentEmployeeId);
+        HasSavedView = true;
+    }
+
+    /// <summary>
+    /// 清除保存的视图
+    /// </summary>
+    [RelayCommand]
+    private async Task ClearSavedViewAsync()
+    {
+        try
+        {
+            await _viewMemoryService.DeleteViewAsync(ViewKey, CurrentSession.CurrentEmployeeId);
+            HasSavedView = false;
+
+            // 重置筛选条件
+            FilterStatus = null;
+            FilterPaymentStatus = null;
+            FilterStartDate = null;
+            FilterEndDate = null;
+            SearchKeyword = null;
+            ShowOnlyDrafts = false;
+
+            ShowSuccess("视图已重置");
+            _suppressNextAutoSave = true;
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            ShowError($"清除视图失败: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 快速筛选
+    /// </summary>
+    [RelayCommand]
+    private async Task ApplyQuickFilterAsync(QuickFilter? filter)
+    {
+        if (filter == null) return;
+
+        FilterStartDate = filter.GetStartDate?.Invoke();
+        FilterEndDate = filter.GetEndDate?.Invoke();
+        FilterStatus = filter.FilterStatus;
+        FilterPaymentStatus = filter.FilterPaymentStatus;
+        ShowOnlyDrafts = false;
+
+        await ResetToFirstPageAndLoadAsync();
     }
 
     protected override async Task LoadDataAsync()
@@ -102,22 +278,54 @@ public partial class OrderListViewModel : PagedViewModelBase
                 var filteredItems = items.ToList();
                 TotalCount = ShowOnlyDrafts ? result.Data.TotalCount : filteredItems.Count;
 
-                Orders = new ObservableCollection<OrderListItem>(filteredItems.Select(o =>
+                var orderItems = filteredItems.Select(o =>
                 {
                     o.PaymentStatusName = GetPaymentStatusName(o.PaymentStatus);
                     o.StatusName = GetStatusName(o.Status);
                     return o;
-                }));
+                }).ToList();
+
+                Orders = new ObservableCollection<OrderListItem>(orderItems);
+                SelectableOrders = new ObservableCollection<SelectableItem<OrderListItem>>(
+                    orderItems.Select(CreateSelectableOrder));
+                IsAllSelected = false;
+                SelectedCount = 0;
+                UpdateEmptyState();
+
+                if (_suppressNextAutoSave)
+                {
+                    _suppressNextAutoSave = false;
+                }
+                else
+                {
+                    await SaveCurrentViewCoreAsync();
+                }
             }
         }
         catch (Exception ex)
         {
-            ShowError($"加载数据失败: {ex.Message}");
+            ShowBusinessException(ex, "加载订单列表");
+            ShowLoadFailedState();
         }
         finally
         {
             IsLoading = false;
         }
+    }
+
+    private SelectableItem<OrderListItem> CreateSelectableOrder(OrderListItem order)
+    {
+        var selectable = new SelectableItem<OrderListItem>
+        {
+            Id = order.Id,
+            Data = order
+        };
+        selectable.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(SelectableItem<OrderListItem>.IsSelected))
+                UpdateSelectedCount();
+        };
+        return selectable;
     }
 
     private string GetStatusName(OrderStatus status) => status switch
@@ -145,11 +353,151 @@ public partial class OrderListViewModel : PagedViewModelBase
     {
         var editVm = App.Services.GetService(typeof(OrderEditViewModel)) as OrderEditViewModel
             ?? throw new InvalidOperationException("无法创建订单编辑视图模型");
-        
+
         editVm.OnSaveCompleted = async () => { await LoadDataAsync(); };
-        
+
         var dialog = new Views.OrderEditWindow(editVm) { Owner = System.Windows.Application.Current.MainWindow };
         dialog.ShowDialog();
+    }
+
+    [RelayCommand]
+    private async Task CopyOrderAsync(OrderListItem? order)
+    {
+        if (order == null) return;
+
+        try
+        {
+            var templateService = App.Services.GetService(typeof(OrderTemplateService)) as OrderTemplateService;
+            if (templateService == null) return;
+
+            var result = await templateService.CopyOrderAsync(order.Id, CurrentSession.CurrentEmployeeId);
+            if (result.Success)
+            {
+                ShowSuccess("订单已复制为草稿");
+                await LoadDataAsync();
+            }
+            else
+            {
+                ShowError(result.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowError($"复制订单失败: {ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    private async Task SaveAsTemplateAsync(OrderListItem? order)
+    {
+        if (order == null) return;
+
+        var templateName = Microsoft.VisualBasic.Interaction.InputBox(
+            "请输入模板名称：", "保存为模板", $"{order.CustomerName}_{DateTime.Now:MMdd}");
+
+        if (string.IsNullOrWhiteSpace(templateName)) return;
+
+        try
+        {
+            var templateService = App.Services.GetService(typeof(OrderTemplateService)) as OrderTemplateService;
+            if (templateService == null) return;
+
+            var request = new CreateTemplateFromOrderRequest
+            {
+                OrderId = order.Id,
+                TemplateName = templateName
+            };
+
+            var result = await templateService.CreateTemplateFromOrderAsync(request, CurrentSession.CurrentEmployeeId);
+            if (result.Success)
+            {
+                ShowSuccess($"模板「{templateName}」已保存");
+            }
+            else
+            {
+                ShowError(result.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowError($"保存模板失败: {ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    private async Task CreateFromTemplateAsync()
+    {
+        try
+        {
+            var templateService = App.Services.GetService(typeof(OrderTemplateService)) as OrderTemplateService;
+            if (templateService == null) return;
+
+            var result = await templateService.GetTemplatesAsync(CurrentSession.CurrentEmployeeId);
+            if (!result.Success || result.Data == null || !result.Data.Any())
+            {
+                ShowError("没有可用的订单模板");
+                return;
+            }
+
+            // 显示模板选择窗口
+            var templates = result.Data;
+            var selectWindow = new System.Windows.Window
+            {
+                Title = "选择订单模板",
+                Width = 500,
+                Height = 400,
+                WindowStartupLocation = System.Windows.WindowStartupLocation.CenterOwner,
+                Owner = System.Windows.Application.Current.MainWindow
+            };
+
+            var listBox = new System.Windows.Controls.ListBox
+            {
+                Margin = new System.Windows.Thickness(10)
+            };
+            foreach (var template in templates)
+            {
+                listBox.Items.Add(new System.Windows.Controls.ListBoxItem
+                {
+                    Content = $"{template.Name} ({template.CustomerName})",
+                    Tag = template.Id
+                });
+            }
+
+            var okButton = new System.Windows.Controls.Button
+            {
+                Content = "使用模板",
+                Width = 80,
+                Margin = new System.Windows.Thickness(10),
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Right
+            };
+
+            var panel = new System.Windows.Controls.StackPanel();
+            panel.Children.Add(listBox);
+            panel.Children.Add(okButton);
+            selectWindow.Content = panel;
+
+            okButton.Click += (s, e) => selectWindow.DialogResult = true;
+
+            if (selectWindow.ShowDialog() == true && listBox.SelectedItem is System.Windows.Controls.ListBoxItem selected)
+            {
+                var templateId = (int)selected.Tag;
+                var createResult = await templateService.CreateOrderFromTemplateAsync(templateId, CurrentSession.CurrentEmployeeId);
+
+                if (createResult.Success)
+                {
+                    ShowSuccess("订单已从模板创建");
+                    await LoadDataAsync();
+                }
+                else
+                {
+                    ShowError(createResult.Message);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowError($"从模板创建订单失败: {ex.Message}");
+        }
     }
 
     private async Task ApplyDateFilterAsync(DateTime? startDate, DateTime? endDate)
@@ -194,14 +542,14 @@ public partial class OrderListViewModel : PagedViewModelBase
     private Task ViewOrderAsync(OrderListItem? order)
     {
         if (order == null) return Task.CompletedTask;
-        
+
         var editVm = App.Services.GetService(typeof(OrderEditViewModel)) as OrderEditViewModel
             ?? throw new InvalidOperationException("无法创建订单编辑视图模型");
-        
+
         editVm.LoadOrder(order.Id);
         editVm.IsReadOnly = true;
         editVm.OnSaveCompleted = async () => { await LoadDataAsync(); };
-        
+
         var dialog = new Views.OrderEditWindow(editVm) { Owner = System.Windows.Application.Current.MainWindow };
         dialog.ShowDialog();
         return Task.CompletedTask;
@@ -211,14 +559,14 @@ public partial class OrderListViewModel : PagedViewModelBase
     private Task EditOrderAsync(OrderListItem? order)
     {
         if (order == null) return Task.CompletedTask;
-        
+
         var editVm = App.Services.GetService(typeof(OrderEditViewModel)) as OrderEditViewModel
             ?? throw new InvalidOperationException("无法创建订单编辑视图模型");
-        
+
         editVm.LoadOrder(order.Id);
         editVm.IsReadOnly = false;
         editVm.OnSaveCompleted = async () => { await LoadDataAsync(); };
-        
+
         var dialog = new Views.OrderEditWindow(editVm) { Owner = System.Windows.Application.Current.MainWindow };
         dialog.ShowDialog();
         return Task.CompletedTask;
@@ -228,13 +576,13 @@ public partial class OrderListViewModel : PagedViewModelBase
     private Task AssignOrderAsync(OrderListItem? order)
     {
         if (order == null) return Task.CompletedTask;
-        
+
         var editVm = App.Services.GetService(typeof(OrderEditViewModel)) as OrderEditViewModel
             ?? throw new InvalidOperationException("无法创建订单编辑视图模型");
-        
+
         editVm.LoadOrder(order.Id);
         editVm.ShowAssignmentPanel = true;
-        
+
         var dialog = new Views.OrderEditWindow(editVm) { Owner = System.Windows.Application.Current.MainWindow };
         dialog.ShowDialog();
         return Task.CompletedTask;
@@ -244,19 +592,31 @@ public partial class OrderListViewModel : PagedViewModelBase
     private Task UpdateStatusAsync(OrderListItem? order)
     {
         if (order == null) return Task.CompletedTask;
-        
-        var statuses = new[] { OrderStatus.Pending, OrderStatus.Assigned, OrderStatus.Delivering, 
-            OrderStatus.Completed, OrderStatus.Failed, OrderStatus.Cancelled };
-        
-        var statusNames = new[] { "待分配", "已分配", "配送中", "已完成", "配送失败", "已取消" };
-        
-        var menu = new System.Windows.Controls.ContextMenu();
-        for (int i = 0; i < statuses.Length; i++)
+
+        // 使用 OrderStatusManager 获取当前状态允许的下一步操作
+        var validStatuses = PRO.Domain.Enums.OrderStatusManager.GetValidNextStatuses(order.Status);
+
+        if (!validStatuses.Any())
         {
-            var status = statuses[i];
-            var item = new System.Windows.Controls.MenuItem { Header = statusNames[i], Tag = status };
+            ShowError($"当前状态「{order.StatusName}」不允许变更");
+            return Task.CompletedTask;
+        }
+
+        var menu = new System.Windows.Controls.ContextMenu();
+        foreach (var status in validStatuses)
+        {
+            var statusName = PRO.Domain.Enums.OrderStatusManager.GetStatusName(status);
+            var item = new System.Windows.Controls.MenuItem
+            {
+                Header = statusName,
+                Tag = status,
+                // 取消操作用红色标识
+                Foreground = status == OrderStatus.Cancelled
+                    ? System.Windows.Media.Brushes.Red
+                    : System.Windows.Media.Brushes.Black
+            };
             var orderId = order.Id;
-            item.Click += async (s, e) => 
+            item.Click += async (s, e) =>
             {
                 await ChangeOrderStatusAsync(orderId, (OrderStatus)((System.Windows.Controls.MenuItem)s!).Tag!);
             };
@@ -270,74 +630,93 @@ public partial class OrderListViewModel : PagedViewModelBase
     {
         try
         {
-            var order = await _dbContext.Orders.FindAsync(orderId);
-            if (order != null)
+            var auditOrder = await _dbContext.Orders.AsNoTracking()
+                .Where(o => o.Id == orderId)
+                .Select(o => new { o.Id, o.OrderNo, o.Status })
+                .FirstOrDefaultAsync();
+            if (auditOrder == null)
             {
-                // 先检查取消原因 - 从UI输入获取而非数据库旧值
-                if (newStatus == OrderStatus.Cancelled)
+                ShowError("订单不存在");
+                return;
+            }
+
+            if (newStatus == OrderStatus.Cancelled && !CheckOrderPermission("Cancel")) return;
+            if (newStatus != OrderStatus.Cancelled && !CheckOrderPermission("BatchStatusChange")) return;
+
+            string? reason = null;
+            if (newStatus == OrderStatus.Cancelled)
+            {
+                var inputDialog = new System.Windows.Controls.TextBox
                 {
-                    // 弹出输入框让用户输入取消原因
-                    var inputDialog = new System.Windows.Controls.TextBox
-                    {
-                        TextWrapping = System.Windows.TextWrapping.Wrap,
-                        AcceptsReturn = true,
-                        Height = 80,
-                        Margin = new System.Windows.Thickness(5)
-                    };
+                    TextWrapping = System.Windows.TextWrapping.Wrap,
+                    AcceptsReturn = true,
+                    Height = 80,
+                    Margin = new System.Windows.Thickness(5)
+                };
 
-                    var dialogContent = new System.Windows.Controls.StackPanel();
-                    dialogContent.Children.Add(new System.Windows.Controls.Label { Content = "请输入取消原因：" });
-                    dialogContent.Children.Add(inputDialog);
+                var dialogContent = new System.Windows.Controls.StackPanel();
+                dialogContent.Children.Add(new System.Windows.Controls.Label { Content = "请输入取消原因：" });
+                dialogContent.Children.Add(inputDialog);
 
-                    var dialogWindow = new System.Windows.Window
-                    {
-                        Title = "取消订单",
-                        Content = dialogContent,
-                        Width = 400,
-                        Height = 200,
-                        WindowStartupLocation = System.Windows.WindowStartupLocation.CenterOwner,
-                        Owner = System.Windows.Application.Current.MainWindow
-                    };
+                var dialogWindow = new System.Windows.Window
+                {
+                    Title = "取消订单",
+                    Content = dialogContent,
+                    Width = 400,
+                    Height = 200,
+                    WindowStartupLocation = System.Windows.WindowStartupLocation.CenterOwner,
+                    Owner = System.Windows.Application.Current.MainWindow
+                };
 
-                    var okButton = new System.Windows.Controls.Button
-                    {
-                        Content = "确定",
-                        Width = 80,
-                        Margin = new System.Windows.Thickness(5),
-                        HorizontalAlignment = System.Windows.HorizontalAlignment.Right
-                    };
-                    okButton.Click += (s, e) => dialogWindow.DialogResult = true;
-                    dialogContent.Children.Add(okButton);
+                var okButton = new System.Windows.Controls.Button
+                {
+                    Content = "确定",
+                    Width = 80,
+                    Margin = new System.Windows.Thickness(5),
+                    HorizontalAlignment = System.Windows.HorizontalAlignment.Right
+                };
+                okButton.Click += (s, e) => dialogWindow.DialogResult = true;
+                dialogContent.Children.Add(okButton);
 
-                    if (dialogWindow.ShowDialog() == true && string.IsNullOrWhiteSpace(inputDialog.Text))
-                    {
-                        ShowError("取消原因不能为空");
-                        return;
-                    }
+                if (dialogWindow.ShowDialog() != true)
+                    return;
 
-                    order.CancelReason = inputDialog.Text;
+                reason = inputDialog.Text;
+                if (string.IsNullOrWhiteSpace(reason))
+                {
+                    ShowError("取消原因不能为空");
+                    return;
                 }
+            }
 
-                var now = DateTime.Now;
-                order.Status = newStatus;
-                order.UpdatedAt = now;
-                order.LocalTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                order.SyncStatus = SyncStatus.Pending;
-
-                // 记录修改
-                _dbContext.OrderModificationRecords.Add(new OrderModificationRecord
+            ApiResponse<bool>? result = null;
+            var executed = await ExecuteWithRetryAsync(async () =>
+            {
+                result = await _orderService.UpdateStatusAsync(new UpdateOrderStatusRequest
                 {
                     OrderId = orderId,
-                    ModifiedById = CurrentSession.CurrentEmployeeId,
-                    ModifiedAt = now,
-                    Content = $"状态变更为：{GetStatusName(newStatus)}",
-                    ModificationType = "StatusChange"
-                });
+                    NewStatus = newStatus,
+                    Reason = reason
+                }, CurrentSession.CurrentEmployeeId);
 
-                await _dbContext.SaveChangesAsync();
-                ShowSuccess($"订单状态已更新为：{GetStatusName(newStatus)}");
-                await LoadDataAsync();
+                if (result == null || !result.Success)
+                    throw new InvalidOperationException(result?.Message ?? "状态更新失败");
+            }, "订单状态变更", showSuccess: false);
+
+            if (!executed || result == null)
+            {
+                return;
             }
+
+            ShowSuccess(result.Message);
+            await _auditService.LogOrderStatusChangeAsync(
+                CurrentSession.CurrentEmployeeId,
+                auditOrder.Id,
+                auditOrder.OrderNo,
+                auditOrder.Status,
+                newStatus,
+                reason);
+            await LoadDataAsync();
         }
         catch (Exception ex)
         {
@@ -348,9 +727,17 @@ public partial class OrderListViewModel : PagedViewModelBase
     [RelayCommand]
     private async Task ExportToExcelAsync()
     {
+        if (!CheckOrderPermission("Export")) return;
+
         try
         {
             var branchId = CurrentSession.CurrentBranchId;
+
+            // 显示导出进度
+            IsExporting = true;
+            ExportProgress = 0;
+            ExportStatusText = "正在查询数据...";
+
             var orders = await _dbContext.Orders
                 .AsNoTracking()
                 .Include(o => o.Customer)
@@ -361,6 +748,13 @@ public partial class OrderListViewModel : PagedViewModelBase
                 .Take(5000)  // 最多导出5000条
                 .ToListAsync();
 
+            if (orders.Count == 0)
+            {
+                IsExporting = false;
+                ShowError("没有可导出的订单数据");
+                return;
+            }
+
             var dialog = new SaveFileDialog
             {
                 Filter = "Excel文件|*.xlsx",
@@ -369,13 +763,16 @@ public partial class OrderListViewModel : PagedViewModelBase
 
             if (dialog.ShowDialog() == true)
             {
+                ExportStatusText = "正在生成Excel...";
+                ExportProgress = 0;
+
                 using var workbook = new XLWorkbook();
                 var worksheet = workbook.Worksheets.Add("订单列表");
 
                 // 表头
-                var headers = new[] { "订单号", "客户名称", "手机号", "配送地址", "经度", "纬度", 
+                var headers = new[] { "订单号", "客户名称", "手机号", "配送地址", "经度", "纬度",
                     "总金额", "收款金额", "收款状态", "订单状态", "配送员", "配送时间", "创建时间", "产品明细" };
-                
+
                 for (int i = 0; i < headers.Length; i++)
                 {
                     worksheet.Cell(1, i + 1).Value = headers[i];
@@ -387,6 +784,8 @@ public partial class OrderListViewModel : PagedViewModelBase
 
                 // 数据
                 var row = 2;
+                var totalCount = orders.Count;
+                var lastReportPercent = 0;
                 foreach (var o in orders)
                 {
                     worksheet.Cell(row, 1).Value = o.OrderNo;
@@ -402,21 +801,42 @@ public partial class OrderListViewModel : PagedViewModelBase
                     worksheet.Cell(row, 11).Value = o.DeliveryPerson?.Name;
                     worksheet.Cell(row, 12).Value = o.DeliveryTime?.ToString("yyyy-MM-dd HH:mm");
                     worksheet.Cell(row, 13).Value = o.CreatedAt.ToString("yyyy-MM-dd HH:mm");
-                    
+
                     // 产品明细
                     var items = o.Items.Select(i => $"{i.Product?.Name}({i.Quantity}x{i.UnitPrice})").ToList();
                     worksheet.Cell(row, 14).Value = string.Join(", ", items);
-                    
+
                     row++;
+
+                    // 每5%报告一次进度
+                    var percent = (int)((double)(row - 2) / totalCount * 100);
+                    if (percent - lastReportPercent >= 5 || percent == 100)
+                    {
+                        lastReportPercent = percent;
+                        ExportProgress = percent;
+                        ExportStatusText = $"正在导出... {row - 2}/{totalCount}";
+                        await Task.Yield(); // 让UI有机会刷新
+                    }
                 }
 
+                ExportStatusText = "正在调整列宽...";
+                ExportProgress = 95;
                 worksheet.Columns().AdjustToContents();
+
+                ExportStatusText = "正在保存文件...";
+                ExportProgress = 98;
                 workbook.SaveAs(dialog.FileName);
+
+                ExportProgress = 100;
+                await _auditService.LogExportAsync(CurrentSession.CurrentEmployeeId, "订单Excel", orders.Count);
                 ShowSuccess($"导出成功，共 {orders.Count} 条订单");
             }
+
+            IsExporting = false;
         }
         catch (Exception ex)
         {
+            IsExporting = false;
             ShowError($"导出失败: {ex.Message}");
         }
     }
@@ -424,14 +844,16 @@ public partial class OrderListViewModel : PagedViewModelBase
     [RelayCommand]
     private async Task ExportForGaodeAsync()
     {
+        if (!CheckOrderPermission("Export")) return;
+
         try
         {
             var branchId = CurrentSession.CurrentBranchId;
             var orders = await _dbContext.Orders
                 .AsNoTracking()
                 .Include(o => o.Customer)
-                .Where(o => o.BranchId == branchId && 
-                    o.Status == OrderStatus.Assigned && 
+                .Where(o => o.BranchId == branchId &&
+                    o.Status == OrderStatus.Assigned &&
                     o.DeliveryLongitude.HasValue && o.DeliveryLatitude.HasValue)
                 .OrderBy(o => o.DeliveryTime)
                 .Take(500)
@@ -473,7 +895,7 @@ public partial class OrderListViewModel : PagedViewModelBase
                 var row = 2;
                 var groupNum = 1;
                 var itemsInGroup = 0;
-                
+
                 foreach (var o in orders.OrderBy(o => o.DeliveryTime))
                 {
                     // 每20个订单一组
@@ -489,20 +911,21 @@ public partial class OrderListViewModel : PagedViewModelBase
                     worksheet.Cell(row, 5).Value = "";  // 颜色
                     worksheet.Cell(row, 6).Value = "";  // 图标外轮廓
                     worksheet.Cell(row, 7).Value = "";  // 图标填充物
-                    
+
                     // 描述：订单号+客户+金额
                     var desc = $"{o.OrderNo}\n客户：{o.Customer?.Name}\n金额：¥{o.TotalAmount}\n电话：{o.Customer?.Phone}";
                     worksheet.Cell(row, 8).Value = desc;
-                    
+
                     // 文件夹：日期+分公司/组号
                     worksheet.Cell(row, 9).Value = $"{groupPrefix}/订单组{groupNum}";
-                    
+
                     row++;
                     itemsInGroup++;
                 }
 
                 worksheet.Columns().AdjustToContents();
                 workbook.SaveAs(dialog.FileName);
+                await _auditService.LogExportAsync(CurrentSession.CurrentEmployeeId, "高德配送规划", orders.Count);
                 ShowSuccess($"高德路径规划导出成功，共 {orders.Count} 个配送点");
             }
         }
@@ -526,6 +949,13 @@ public partial class OrderListViewModel : PagedViewModelBase
         SelectedCount = SelectableOrders.Count(x => x.IsSelected);
     }
 
+    public override void ClearBatchSelection()
+    {
+        foreach (var item in SelectableOrders)
+            item.IsSelected = false;
+        base.ClearBatchSelection();
+    }
+
     protected override List<int> GetSelectedIds()
     {
         return SelectableOrders.Where(x => x.IsSelected).Select(x => x.Id).ToList();
@@ -542,6 +972,9 @@ public partial class OrderListViewModel : PagedViewModelBase
     [RelayCommand]
     private async Task BatchAssignAsync()
     {
+        // 权限检查
+        if (!CheckOrderPermission("BatchAssign")) return;
+
         var selectedIds = GetSelectedIds();
         if (selectedIds.Count == 0)
         {
@@ -601,30 +1034,24 @@ public partial class OrderListViewModel : PagedViewModelBase
                 dynamic? selected = combo.SelectedItem;
                 if (selected == null) return;
                 var personId = (int)selected.Id;
+                var personName = (string)selected.Name;
 
-                int successCount = 0;
-                foreach (var orderId in selectedIds)
+                if (!ConfirmAction("批量分配", $"确定将 {selectedIds.Count} 个订单分配给 {personName}？"))
+                    return;
+
+                var result = await _orderService.BatchAssignAsync(
+                    selectedIds,
+                    personId,
+                    CurrentSession.CurrentEmployeeId);
+
+                if (!result.Success || result.Data == null)
                 {
-                    var order = await _dbContext.Orders.FindAsync(orderId);
-                    if (order != null && (order.Status == OrderStatus.Pending || order.Status == OrderStatus.Draft))
-                    {
-                        order.DeliveryPersonId = personId;
-                        order.Status = OrderStatus.Assigned;
-                        order.UpdatedAt = DateTime.Now;
-                        _dbContext.OrderModificationRecords.Add(new OrderModificationRecord
-                        {
-                            OrderId = orderId,
-                            ModifiedById = CurrentSession.CurrentEmployeeId,
-                            ModifiedAt = DateTime.Now,
-                            Content = $"批量分配配送员",
-                            ModificationType = "BatchAssign"
-                        });
-                        successCount++;
-                    }
+                    ShowError(result.Message);
+                    return;
                 }
 
-                await _dbContext.SaveChangesAsync();
-                ShowSuccess($"批量分配完成：成功 {successCount}/{selectedIds.Count} 条");
+                await _auditService.LogOrderBatchAssignAsync(CurrentSession.CurrentEmployeeId, result.Data.SuccessCount, personName);
+                ShowBatchOperationResult("批量分配结果", result.Data);
                 ClearBatchSelection();
                 await LoadDataAsync();
             }
@@ -638,6 +1065,8 @@ public partial class OrderListViewModel : PagedViewModelBase
     [RelayCommand]
     private async Task BatchConfirmDraftsAsync()
     {
+        if (!CheckOrderPermission("BatchStatusChange")) return;
+
         var selectedIds = GetSelectedIds();
         if (selectedIds.Count == 0)
         {
@@ -645,42 +1074,68 @@ public partial class OrderListViewModel : PagedViewModelBase
             return;
         }
 
-        var result = System.Windows.MessageBox.Show(
-            $"确认将 {selectedIds.Count} 条草稿订单转为待分配状态？",
-            "批量确认", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
+        if (!ConfirmAction("批量确认", $"确认将 {selectedIds.Count} 条草稿订单转为待分配状态？")) return;
 
-        if (result != System.Windows.MessageBoxResult.Yes) return;
+        // 使用 ExecuteBatchOperationAsync 带进度追踪
+        var orders = await _dbContext.Orders.AsNoTracking()
+            .Where(o => selectedIds.Contains(o.Id))
+            .Select(o => new { o.Id, o.OrderNo })
+            .ToListAsync();
 
-        try
-        {
-            int successCount = 0;
-            foreach (var orderId in selectedIds)
+        var progress = await ExecuteBatchOperationAsync(
+            "批量确认草稿",
+            orders.Count,
+            async (i, ct) =>
             {
-                var order = await _dbContext.Orders.FindAsync(orderId);
-                if (order != null && order.Status == OrderStatus.Draft)
+                var order = orders[i];
+                try
                 {
-                    order.Status = OrderStatus.Pending;
-                    order.UpdatedAt = DateTime.Now;
-                    _dbContext.OrderModificationRecords.Add(new OrderModificationRecord
-                    {
-                        OrderId = orderId,
-                        ModifiedById = CurrentSession.CurrentEmployeeId,
-                        ModifiedAt = DateTime.Now,
-                        Content = "手动批量确认草稿",
-                        ModificationType = "BatchDraftConfirm"
-                    });
-                    successCount++;
+                    var result = await _orderService.BatchConfirmDraftsAsync(
+                        new List<int> { order.Id }, CurrentSession.CurrentEmployeeId);
+                    return (result.Success, result.Success ? null : result.Message);
                 }
-            }
-            await _dbContext.SaveChangesAsync();
-            ShowSuccess($"批量确认完成：成功 {successCount}/{selectedIds.Count} 条");
-            ClearBatchSelection();
-            await LoadDataAsync();
-        }
-        catch (Exception ex)
+                catch (Exception ex)
+                {
+                    return (false, ex.Message);
+                }
+            },
+            i => orders[i].OrderNo);
+
+        await _auditService.LogOrderBatchStatusChangeAsync(
+            CurrentSession.CurrentEmployeeId,
+            progress.SuccessCount,
+            selectedIds.Count,
+            OrderStatus.Pending,
+            "批量确认草稿");
+
+        ShowSuccess(progress.Summary);
+        ClearBatchSelection();
+        await LoadDataAsync();
+    }
+
+    private void ShowBatchOperationResult(string title, BatchOperationResult result)
+    {
+        var summary = $"{title}：成功 {result.SuccessCount} 条，失败 {result.FailedCount} 条";
+        if (!result.HasFailures)
         {
-            ShowError($"批量确认失败: {ex.Message}");
+            ShowSuccess(summary);
+            return;
         }
+
+        var details = string.Join(Environment.NewLine,
+            result.Items
+                .Where(i => !i.Success)
+                .Take(20)
+                .Select(i => $"{i.EntityNo}: {i.Message}"));
+        if (result.FailedCount > 20)
+            details += $"{Environment.NewLine}... 还有 {result.FailedCount - 20} 条失败记录";
+
+        ShowError(summary);
+        System.Windows.MessageBox.Show(
+            $"{summary}{Environment.NewLine}{Environment.NewLine}{details}",
+            title,
+            System.Windows.MessageBoxButton.OK,
+            System.Windows.MessageBoxImage.Warning);
     }
 
     [RelayCommand]
@@ -691,753 +1146,27 @@ public partial class OrderListViewModel : PagedViewModelBase
     }
 }
 
-public partial class OrderEditViewModel : ViewModelBase
+/// <summary>
+/// 快速筛选预设
+/// </summary>
+public class QuickFilter
 {
-    private readonly ProDbContext _dbContext;
-    private int? _orderId;
-    private Action? _onSaveCompleted;
+    public string Name { get; }
+    public Func<DateTime>? GetStartDate { get; }
+    public Func<DateTime>? GetEndDate { get; }
+    public OrderStatus? FilterStatus { get; }
+    public PaymentStatus? FilterPaymentStatus { get; }
 
-    public Action? OnSaveCompleted
+    public QuickFilter(string name,
+        Func<DateTime>? getStartDate = null,
+        Func<DateTime>? getEndDate = null,
+        OrderStatus? filterStatus = null,
+        PaymentStatus? filterPaymentStatus = null)
     {
-        get => _onSaveCompleted;
-        set => _onSaveCompleted = value;
-    }
-
-    [ObservableProperty]
-    private bool _isReadOnly;
-
-    [ObservableProperty]
-    private bool _showAssignmentPanel;
-
-    [ObservableProperty]
-    private string _windowTitle = "新建订单";
-
-    [ObservableProperty]
-    private string _orderNo = string.Empty;
-
-    [ObservableProperty]
-    private int _customerId;
-
-    [ObservableProperty]
-    private string? _customerName;
-
-    [ObservableProperty]
-    private string? _customerPhone;
-
-    [ObservableProperty]
-    private string? _deliveryAddress;
-
-    [ObservableProperty]
-    private double? _deliveryLongitude;
-
-    [ObservableProperty]
-    private double? _deliveryLatitude;
-
-    [ObservableProperty]
-    private DateTime? _deliveryTime;
-
-    [ObservableProperty]
-    private decimal _totalAmount;
-
-    [ObservableProperty]
-    private decimal _receivedAmount;
-
-    [ObservableProperty]
-    private decimal _discountAmount;
-
-    [ObservableProperty]
-    private decimal _receivableAmount;
-
-    [ObservableProperty]
-    private PaymentStatus _paymentStatus = PaymentStatus.Unpaid;
-
-    [ObservableProperty]
-    private string? _remark;
-
-    [ObservableProperty]
-    private bool _isDraft;
-
-    [ObservableProperty]
-    private string? _cancelReason;
-
-    [ObservableProperty]
-    private ObservableCollection<OrderItemDto> _items = new();
-
-    [ObservableProperty]
-    private ObservableCollection<CustomerListItem> _customers = new();
-
-    [ObservableProperty]
-    private CustomerListItem? _selectedCustomer;
-
-    [ObservableProperty]
-    private ObservableCollection<ProductListItem> _products = new();
-
-    [ObservableProperty]
-    private ProductListItem? _selectedProduct;
-
-    [ObservableProperty]
-    private int _addQuantity = 1;
-
-    [ObservableProperty]
-    private ObservableCollection<DeliveryPersonListItem> _deliveryPersons = new();
-
-    [ObservableProperty]
-    private DeliveryPersonListItem? _selectedDeliveryPerson;
-
-    [ObservableProperty]
-    private ObservableCollection<OrderModificationRecordDto> _modificationRecords = new();
-
-    [ObservableProperty]
-    private string _customerSearchText = string.Empty;
-
-    [ObservableProperty]
-    private ObservableCollection<CustomerListItem> _customerSearchResults = new();
-
-    [ObservableProperty]
-    private bool _hasCustomerSearchResults;
-
-    partial void OnCustomerSearchTextChanged(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            CustomerSearchResults.Clear();
-            HasCustomerSearchResults = false;
-            return;
-        }
-
-        var results = Customers.Where(c =>
-            c.Name.Contains(value, StringComparison.OrdinalIgnoreCase) ||
-            (c.CustomerNo != null && c.CustomerNo.Contains(value, StringComparison.OrdinalIgnoreCase)))
-            .Take(10)
-            .ToList();
-        CustomerSearchResults = new ObservableCollection<CustomerListItem>(results);
-        HasCustomerSearchResults = results.Count > 0;
-    }
-
-    [RelayCommand]
-    private void SelectCustomerFromSearch(CustomerListItem? customer)
-    {
-        if (customer == null) return;
-        SelectedCustomer = customer;
-        CustomerSearchText = customer.Name;
-        CustomerSearchResults.Clear();
-        HasCustomerSearchResults = false;
-    }
-    
-    [RelayCommand]
-    private async Task OpenCustomerPickerAsync()
-    {
-        var selected = await Views.CustomerPickerWindow.ShowAsync(
-            owner: System.Windows.Application.Current.MainWindow,
-            preselected: SelectedCustomer);
-
-        if (selected != null)
-        {
-            var matched = Customers.FirstOrDefault(c => c.Id == selected.Id);
-            if (matched != null)
-            {
-                SelectedCustomer = matched;
-                CustomerSearchText = matched.Name;
-            }
-        }
-    }
-
-    private readonly DraftService _draftService;
-    private System.Windows.Threading.DispatcherTimer? _autoSaveTimer;
-    private bool _isDraftDirty;
-    private const string OrderDraftKey = "order_edit";
-
-    public OrderEditViewModel()
-    {
-        _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext 
-            ?? throw new InvalidOperationException("无法获取数据库上下文");
-        _draftService = App.Services.GetService(typeof(DraftService)) as DraftService
-            ?? throw new InvalidOperationException("无法获取草稿服务");
-        
-        _orderId = null;
-        WindowTitle = "新建订单";
-        IsReadOnly = false;
-
-        _ = InitAsync();
-        InitializeAutoSave();
-    }
-
-    private void InitializeAutoSave()
-    {
-        _autoSaveTimer = new System.Windows.Threading.DispatcherTimer
-        {
-            Interval = TimeSpan.FromSeconds(30)
-        };
-        _autoSaveTimer.Tick += async (s, e) => await SaveDraftAsync();
-        _autoSaveTimer.Start();
-
-        PropertyChanged += (s, e) =>
-        {
-            if (!IsReadOnly && e.PropertyName != nameof(IsLoading))
-                _isDraftDirty = true;
-        };
-    }
-
-    private async Task SaveDraftAsync()
-    {
-        if (!_isDraftDirty) return;
-        try
-        {
-            var draftData = new OrderDraftData
-            {
-                CustomerId = CustomerId,
-                CustomerName = CustomerName,
-                DeliveryAddress = DeliveryAddress,
-                DeliveryLongitude = DeliveryLongitude,
-                DeliveryLatitude = DeliveryLatitude,
-                DeliveryTime = DeliveryTime,
-                Remark = Remark,
-                DiscountAmount = DiscountAmount,
-                Items = Items.Select(i => new OrderItemDraftData
-                {
-                    ProductId = i.ProductId,
-                    ProductName = i.ProductName,
-                    Quantity = i.Quantity,
-                    UnitPrice = i.UnitPrice,
-                    Amount = i.Amount
-                }).ToList()
-            };
-
-            await _draftService.SaveDraftAsync(OrderDraftKey, draftData, CurrentSession.CurrentEmployeeId);
-            _isDraftDirty = false;
-        }
-        catch (Exception ex)
-        {
-            Log.Warning(ex, "订单草稿自动保存失败");
-        }
-    }
-
-    private async Task<OrderDraftData?> LoadDraftAsync()
-    {
-        return await _draftService.LoadDraftAsync<OrderDraftData>(OrderDraftKey, CurrentSession.CurrentEmployeeId);
-    }
-
-    private async Task DeleteDraftAsync()
-    {
-        await _draftService.DeleteDraftAsync(OrderDraftKey, CurrentSession.CurrentEmployeeId);
-    }
-
-    private async Task InitAsync()
-    {
-        try
-        {
-            // 检查是否有未保存的草稿
-            var draft = await LoadDraftAsync();
-            if (draft != null)
-            {
-                var result = System.Windows.MessageBox.Show(
-                    "检测到上次未保存的订单草稿，是否恢复？",
-                    "恢复草稿", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
-                if (result == System.Windows.MessageBoxResult.Yes)
-                {
-                    CustomerId = draft.CustomerId;
-                    CustomerName = draft.CustomerName;
-                    DeliveryAddress = draft.DeliveryAddress;
-                    DeliveryLongitude = draft.DeliveryLongitude;
-                    DeliveryLatitude = draft.DeliveryLatitude;
-                    DeliveryTime = draft.DeliveryTime;
-                    Remark = draft.Remark;
-                    DiscountAmount = draft.DiscountAmount;
-                    if (draft.Items != null)
-                    {
-                        Items = new ObservableCollection<OrderItemDto>(
-                            draft.Items.Select(i => new OrderItemDto
-                            {
-                                ProductId = i.ProductId,
-                                ProductName = i.ProductName ?? "",
-                                Quantity = i.Quantity,
-                                UnitPrice = i.UnitPrice,
-                                Amount = i.Amount
-                            }));
-                    }
-                    RecalculateTotal();
-                }
-                else
-                {
-                    await DeleteDraftAsync();
-                }
-            }
-
-            OrderNo = await GenerateOrderNoAsync();
-            await LoadCustomersAsync();
-            await LoadProductsAsync();
-            await LoadDeliveryPersonsAsync();
-        }
-        catch (Exception ex)
-        {
-            Serilog.Log.Error(ex, "订单编辑初始化失败");
-        }
-    }
-
-    public void LoadOrder(int orderId)
-    {
-        _orderId = orderId;
-        WindowTitle = "编辑订单";
-        IsReadOnly = false;
-        _ = LoadOrderAsync();
-    }
-
-    private async Task<string> GenerateOrderNoAsync()
-    {
-        var branchId = CurrentSession.CurrentBranchId;
-        var branch = await _dbContext.Branches.AsNoTracking().FirstOrDefaultAsync(b => b.Id == branchId);
-        var branchCode = branch?.Code ?? "0000";
-        if (branchCode.Length != 4)
-            branchCode = branchCode.PadLeft(4, '0').Substring(0, 4);
-
-        var datePart = DateTime.Now.ToString("yyyyMMdd");
-        var prefix = $"D{datePart}{branchCode}";
-
-        var maxNo = await _dbContext.Orders
-            .AsNoTracking()
-            .Where(o => o.OrderNo.StartsWith(prefix))
-            .MaxAsync(o => (string?)o.OrderNo) ?? "";
-
-        var seq = 1;
-        if (maxNo.Length >= prefix.Length + 4)
-        {
-            var lastSeqStr = maxNo.Substring(prefix.Length, 4);
-            int.TryParse(lastSeqStr, out seq);
-            seq++;
-        }
-
-        return $"{prefix}{seq:D4}";
-    }
-
-    private async Task LoadCustomersAsync()
-    {
-        var branchId = CurrentSession.CurrentBranchId;
-        var customers = await _dbContext.Customers
-            .AsNoTracking()
-            .Where(c => c.BranchId == branchId && c.Status == CustomerStatus.Active)
-            .ToListAsync();
-
-        Customers = new ObservableCollection<CustomerListItem>(
-            customers.Select(c => new CustomerListItem 
-            { 
-                Id = c.Id, 
-                Name = c.Name, 
-                Phone = c.Phone,
-                Address = c.Address
-            }));
-    }
-
-    private async Task LoadProductsAsync()
-    {
-        var products = await _dbContext.Products
-            .AsNoTracking()
-            .Where(p => p.Status == ProductStatus.Active)
-            .ToListAsync();
-
-        Products = new ObservableCollection<ProductListItem>(
-            products.Select(p => new ProductListItem
-            {
-                Id = p.Id,
-                SKU = p.SKU,
-                Name = p.Name,
-                Specification = p.Specification,
-                ReferencePrice = p.ReferencePrice,
-                Stock = p.Stock,
-                Unit = p.Unit
-            }));
-    }
-
-    private async Task LoadDeliveryPersonsAsync()
-    {
-        var branchId = CurrentSession.CurrentBranchId;
-        var persons = await _dbContext.DeliveryPersons
-            .AsNoTracking()
-            .Where(d => d.BranchId == branchId && d.Status == DeliveryPersonStatus.Available)
-            .ToListAsync();
-
-        DeliveryPersons = new ObservableCollection<DeliveryPersonListItem>(
-            persons.Select(d => new DeliveryPersonListItem
-            {
-                Id = d.Id,
-                Name = d.Name,
-                Phone = d.Phone,
-                CurrentLoad = d.CurrentLoad,
-                MaxLoad = d.MaxLoad
-            }));
-    }
-
-    partial void OnSelectedCustomerChanged(CustomerListItem? value)
-    {
-        if (value != null)
-        {
-            CustomerId = value.Id;
-            CustomerName = value.Name;
-            CustomerPhone = value.Phone;
-            DeliveryAddress = value.Address;
-            // 经纬度需要在保存时从 Customer 表获取
-        }
-    }
-
-    private async Task LoadOrderAsync()
-    {
-        if (!_orderId.HasValue) return;
-
-        var order = await _dbContext.Orders
-            .AsNoTracking()
-            .Include(o => o.Customer)
-            .Include(o => o.Items).ThenInclude(i => i.Product)
-            .Include(o => o.DeliveryPerson)
-            .Include(o => o.ModificationRecords).ThenInclude(r => r.ModifiedBy)
-            .FirstOrDefaultAsync(o => o.Id == _orderId);
-
-        if (order != null)
-        {
-            OrderNo = order.OrderNo;
-            CustomerId = order.CustomerId;
-            CustomerName = order.Customer?.Name;
-            CustomerPhone = order.Customer?.Phone;
-            DeliveryAddress = order.DeliveryAddress;
-            DeliveryLongitude = order.DeliveryLongitude;
-            DeliveryLatitude = order.DeliveryLatitude;
-            DeliveryTime = order.DeliveryTime;
-            TotalAmount = order.TotalAmount;
-            ReceivedAmount = order.ReceivedAmount;
-            DiscountAmount = order.DiscountAmount;
-            ReceivableAmount = order.TotalAmount - order.DiscountAmount;
-            PaymentStatus = order.PaymentStatus;
-            Remark = order.Remark;
-            IsDraft = order.Status == OrderStatus.Draft;
-            CancelReason = order.CancelReason;
-
-            if (order.DeliveryPersonId.HasValue && DeliveryPersons.Any())
-            {
-                SelectedDeliveryPerson = DeliveryPersons.FirstOrDefault(d => d.Id == order.DeliveryPersonId);
-            }
-
-            Items = new ObservableCollection<OrderItemDto>(
-                order.Items.Select(i => new OrderItemDto
-                {
-                    Id = i.Id,
-                    ProductId = i.ProductId,
-                    ProductName = i.Product?.Name ?? "",
-                    ProductSku = i.Product?.SKU,
-                    ProductSpec = i.Product?.Specification,
-                    Quantity = i.Quantity,
-                    UnitPrice = i.UnitPrice,
-                    Amount = i.Amount,
-                    DiscountType = i.DiscountType,
-                    DiscountValue = i.DiscountValue
-                }));
-
-            ModificationRecords = new ObservableCollection<OrderModificationRecordDto>(
-                order.ModificationRecords.OrderByDescending(r => r.ModifiedAt).Select(r => new OrderModificationRecordDto
-                {
-                    Id = r.Id,
-                    OrderId = r.OrderId,
-                    ModifiedById = r.ModifiedById,
-                    ModifiedByName = r.ModifiedBy?.Name ?? "",
-                    ModifiedByNo = r.ModifiedBy?.EmployeeNo ?? "",
-                    ModifiedAt = r.ModifiedAt,
-                    Content = r.Content,
-                    ModificationType = r.ModificationType
-                }));
-        }
-    }
-
-    [RelayCommand]
-    private void AddItem()
-    {
-        if (SelectedProduct == null || AddQuantity <= 0) return;
-
-        var unitPrice = SelectedProduct.ReferencePrice ?? 0m;
-
-        if (SelectedProduct.Stock < AddQuantity)
-        {
-            ShowError($"库存不足，当前库存：{SelectedProduct.Stock}");
-            return;
-        }
-
-        var amount = unitPrice * AddQuantity;
-        Items.Add(new OrderItemDto
-        {
-            ProductId = SelectedProduct.Id,
-            ProductName = SelectedProduct.Name,
-            ProductSku = SelectedProduct.SKU,
-            ProductSpec = SelectedProduct.Specification,
-            Quantity = AddQuantity,
-            UnitPrice = unitPrice,
-            Amount = amount
-        });
-
-        RecalculateTotal();
-        SelectedProduct = null;
-        AddQuantity = 1;
-    }
-
-    /// <summary>
-    /// DataGrid行编辑完成后重算金额
-    /// </summary>
-    [RelayCommand]
-    private void RecalcItems()
-    {
-        foreach (var item in Items)
-        {
-            item.Amount = item.Quantity * item.UnitPrice;
-        }
-        RecalculateTotal();
-    }
-
-    [RelayCommand]
-    private void RemoveItem(OrderItemDto? item)
-    {
-        if (item != null)
-        {
-            Items.Remove(item);
-            RecalculateTotal();
-        }
-    }
-
-    partial void OnDiscountAmountChanged(decimal value)
-    {
-        ReceivableAmount = TotalAmount - value;
-    }
-
-    private void RecalculateTotal()
-    {
-        TotalAmount = Items.Sum(i => i.Amount);
-        ReceivableAmount = TotalAmount - DiscountAmount;
-    }
-
-    [RelayCommand]
-    private async Task SaveAsync()
-    {
-        if (CustomerId == 0)
-        {
-            ShowError("请选择客户");
-            return;
-        }
-
-        if (!Items.Any())
-        {
-            ShowError("请添加产品");
-            return;
-        }
-
-        if (TotalAmount <= 0)
-        {
-            ShowError("订单总金额必须大于0");
-            return;
-        }
-
-        // 自动填充配送地址为客户地址（如果未设置）
-        if (string.IsNullOrWhiteSpace(DeliveryAddress) && SelectedCustomer != null)
-        {
-            DeliveryAddress = SelectedCustomer.Address;
-        }
-
-        try
-        {
-            var now = DateTime.Now;
-            var localTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
-            if (_orderId.HasValue)
-            {
-                var order = await _dbContext.Orders
-                    .Include(o => o.Items)
-                    .FirstOrDefaultAsync(o => o.Id == _orderId.Value);
-                    
-                if (order != null)
-                {
-                    // 记录修改前状态
-                    var changes = new System.Text.StringBuilder();
-                    if (order.CustomerId != CustomerId) changes.Append($"客户: {order.Customer?.Name} -> {CustomerName}; ");
-                    if (order.TotalAmount != TotalAmount) changes.Append($"金额: {order.TotalAmount} -> {TotalAmount}; ");
-                    if (order.PaymentStatus != PaymentStatus) changes.Append($"收款状态: {order.PaymentStatus} -> {PaymentStatus}; ");
-
-                    order.CustomerId = CustomerId;
-                    order.DeliveryAddress = DeliveryAddress;
-                    order.DeliveryLongitude = DeliveryLongitude;
-                    order.DeliveryLatitude = DeliveryLatitude;
-                    order.DeliveryTime = DeliveryTime;
-                    order.TotalAmount = TotalAmount;
-                    order.ReceivedAmount = ReceivedAmount;
-                    order.DiscountAmount = DiscountAmount;
-                    order.PaymentStatus = PaymentStatus;
-                    order.Remark = Remark;
-                    order.CancelReason = CancelReason;
-                    order.UpdatedAt = now;
-                    order.LocalTimestamp = localTimestamp;
-                    order.SyncStatus = SyncStatus.Pending;
-
-                    if (SelectedDeliveryPerson != null && order.Status == OrderStatus.Pending)
-                    {
-                        order.DeliveryPersonId = SelectedDeliveryPerson.Id;
-                        order.Status = OrderStatus.Assigned;
-                        changes.Append("已分配配送员; ");
-                    }
-
-                    // 更新明细
-                    _dbContext.OrderItems.RemoveRange(order.Items);
-
-                    foreach (var item in Items)
-                    {
-                        _dbContext.OrderItems.Add(new OrderItem
-                        {
-                            OrderId = order.Id,
-                            ProductId = item.ProductId,
-                            Quantity = item.Quantity,
-                            UnitPrice = item.UnitPrice,
-                            Amount = item.Amount,
-                            DiscountType = item.DiscountType,
-                            DiscountValue = item.DiscountValue
-                        });
-                    }
-
-                    // 记录修改
-                    if (changes.Length > 0)
-                    {
-                        _dbContext.OrderModificationRecords.Add(new OrderModificationRecord
-                        {
-                            OrderId = order.Id,
-                            ModifiedById = CurrentSession.CurrentEmployeeId,
-                            ModifiedAt = now,
-                            Content = changes.ToString(),
-                            ModificationType = "Update"
-                        });
-                    }
-
-                    await _dbContext.SaveChangesAsync();
-                    await UpdateStockForOrderAsync(order.Id, Items);
-
-                    await transaction.CommitAsync();
-                    await DeleteDraftAsync();
-                    ShowSuccess("保存成功");
-                    _onSaveCompleted?.Invoke();
-                }
-            }
-            else
-            {
-                var order = new Order
-                {
-                    OrderNo = OrderNo,
-                    CustomerId = CustomerId,
-                    BranchId = CurrentSession.CurrentBranchId,
-                    CreatedById = CurrentSession.CurrentEmployeeId,
-                    DeliveryAddress = DeliveryAddress,
-                    DeliveryLongitude = DeliveryLongitude,
-                    DeliveryLatitude = DeliveryLatitude,
-                    DeliveryTime = DeliveryTime,
-                    TotalAmount = TotalAmount,
-                    ReceivedAmount = ReceivedAmount,
-                    DiscountAmount = DiscountAmount,
-                    PaymentStatus = PaymentStatus,
-                    Status = IsDraft ? OrderStatus.Draft : OrderStatus.Pending,
-                    Remark = Remark,
-                    DraftExpireTime = IsDraft ? now.AddMinutes(30) : null,
-                    CreatedAt = now,
-                    UpdatedAt = now,
-                    LocalTimestamp = localTimestamp,
-                    SyncStatus = SyncStatus.Pending
-                };
-
-                if (SelectedDeliveryPerson != null)
-                {
-                    order.DeliveryPersonId = SelectedDeliveryPerson.Id;
-                    order.Status = OrderStatus.Assigned;
-                }
-
-                _dbContext.Orders.Add(order);
-                await _dbContext.SaveChangesAsync();
-
-                foreach (var item in Items)
-                {
-                    _dbContext.OrderItems.Add(new OrderItem
-                    {
-                        OrderId = order.Id,
-                        ProductId = item.ProductId,
-                        Quantity = item.Quantity,
-                        UnitPrice = item.UnitPrice,
-                        Amount = item.Amount,
-                        DiscountType = item.DiscountType,
-                        DiscountValue = item.DiscountValue
-                    });
-                }
-
-                // 记录创建
-                _dbContext.OrderModificationRecords.Add(new OrderModificationRecord
-                {
-                    OrderId = order.Id,
-                    ModifiedById = CurrentSession.CurrentEmployeeId,
-                    ModifiedAt = now,
-                    Content = "创建订单",
-                    ModificationType = "Create"
-                });
-
-                await _dbContext.SaveChangesAsync();
-                await UpdateStockForOrderAsync(order.Id, Items);
-
-                await transaction.CommitAsync();
-                await DeleteDraftAsync();
-                ShowSuccess("保存成功");
-                _onSaveCompleted?.Invoke();
-            }
-        }
-        catch (Exception ex)
-        {
-            ShowError($"保存失败: {ex.Message}");
-        }
-    }
-
-    /// <summary>
-    /// 更新订单的库存扣减
-    /// </summary>
-    private async Task UpdateStockForOrderAsync(int orderId, ObservableCollection<OrderItemDto> newItems)
-    {
-        // 获取订单原有的明细（用于计算库存差异）
-        var originalItems = await _dbContext.OrderItems
-            .AsNoTracking()
-            .Where(i => i.OrderId == orderId)
-            .ToListAsync();
-
-        // 原有商品：恢复库存
-        foreach (var original in originalItems)
-        {
-            var product = await _dbContext.Products.FindAsync(original.ProductId);
-            if (product != null)
-            {
-                product.Stock += original.Quantity;
-            }
-        }
-
-        // 新商品：扣减库存
-        foreach (var newItem in newItems)
-        {
-            var product = await _dbContext.Products.FindAsync(newItem.ProductId);
-            if (product != null)
-            {
-                if (product.Stock < newItem.Quantity)
-                {
-                    throw new InvalidOperationException($"产品 [{product.Name}] 库存不足，当前库存：{product.Stock}，需要：{newItem.Quantity}");
-                }
-                product.Stock -= newItem.Quantity;
-            }
-        }
-
-        await _dbContext.SaveChangesAsync();
-    }
-
-    [RelayCommand]
-    private async Task SaveAsDraftAsync()
-    {
-        IsDraft = true;
-        await SaveAsync();
-    }
-
-    [RelayCommand]
-    private void Cancel()
-    {
-        // 窗口关闭由View处理
+        Name = name;
+        GetStartDate = getStartDate;
+        GetEndDate = getEndDate;
+        FilterStatus = filterStatus;
+        FilterPaymentStatus = filterPaymentStatus;
     }
 }

@@ -49,10 +49,10 @@ public partial class MainViewModel : ViewModelBase
     private int _pendingSyncCount;
 
     [ObservableProperty]
-    private ObservableCollection<NavigationItem> _navigationItems = new();
+    private ObservableCollection<NavigationItem> _navigationItems = [];
 
     [ObservableProperty]
-    private ObservableCollection<TabItem> _tabItems = new();
+    private ObservableCollection<TabItem> _tabItems = [];
 
     [ObservableProperty]
     private TabItem? _selectedTab;
@@ -70,8 +70,28 @@ public partial class MainViewModel : ViewModelBase
     private bool _isSearchFocused;
 
     private ICollectionView? _navigationView;
-    private readonly Dictionary<string, (DispatcherTimer Timer, EventHandler Handler)> _hoverTimers = new();
-    private readonly Dictionary<string, (DispatcherTimer Timer, EventHandler Handler)> _collapseTimers = new();
+    private readonly Dictionary<string, (DispatcherTimer Timer, EventHandler Handler)> _hoverTimers = [];
+    private readonly Dictionary<string, (DispatcherTimer Timer, EventHandler Handler)> _collapseTimers = [];
+
+    /// <summary>
+    /// 停止并释放所有导航悬浮/折叠定时器
+    /// </summary>
+    public void StopAllTimers()
+    {
+        foreach (var kvp in _hoverTimers)
+        {
+            kvp.Value.Timer.Stop();
+            kvp.Value.Timer.Tick -= kvp.Value.Handler;
+        }
+        _hoverTimers.Clear();
+
+        foreach (var kvp in _collapseTimers)
+        {
+            kvp.Value.Timer.Stop();
+            kvp.Value.Timer.Tick -= kvp.Value.Handler;
+        }
+        _collapseTimers.Clear();
+    }
 
     public MainViewModel()
     {
@@ -120,27 +140,42 @@ public partial class MainViewModel : ViewModelBase
         };
         customerCat.Children.Add(new NavigationItem
         {
-            Id = "customer_add", Title = "添加客户", SortOrder = 21, ParentId = "cat_customer",
+            Id = "customer_add",
+            Title = "添加客户",
+            SortOrder = 21,
+            ParentId = "cat_customer",
             ViewModelType = typeof(CustomerListViewModel)
         });
         customerCat.Children.Add(new NavigationItem
         {
-            Id = "customer", Title = "客户列表", SortOrder = 22, ParentId = "cat_customer",
+            Id = "customer",
+            Title = "客户列表",
+            SortOrder = 22,
+            ParentId = "cat_customer",
             ViewModelType = typeof(CustomerListViewModel)
         });
         customerCat.Children.Add(new NavigationItem
         {
-            Id = "wechat_scrm", Title = "企微SCRM", SortOrder = 23, ParentId = "cat_customer",
+            Id = "wechat_scrm",
+            Title = "企微SCRM",
+            SortOrder = 23,
+            ParentId = "cat_customer",
             ViewModelType = typeof(WeChatScrmViewModel)
         });
         customerCat.Children.Add(new NavigationItem
         {
-            Id = "visit_opportunity", Title = "拜访/机会", SortOrder = 24, ParentId = "cat_customer",
+            Id = "visit_opportunity",
+            Title = "拜访/机会",
+            SortOrder = 24,
+            ParentId = "cat_customer",
             ViewModelType = typeof(VisitOpportunityViewModel)
         });
         customerCat.Children.Add(new NavigationItem
         {
-            Id = "district_tag", Title = "商圈/标签", SortOrder = 25, ParentId = "cat_customer",
+            Id = "district_tag",
+            Title = "商圈/标签",
+            SortOrder = 25,
+            ParentId = "cat_customer",
             ViewModelType = typeof(DistrictTagViewModel)
         });
         NavigationItems.Add(customerCat);
@@ -155,17 +190,26 @@ public partial class MainViewModel : ViewModelBase
         };
         orderCat.Children.Add(new NavigationItem
         {
-            Id = "order_new", Title = "新建订单", SortOrder = 31, ParentId = "cat_order",
+            Id = "order_new",
+            Title = "新建订单",
+            SortOrder = 31,
+            ParentId = "cat_order",
             ViewModelType = typeof(OrderListViewModel)
         });
         orderCat.Children.Add(new NavigationItem
         {
-            Id = "order_draft", Title = "草稿订单", SortOrder = 32, ParentId = "cat_order",
+            Id = "order_draft",
+            Title = "草稿订单",
+            SortOrder = 32,
+            ParentId = "cat_order",
             ViewModelType = typeof(OrderListViewModel)
         });
         orderCat.Children.Add(new NavigationItem
         {
-            Id = "order", Title = "订单列表", SortOrder = 33, ParentId = "cat_order",
+            Id = "order",
+            Title = "订单列表",
+            SortOrder = 33,
+            ParentId = "cat_order",
             ViewModelType = typeof(OrderListViewModel)
         });
         NavigationItems.Add(orderCat);
@@ -181,14 +225,28 @@ public partial class MainViewModel : ViewModelBase
         {
             financeCat.Children.Add(new NavigationItem
             {
-                Id = "settlement", Title = "结算", SortOrder = 41, ParentId = "cat_finance",
+                Id = "settlement",
+                Title = "结算",
+                SortOrder = 41,
+                ParentId = "cat_finance",
                 ViewModelType = typeof(SettlementListViewModel)
             });
         }
         financeCat.Children.Add(new NavigationItem
         {
-            Id = "ar", Title = "应收款", SortOrder = 42, ParentId = "cat_finance",
+            Id = "ar",
+            Title = "应收款",
+            SortOrder = 42,
+            ParentId = "cat_finance",
             ViewModelType = typeof(AccountsReceivableViewModel)
+        });
+        financeCat.Children.Add(new NavigationItem
+        {
+            Id = "payment",
+            Title = "收款登记",
+            SortOrder = 43,
+            ParentId = "cat_finance",
+            ViewModelType = typeof(PaymentRegistrationViewModel)
         });
         NavigationItems.Add(financeCat);
 
@@ -201,17 +259,26 @@ public partial class MainViewModel : ViewModelBase
         };
         logisticsCat.Children.Add(new NavigationItem
         {
-            Id = "product", Title = "产品管理", SortOrder = 51, ParentId = "cat_logistics",
+            Id = "product",
+            Title = "产品管理",
+            SortOrder = 51,
+            ParentId = "cat_logistics",
             ViewModelType = typeof(ProductListViewModel)
         });
         logisticsCat.Children.Add(new NavigationItem
         {
-            Id = "logistics", Title = "物流管理", SortOrder = 52, ParentId = "cat_logistics",
+            Id = "logistics",
+            Title = "物流管理",
+            SortOrder = 52,
+            ParentId = "cat_logistics",
             ViewModelType = typeof(DeliveryPersonListViewModel)
         });
         logisticsCat.Children.Add(new NavigationItem
         {
-            Id = "inventory", Title = "库存盘点", SortOrder = 53, ParentId = "cat_logistics",
+            Id = "inventory",
+            Title = "库存盘点",
+            SortOrder = 53,
+            ParentId = "cat_logistics",
             ViewModelType = typeof(InventoryViewModel)
         });
         NavigationItems.Add(logisticsCat);
@@ -234,13 +301,27 @@ public partial class MainViewModel : ViewModelBase
         };
         analyticsCat.Children.Add(new NavigationItem
         {
-            Id = "reports", Title = "报表中心", SortOrder = 71, ParentId = "cat_analytics",
+            Id = "reports",
+            Title = "报表中心",
+            SortOrder = 71,
+            ParentId = "cat_analytics",
             ViewModelType = typeof(ReportCenterViewModel)
         });
         analyticsCat.Children.Add(new NavigationItem
         {
-            Id = "prediction", Title = "智能预测", SortOrder = 72, ParentId = "cat_analytics",
+            Id = "prediction",
+            Title = "智能预测",
+            SortOrder = 72,
+            ParentId = "cat_analytics",
             ViewModelType = typeof(PredictionDashboardViewModel)
+        });
+        analyticsCat.Children.Add(new NavigationItem
+        {
+            Id = "error_dashboard",
+            Title = "错误统计",
+            SortOrder = 73,
+            ParentId = "cat_analytics",
+            ViewModelType = typeof(ErrorDashboardViewModel)
         });
         NavigationItems.Add(analyticsCat);
 
@@ -259,27 +340,94 @@ public partial class MainViewModel : ViewModelBase
         {
             systemCat.Children.Add(new NavigationItem
             {
-                Id = "org_structure", Title = "组织架构", SortOrder = 101, ParentId = "cat_system",
+                Id = "org_structure",
+                Title = "组织架构",
+                SortOrder = 101,
+                ParentId = "cat_system",
                 ViewModelType = typeof(EmployeeListViewModel)
             });
         }
         systemCat.Children.Add(new NavigationItem
         {
-            Id = "system", Title = "应用设置", SortOrder = 102, ParentId = "cat_system",
+            Id = "system",
+            Title = "应用设置",
+            SortOrder = 102,
+            ParentId = "cat_system",
             ViewModelType = typeof(SystemSettingsViewModel)
         });
         systemCat.Children.Add(new NavigationItem
         {
-            Id = "operation_log", Title = "操作日志", SortOrder = 103, ParentId = "cat_system",
+            Id = "operation_log",
+            Title = "操作日志",
+            SortOrder = 103,
+            ParentId = "cat_system",
             ViewModelType = typeof(OperationLogViewModel)
         });
+        systemCat.Children.Add(new NavigationItem
+        {
+            Id = "data_quality",
+            Title = "数据质量",
+            SortOrder = 104,
+            ParentId = "cat_system",
+            ViewModelType = typeof(DataQualityViewModel)
+        });
         NavigationItems.Add(systemCat);
+
+        // 权限过滤：移除用户无权访问的菜单项
+        FilterNavigationByPermissions();
 
         // 初始化 CollectionView
         _navigationView = CollectionViewSource.GetDefaultView(NavigationItems);
         if (_navigationView != null)
         {
             _navigationView.Filter = FilterNavigation;
+        }
+    }
+
+    /// <summary>
+    /// 根据用户权限过滤导航菜单
+    /// </summary>
+    private void FilterNavigationByPermissions()
+    {
+        var session = CurrentSession.Current;
+        if (session.IsHeadquartersAdmin) return; // 总部管理员看到所有菜单
+
+        // 权限映射：菜单ID → 所需权限代码
+        var permissionMap = new Dictionary<string, string>
+        {
+            ["customer_add"] = "Customer.Create",
+            ["customer"] = "Customer.View",
+            ["order_new"] = "Order.Create",
+            ["order_draft"] = "Order.View",
+            ["order"] = "Order.View",
+            ["settlement"] = "Settlement.View",
+            ["ar"] = "Order.View",
+            ["product"] = "Product.View",
+            ["logistics"] = "Delivery.View",
+            ["inventory"] = "Product.View",
+            ["workplan"] = "WorkPlan.View",
+            ["reports"] = "Order.Export",
+            ["org_structure"] = "System.View",
+            ["operation_log"] = "System.View",
+        };
+
+        // 过滤子菜单项
+        foreach (var category in NavigationItems.Where(n => n.IsCategory).ToList())
+        {
+            category.Children.RemoveAll(child =>
+            {
+                if (permissionMap.TryGetValue(child.Id, out var requiredPermission))
+                {
+                    return !session.HasPermission(requiredPermission);
+                }
+                return false;
+            });
+
+            // 如果分类下没有子项，移除整个分类
+            if (category.Children.Count == 0)
+            {
+                NavigationItems.Remove(category);
+            }
         }
     }
 
@@ -296,7 +444,7 @@ public partial class MainViewModel : ViewModelBase
         // 单层菜单项：直接匹配标题
         if (!item.IsCategory && item.Id != "sep1")
         {
-            var match = item.Title.ToLower().Contains(keyword);
+            var match = item.Title.Contains(keyword, StringComparison.OrdinalIgnoreCase);
             item.SearchScore = match ? 1 : 0;
             return match;
         }
@@ -304,15 +452,15 @@ public partial class MainViewModel : ViewModelBase
         // 分类目录：匹配标题 或 任意子项匹配
         if (item.IsCategory)
         {
-            var titleMatch = item.Title.ToLower().Contains(keyword);
-            var anyChildMatch = item.Children.Any(c => c.Title.ToLower().Contains(keyword));
+            var titleMatch = item.Title.Contains(keyword, StringComparison.OrdinalIgnoreCase);
+            var anyChildMatch = item.Children.Any(c => c.Title.Contains(keyword, StringComparison.OrdinalIgnoreCase));
 
             if (titleMatch || anyChildMatch)
             {
                 // 标记匹配的子项
                 foreach (var child in item.Children)
                 {
-                    child.SearchScore = child.Title.ToLower().Contains(keyword) ? 1 : 0;
+                    child.SearchScore = child.Title.Contains(keyword, StringComparison.OrdinalIgnoreCase) ? 1 : 0;
                 }
                 item.SearchScore = 1;
                 if (!item.IsExpanded)
@@ -569,6 +717,13 @@ public partial class MainViewModel : ViewModelBase
             ViewModel = App.Services.GetService(navItem.ViewModelType) as ViewModelBase
         };
 
+        if (tab.ViewModel == null)
+        {
+            Serilog.Log.Error("无法创建视图 {ViewModelType}，服务未注册", navItem.ViewModelType.Name);
+            ShowError($"无法打开页面：{navItem.Title}");
+            return;
+        }
+
         if (navItem.Id == "order_draft" && tab.ViewModel is OrderListViewModel draftVm)
         {
             draftVm.ShowOnlyDrafts = true;
@@ -649,6 +804,19 @@ public partial class MainViewModel : ViewModelBase
     {
         SearchKeyword = string.Empty;
         IsSearchFocused = false;
+    }
+
+    [RelayCommand]
+    private void OpenGlobalSearch()
+    {
+        var searchVm = App.Services.GetService(typeof(GlobalSearchViewModel)) as GlobalSearchViewModel;
+        if (searchVm == null) return;
+
+        var dialog = new Views.GlobalSearchWindow(searchVm)
+        {
+            Owner = System.Windows.Application.Current.MainWindow
+        };
+        dialog.ShowDialog();
     }
 
     [RelayCommand]

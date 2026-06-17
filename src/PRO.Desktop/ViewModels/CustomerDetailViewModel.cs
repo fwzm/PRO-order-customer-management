@@ -5,6 +5,7 @@ using PRO.Domain.Entities;
 using PRO.Domain.Enums;
 using PRO.Infrastructure.Persistence;
 using PRO.Desktop.Prediction;
+using Serilog;
 using System.Collections.ObjectModel;
 using System.Windows;
 
@@ -18,10 +19,10 @@ public partial class CustomerDetailViewModel : ViewModelBase
 
     [ObservableProperty] private Customer? _customer;
     [ObservableProperty] private string _customerNo = "", _customerName = "", _customerTypeStr = "", _customerPhone = "", _customerAddress = "", _customerManagerName = "未分配", _customerCreatorName = "";
-    [ObservableProperty] private ObservableCollection<OrderSummary> _recentOrders = new();
-    [ObservableProperty] private ObservableCollection<VisitRecordItem> _recentVisits = new();
-    [ObservableProperty] private ObservableCollection<OpportunityItem> _opportunities = new();
-    [ObservableProperty] private ObservableCollection<CustomerPriceItem> _customerPrices = new();
+    [ObservableProperty] private ObservableCollection<OrderSummary> _recentOrders = [];
+    [ObservableProperty] private ObservableCollection<VisitRecordItem> _recentVisits = [];
+    [ObservableProperty] private ObservableCollection<OpportunityItem> _opportunities = [];
+    [ObservableProperty] private ObservableCollection<CustomerPriceItem> _customerPrices = [];
     [ObservableProperty] private int _totalOrders;
     [ObservableProperty] private decimal _totalAmount;
     [ObservableProperty] private decimal _totalReceivable;
@@ -29,7 +30,7 @@ public partial class CustomerDetailViewModel : ViewModelBase
     [ObservableProperty] private double _predictedAmount;
     [ObservableProperty] private double _predictedConfidence;
     [ObservableProperty] private string _churnRisk = "无";
-    [ObservableProperty] private ObservableCollection<EmployeeItem> _employeeList = new();
+    [ObservableProperty] private ObservableCollection<EmployeeItem> _employeeList = [];
     [ObservableProperty] private EmployeeItem? _selectedManager;
 
     public Action? OnCustomerUpdated;
@@ -38,7 +39,7 @@ public partial class CustomerDetailViewModel : ViewModelBase
     {
         _customerId = customerId;
         _db = App.Services.GetService(typeof(ProDbContext)) as ProDbContext ?? throw new InvalidOperationException("无法获取数据库上下文");
-        _ = LoadAsync();
+        RunInBackground(LoadAsync(), "加载客户详情失败");
     }
 
     private async Task LoadAsync()
@@ -74,7 +75,7 @@ public partial class CustomerDetailViewModel : ViewModelBase
 
             // 预测
             try { var engine = new PredictionEngine(_db); var pred = await engine.PredictCustomerOrderAsync(_customerId); PredictedAmount = pred.PredictedAmount; PredictedConfidence = pred.ConfidenceScore; }
-            catch { PredictedAmount = 0; }
+            catch (Exception ex) { Serilog.Log.Warning(ex, "客户订单预测失败"); PredictedAmount = 0; }
 
             // 流失风险
             if (orders.Any()) { var last = orders.First().CreatedAt; if ((DateTime.Now - last).TotalDays > AvgInterval * 2 && AvgInterval > 0) ChurnRisk = "高"; else if ((DateTime.Now - last).TotalDays > AvgInterval * 1.5) ChurnRisk = "中"; }
@@ -83,7 +84,7 @@ public partial class CustomerDetailViewModel : ViewModelBase
             EmployeeList = new ObservableCollection<EmployeeItem>(emps.Select(e => new EmployeeItem { Id = e.Id, Name = e.Name }));
             SelectedManager = EmployeeList.FirstOrDefault(e => e.Id == c.CustomerManagerId);
         }
-        catch (Exception ex) { ShowError($"加载失败: {ex.Message}"); }
+        catch (Exception ex) { Log.Error(ex, "加载客户详情失败"); ShowError($"加载失败: {ex.Message}"); }
         finally { IsLoading = false; }
     }
 
@@ -118,6 +119,26 @@ public partial class CustomerDetailViewModel : ViewModelBase
     private void GoBack()
     {
         _owningWindow?.Close();
+    }
+
+    [RelayCommand]
+    private void OpenArchive()
+    {
+        var archiveVm = App.Services.GetService(typeof(CustomerArchiveViewModel)) as CustomerArchiveViewModel;
+        if (archiveVm == null) return;
+
+        archiveVm.LoadCustomer(_customerId);
+
+        var window = new Window
+        {
+            Title = $"客户档案 - {CustomerName}",
+            Content = new Views.CustomerArchiveView(archiveVm),
+            Width = 1000,
+            Height = 700,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = _owningWindow ?? System.Windows.Application.Current.MainWindow
+        };
+        window.Show();
     }
 }
 

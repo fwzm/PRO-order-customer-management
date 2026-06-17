@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PRO.Application.DTOs;
 using PRO.Application.Interfaces;
+using PRO.WebApi.Authorization;
+using PRO.WebApi.Filters;
 
 namespace PRO.WebApi.Controllers;
 
@@ -11,17 +13,14 @@ namespace PRO.WebApi.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class WeChatController : ControllerBase
+public class WeChatController(IWeChatService weChatService) : ControllerBase
 {
-    private readonly IWeChatService _weChatService;
-
-    public WeChatController(IWeChatService weChatService)
-    {
-        _weChatService = weChatService;
-    }
+    private readonly IWeChatService _weChatService = weChatService;
 
     /// <summary>同步组织架构</summary>
     [HttpPost("sync-organization")]
+    [Authorize(Policy = PermissionPolicies.SystemWeChat)]
+    [ServiceFilter(typeof(AuditLogFilter))]
     public async Task<IActionResult> SyncOrganization()
     {
         var result = await _weChatService.SyncOrganizationAsync();
@@ -30,6 +29,8 @@ public class WeChatController : ControllerBase
 
     /// <summary>同步指定员工</summary>
     [HttpPost("sync-employee/{employeeId:int}")]
+    [Authorize(Policy = PermissionPolicies.SystemWeChat)]
+    [ServiceFilter(typeof(AuditLogFilter))]
     public async Task<IActionResult> SyncEmployee(int employeeId)
     {
         var result = await _weChatService.SyncEmployeeAsync(employeeId);
@@ -38,6 +39,8 @@ public class WeChatController : ControllerBase
 
     /// <summary>拉取新客户</summary>
     [HttpPost("pull-customers")]
+    [Authorize(Policy = PermissionPolicies.SystemWeChat)]
+    [ServiceFilter(typeof(AuditLogFilter))]
     public async Task<IActionResult> PullCustomers()
     {
         var result = await _weChatService.PullNewCustomersAsync();
@@ -46,6 +49,8 @@ public class WeChatController : ControllerBase
 
     /// <summary>发送消息</summary>
     [HttpPost("send-message")]
+    [Authorize(Policy = PermissionPolicies.SystemWeChat)]
+    [ServiceFilter(typeof(AuditLogFilter))]
     public async Task<IActionResult> SendMessage([FromBody] SendMessageBody body)
     {
         var result = await _weChatService.SendMessageAsync(body.ToUser, body.Content, body.AgentId);
@@ -54,6 +59,7 @@ public class WeChatController : ControllerBase
 
     /// <summary>获取同步日志</summary>
     [HttpGet("sync-logs")]
+    [Authorize(Policy = PermissionPolicies.SystemWeChat)]
     public async Task<IActionResult> GetSyncLogs([FromQuery] int days = 7)
     {
         var result = await _weChatService.GetSyncLogsAsync(days);

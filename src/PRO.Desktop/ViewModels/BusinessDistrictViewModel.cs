@@ -18,7 +18,7 @@ public partial class BusinessDistrictViewModel : ViewModelBase
     private readonly ProDbContext _dbContext;
 
     [ObservableProperty]
-    private ObservableCollection<BusinessDistrict> _businessDistricts = new();
+    private ObservableCollection<BusinessDistrict> _businessDistricts = [];
 
     [ObservableProperty]
     private BusinessDistrict? _selectedItem;
@@ -36,7 +36,7 @@ public partial class BusinessDistrictViewModel : ViewModelBase
     private string _editCity = string.Empty;
 
     [ObservableProperty]
-    private ObservableCollection<string> _cities = new();
+    private ObservableCollection<string> _cities = [];
 
     private int? _editingId;
 
@@ -44,7 +44,7 @@ public partial class BusinessDistrictViewModel : ViewModelBase
     {
         _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext
             ?? throw new InvalidOperationException("无法获取数据库上下文");
-        _ = LoadDataAsync();
+        RunInBackground(LoadDataAsync(), "加载商圈数据失败");
     }
 
     private async Task LoadDataAsync()
@@ -137,6 +137,7 @@ public partial class BusinessDistrictViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
+            Log.Error(ex, "商圈保存失败");
             ShowError($"保存失败: {ex.Message}");
         }
     }
@@ -158,6 +159,7 @@ public partial class BusinessDistrictViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
+            Log.Error(ex, "商圈删除失败");
             ShowError($"删除失败: {ex.Message}");
         }
     }

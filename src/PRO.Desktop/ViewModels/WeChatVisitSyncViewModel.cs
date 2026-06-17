@@ -13,16 +13,16 @@ namespace PRO.Desktop.ViewModels;
 public partial class WeChatVisitSyncViewModel : ViewModelBase
 {
     private readonly ProDbContext _db;
-    [ObservableProperty] private ObservableCollection<WeChatVisitItem> _records = new();
+    [ObservableProperty] private ObservableCollection<WeChatVisitItem> _records = [];
     [ObservableProperty] private WeChatVisitItem? _selectedRecord;
-    [ObservableProperty] private ObservableCollection<CustomerItem> _customers = new();
+    [ObservableProperty] private ObservableCollection<CustomerItem> _customers = [];
     [ObservableProperty] private CustomerItem? _selectedCustomer;
     [ObservableProperty] private string? _syncStatus;
 
     public WeChatVisitSyncViewModel()
     {
         _db = App.Services.GetService(typeof(ProDbContext)) as ProDbContext ?? throw new InvalidOperationException("无法获取数据库上下文");
-        _ = LoadAsync();
+        RunInBackground(LoadAsync(), "加载拜访同步数据失败");
     }
 
     private async Task LoadAsync()
@@ -39,9 +39,17 @@ public partial class WeChatVisitSyncViewModel : ViewModelBase
 
             Records = new ObservableCollection<WeChatVisitItem>(list.Select(v => new WeChatVisitItem
             {
-                Id = v.Id, SourceRecordId = v.SourceRecordId, CustomerName = v.CustomerName, VisitorName = v.VisitorName,
-                VisitDate = v.VisitDate, VisitType = v.VisitType, Content = v.Content, Purpose = v.Purpose,
-                CustomerDemand = v.CustomerDemand, NextAction = v.NextAction, SyncedAt = v.SyncedAt,
+                Id = v.Id,
+                SourceRecordId = v.SourceRecordId,
+                CustomerName = v.CustomerName,
+                VisitorName = v.VisitorName,
+                VisitDate = v.VisitDate,
+                VisitType = v.VisitType,
+                Content = v.Content,
+                Purpose = v.Purpose,
+                CustomerDemand = v.CustomerDemand,
+                NextAction = v.NextAction,
+                SyncedAt = v.SyncedAt,
                 CustomerManagerName = v.LinkedCustomerId.HasValue && customerManagers.ContainsKey(v.LinkedCustomerId.Value)
                     ? customerManagers[v.LinkedCustomerId.Value] : (v.VisitorName ?? "")
             }));
@@ -89,10 +97,14 @@ public partial class WeChatVisitSyncViewModel : ViewModelBase
             // 1. 创建正式拜访记录
             _db.VisitRecords.Add(new VisitRecord
             {
-                CustomerId = customerId, VisitorId = CurrentSession.CurrentEmployeeId,
-                VisitType = item.VisitType ?? "电话", Purpose = item.Purpose,
-                Content = item.Content, CustomerDemand = item.CustomerDemand,
-                NextAction = item.NextAction, VisitDate = item.VisitDate ?? DateTime.Now,
+                CustomerId = customerId,
+                VisitorId = CurrentSession.CurrentEmployeeId,
+                VisitType = item.VisitType ?? "电话",
+                Purpose = item.Purpose,
+                Content = item.Content,
+                CustomerDemand = item.CustomerDemand,
+                NextAction = item.NextAction,
+                VisitDate = item.VisitDate ?? DateTime.Now,
                 CreatedAt = DateTime.Now
             });
 
@@ -109,9 +121,9 @@ public partial class WeChatVisitSyncViewModel : ViewModelBase
                     using var scope = App.Services.CreateScope();
                     var httpFactory = scope.ServiceProvider.GetRequiredService<System.Net.Http.IHttpClientFactory>();
                     var service = new SmartTableSyncService(httpFactory, _db);
-                    await service.DeleteRecordsAsync(new List<string> { item.SourceRecordId });
+                    await service.DeleteRecordsAsync([item.SourceRecordId]);
                 }
-                catch { /* 静默失败 */ }
+                catch (Exception ex) { Serilog.Log.Warning(ex, "删除智能表格记录失败"); }
             }
 
             await _db.SaveChangesAsync();
@@ -131,10 +143,16 @@ public partial class WeChatVisitSyncViewModel : ViewModelBase
             var customerNo = "K" + DateTime.Now.ToString("yyyyMMdd") + "0000" + new Random().Next(1000, 9999);
             var customer = new Customer
             {
-                Name = item.CustomerName, CustomerNo = customerNo, CustomerType = Domain.Enums.CustomerType.Sub,
-                BranchId = branchId, CreatedById = CurrentSession.CurrentEmployeeId,
-                Status = Domain.Enums.CustomerStatus.Active, CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now,
-                SyncStatus = Domain.Enums.SyncStatus.Pending, LocalTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                Name = item.CustomerName,
+                CustomerNo = customerNo,
+                CustomerType = Domain.Enums.CustomerType.Sub,
+                BranchId = branchId,
+                CreatedById = CurrentSession.CurrentEmployeeId,
+                Status = Domain.Enums.CustomerStatus.Active,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
+                SyncStatus = Domain.Enums.SyncStatus.Pending,
+                LocalTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
             };
             _db.Customers.Add(customer);
             await _db.SaveChangesAsync();

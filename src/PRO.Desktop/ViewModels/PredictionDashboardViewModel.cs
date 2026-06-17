@@ -34,16 +34,16 @@ public partial class PredictionDashboardViewModel : ViewModelBase
     private ProductDemandPrediction? _selectedProductPrediction;
 
     [ObservableProperty]
-    private ObservableCollection<CustomerOrderPrediction> _customerPredictions = new();
+    private ObservableCollection<CustomerOrderPrediction> _customerPredictions = [];
 
     [ObservableProperty]
-    private ObservableCollection<ProductDemandPrediction> _productPredictions = new();
+    private ObservableCollection<ProductDemandPrediction> _productPredictions = [];
 
     [ObservableProperty]
-    private ObservableCollection<ChurnWarning> _churnWarnings = new();
+    private ObservableCollection<ChurnWarning> _churnWarnings = [];
 
     [ObservableProperty]
-    private ObservableCollection<RevenuePrediction> _branchRevenuePredictions = new();
+    private ObservableCollection<RevenuePrediction> _branchRevenuePredictions = [];
 
     [ObservableProperty]
     private string _lastRefreshTime = "未刷新";
@@ -97,7 +97,7 @@ public partial class PredictionDashboardViewModel : ViewModelBase
             ChurnWarnings = new ObservableCollection<ChurnWarning>(overview.ChurnWarnings);
             BranchRevenuePredictions = new ObservableCollection<RevenuePrediction>(overview.BranchRevenuePredictions);
 
-            // 产品销量预测
+            // 产品销量预测（批量 — 消除 N+1）
             var products = await _dbContext.Products
                 .AsNoTracking()
                 .Where(p => p.Status == Domain.Enums.ProductStatus.Active)
@@ -105,11 +105,7 @@ public partial class PredictionDashboardViewModel : ViewModelBase
                 .Take(20)
                 .ToListAsync();
 
-            var productPreds = new List<ProductDemandPrediction>();
-            foreach (var p in products)
-            {
-                productPreds.Add(await _engine.PredictProductDemandAsync(p.Id));
-            }
+            var productPreds = await _engine.PredictProductDemandBatchAsync(products);
             ProductPredictions = new ObservableCollection<ProductDemandPrediction>(
                 productPreds.OrderByDescending(p => p.PredictedSales));
 

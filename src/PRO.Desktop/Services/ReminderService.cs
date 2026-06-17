@@ -26,7 +26,8 @@ public class ReminderService
         {
             Title = $"收款提醒：{o.Customer?.Name}",
             Detail = $"订单 {o.OrderNo} 已 {Math.Max(0, (int)(now - o.CreatedAt).TotalDays)} 天未收款，金额 ¥{(o.TotalAmount - o.ReceivedAmount):N0}",
-            Type = "Payment", Priority = (int)(now - o.CreatedAt).TotalDays >= 60 ? "高" : "中",
+            Type = "Payment",
+            Priority = (int)(now - o.CreatedAt).TotalDays >= 60 ? "高" : "中",
             CreatedAt = o.CreatedAt
         }));
 
@@ -40,7 +41,8 @@ public class ReminderService
         {
             Title = $"拜访提醒：{v.Customer?.Name}",
             Detail = $"计划于 {v.NextVisitDate:MM-dd} 进行拜访，目的：{v.Purpose}",
-            Type = "Visit", Priority = "中",
+            Type = "Visit",
+            Priority = "中",
             CreatedAt = v.NextVisitDate!.Value
         }));
 
@@ -64,7 +66,9 @@ public class ReminderService
                     {
                         Title = $"客户预警：{c.Name}",
                         Detail = $"已 {days} 天未下单，上次订单 {lastOrder.CreatedAt:MM-dd}",
-                        Type = "Churn", Priority = "低", CreatedAt = lastOrder.CreatedAt
+                        Type = "Churn",
+                        Priority = "低",
+                        CreatedAt = lastOrder.CreatedAt
                     });
                 }
             }

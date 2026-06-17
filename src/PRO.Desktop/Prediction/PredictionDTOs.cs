@@ -10,7 +10,7 @@ public class PredictionResult
     public double Confidence { get; set; }                   // 置信度 0-100
     public string Engine { get; set; } = "统计";             // 使用的引擎
     public DateTime? PredictedDate { get; set; }             // 预测日期
-    public List<LayerContribution> Breakdown { get; set; } = new();
+    public List<LayerContribution> Breakdown { get; set; } = [];
     public TrendDirection Trend { get; set; } = TrendDirection.Stable;
 }
 
@@ -40,8 +40,8 @@ public class CustomerOrderPrediction
     public double ConfidenceScore { get; set; }
     public TrendDirection AmountTrend { get; set; }
     public int DaysSinceLastOrder { get; set; }
-    public List<ProductPrediction> Products { get; set; } = new();
-    public List<LayerContribution> Breakdown { get; set; } = new();
+    public List<ProductPrediction> Products { get; set; } = [];
+    public List<LayerContribution> Breakdown { get; set; } = [];
 }
 
 public class ProductPrediction
@@ -128,7 +128,7 @@ public class PredictionOverview
     public double MonthlyNewCustomers { get; set; }
     public int HighRiskChurnCount { get; set; }
     public int MediumRiskChurnCount { get; set; }
-    public List<CustomerOrderPrediction> UpcomingOrders { get; set; } = new();
-    public List<ChurnWarning> ChurnWarnings { get; set; } = new();
-    public List<RevenuePrediction> BranchRevenuePredictions { get; set; } = new();
+    public List<CustomerOrderPrediction> UpcomingOrders { get; set; } = [];
+    public List<ChurnWarning> ChurnWarnings { get; set; } = [];
+    public List<RevenuePrediction> BranchRevenuePredictions { get; set; } = [];
 }

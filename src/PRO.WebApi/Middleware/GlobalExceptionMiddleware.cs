@@ -9,18 +9,11 @@ namespace PRO.WebApi.Middleware;
 /// <summary>
 /// 全局异常处理中间件 — 拦截未处理的异常，返回统一格式的 ApiResponse
 /// </summary>
-public class GlobalExceptionMiddleware
+public class GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExceptionMiddleware> logger, IHostEnvironment env)
 {
-    private readonly RequestDelegate _next;
-    private readonly ILogger<GlobalExceptionMiddleware> _logger;
-    private readonly IHostEnvironment _env;
-
-    public GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExceptionMiddleware> logger, IHostEnvironment env)
-    {
-        _next = next;
-        _logger = logger;
-        _env = env;
-    }
+    private readonly RequestDelegate _next = next;
+    private readonly ILogger<GlobalExceptionMiddleware> _logger = logger;
+    private readonly IHostEnvironment _env = env;
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -35,7 +28,7 @@ public class GlobalExceptionMiddleware
         catch (UnauthorizedAccessException ex)
         {
             _logger.LogWarning(ex, "未授权访问 {Path}", context.Request.Path);
-            await WriteErrorResponseAsync(context, HttpStatusCode.Unauthorized, "未授权访问", false);
+            await WriteErrorResponseAsync(context, HttpStatusCode.Forbidden, ex.Message, true);
         }
         catch (InvalidOperationException ex)
         {

@@ -37,6 +37,21 @@ public class BusinessConfigService
         return int.TryParse(value, out var result) ? result : defaultValue;
     }
 
+    public async Task<int> GetPositiveIntValueAsync(string key, int defaultValue)
+    {
+        var value = await GetIntValueAsync(key, defaultValue);
+        return value > 0 ? value : defaultValue;
+    }
+
+    public async Task<int> GetOrderDraftExpireMinutesAsync()
+    {
+        var value = await GetPositiveIntValueAsync(ConfigKeys.OrderDraftExpireMinutes, 30);
+        if (value != 30)
+            return value;
+
+        return await GetPositiveIntValueAsync(ConfigKeys.DraftExpireMinutes, 30);
+    }
+
     /// <summary>
     /// 获取布尔配置值
     /// </summary>
@@ -73,10 +88,10 @@ public class BusinessConfigService
             }
 
             await _dbContext.SaveChangesAsync();
-            
+
             // 更新缓存
             _cache[key] = value;
-            
+
             Log.Information("配置已更新: {Key} = {Value}", key, value);
         }
         catch (Exception ex)
@@ -132,7 +147,8 @@ public class BusinessConfigService
     {
         "PageSize" => "列表每页显示条数",
         "AutoBackupInterval" => "自动备份间隔（分钟）",
-        "DraftExpireMinutes" => "草稿自动确认时间（分钟）",
+        "OrderDraftExpireMinutes" => "订单草稿有效期（分钟）",
+        "DraftExpireMinutes" => "订单草稿有效期（分钟，兼容旧配置）",
         "LogRetentionDays" => "日志保留天数",
         "CloseBehavior" => "关闭行为（0=退出，1=最小化到托盘）",
         "DefaultPaymentStatus" => "默认收款状态",
@@ -161,25 +177,44 @@ public static class ConfigKeys
 {
     // 分页
     public const string PageSize = "PageSize";
-    
+    public const string MaxPageSize = "MaxPageSize";
+
     // 备份
     public const string AutoBackupInterval = "AutoBackupInterval";
-    
+
     // 草稿
+    public const string OrderDraftExpireMinutes = "OrderDraftExpireMinutes";
     public const string DraftExpireMinutes = "DraftExpireMinutes";
-    
+
     // 日志
     public const string LogRetentionDays = "LogRetentionDays";
-    
+
     // 关闭行为
     public const string CloseBehavior = "CloseBehavior";
-    
+
     // 安全
     public const string MaxLoginFailures = "MaxLoginFailures";
     public const string LockoutMinutes = "LockoutMinutes";
     public const string PasswordExpireDays = "PasswordExpireDays";
-    
+
     // 自动保存
     public const string EnableAutoSave = "EnableAutoSave";
     public const string AutoSaveInterval = "AutoSaveInterval";
+
+    // 缓存
+    public const string DefaultCacheExpirationMinutes = "DefaultCacheExpirationMinutes";
+    public const string ConfigCacheExpirationMinutes = "ConfigCacheExpirationMinutes";
+
+    // 库存
+    public const string StockWarningThreshold = "StockWarningThreshold";
+    public const string StockCriticalThreshold = "StockCriticalThreshold";
+    public const string AllowNegativeStock = "AllowNegativeStock";
+
+    // 导出
+    public const string MaxExportRowCount = "MaxExportRowCount";
+    public const string ExportFileRetentionDays = "ExportFileRetentionDays";
+
+    // 客户
+    public const string SilentCustomerDays = "SilentCustomerDays";
+    public const string ChurnRiskDays = "ChurnRiskDays";
 }

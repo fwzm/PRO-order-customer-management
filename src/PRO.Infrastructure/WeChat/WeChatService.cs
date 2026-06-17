@@ -67,7 +67,7 @@ public partial class WeChatService : IWeChatService
                 return config.AccessToken;
             }
         }
-        catch { }
+        catch (Exception ex) { Serilog.Log.Warning(ex, "获取企业微信 AccessToken 异常"); }
 
         return null;
     }
@@ -186,8 +186,9 @@ public partial class WeChatService : IWeChatService
             _configCacheTime = DateTime.Now;
             return _cachedConfig;
         }
-        catch
+        catch (Exception ex)
         {
+            Serilog.Log.Warning(ex, "获取企业微信配置异常");
             return new WeChatConfig();
         }
     }
@@ -239,7 +240,7 @@ public partial class WeChatService : IWeChatService
             var result = JObject.Parse(json);
             return result["errcode"]?.Value<int>() == 0;
         }
-        catch { return false; }
+        catch (Exception ex) { Serilog.Log.Warning(ex, "企业微信连接测试异常"); return false; }
     }
 
     #endregion
@@ -338,7 +339,7 @@ public partial class WeChatService : IWeChatService
             var result = JObject.Parse(responseJson);
             return result["errcode"]?.Value<int>() == 0;
         }
-        catch { return false; }
+        catch (Exception ex) { Serilog.Log.Warning(ex, "发送 Webhook 消息异常"); return false; }
     }
 
     /// <summary>
@@ -407,7 +408,7 @@ public partial class WeChatService : IWeChatService
                 }
             }
         }
-        catch { }
+        catch (Exception ex) { Serilog.Log.Warning(ex, "获取企业微信用户信息异常"); }
 
         return ApiResponse<WeChatUserInfo>.Fail("获取用户信息失败");
     }
@@ -430,7 +431,7 @@ public partial class WeChatService : IWeChatService
                 return JsonConvert.DeserializeObject<WeChatUser>(json);
             }
         }
-        catch { }
+        catch (Exception ex) { Serilog.Log.Warning(ex, "获取企业微信用户详情异常"); }
         return null;
     }
 
@@ -821,7 +822,7 @@ public partial class WeChatService : IWeChatService
                 await SendWebhookMessageAsync(webhook.WebhookUrl, message);
             }
         }
-        catch { }
+        catch (Exception ex) { Serilog.Log.Warning(ex, "Webhook 通知批量发送异常"); }
     }
 
     #endregion

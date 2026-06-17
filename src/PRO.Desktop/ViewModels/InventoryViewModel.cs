@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using PRO.Domain.Entities;
 using PRO.Infrastructure.Persistence;
 using PRO.Desktop.Prediction;
+using PRO.Desktop.Controls;
 using System.Collections.ObjectModel;
 using System.Windows;
 
@@ -12,9 +13,9 @@ namespace PRO.Desktop.ViewModels;
 public partial class InventoryViewModel : ViewModelBase
 {
     private readonly ProDbContext _db;
-    [ObservableProperty] private ObservableCollection<InventoryItem> _items = new();
-    [ObservableProperty] private ObservableCollection<ReplenishItem> _replenishItems = new();
-    [ObservableProperty] private ObservableCollection<WarehouseItem> _warehouses = new();
+    [ObservableProperty] private ObservableCollection<InventoryItem> _items = [];
+    [ObservableProperty] private ObservableCollection<ReplenishItem> _replenishItems = [];
+    [ObservableProperty] private ObservableCollection<WarehouseItem> _warehouses = [];
     [ObservableProperty] private WarehouseItem? _selectedWarehouse;
     [ObservableProperty] private string _searchKeyword = "";
     [ObservableProperty] private bool _isChecking;
@@ -22,10 +23,28 @@ public partial class InventoryViewModel : ViewModelBase
     [ObservableProperty] private string _newWarehouseName = "";
     [ObservableProperty] private string _newWarehouseAddress = "";
 
+    // 空状态支持
+    [ObservableProperty] private EmptyStateViewModel? _emptyState;
+    [ObservableProperty] private bool _showEmptyState;
+
     public InventoryViewModel()
     {
         _db = App.Services.GetService(typeof(ProDbContext)) as ProDbContext ?? throw new InvalidOperationException("无法获取数据库上下文");
-        _ = InitAsync();
+        RunInBackground(InitAsync(), "初始化库存数据失败");
+    }
+
+    private void UpdateEmptyState()
+    {
+        if (IsLoading) { ShowEmptyState = false; return; }
+        if (Items.Count > 0) { ShowEmptyState = false; return; }
+
+        ShowEmptyState = true;
+        if (!string.IsNullOrWhiteSpace(SearchKeyword))
+            EmptyState = EmptyStateViewModel.CreateForSearchNoResults(SearchKeyword, SearchCommand);
+        else if (SelectedWarehouse != null)
+            EmptyState = EmptyStateViewModel.CreateForNoResults("库存", new RelayCommand(() => { SelectedWarehouse = null; RunInBackground(LoadAsync(), "清除筛选失败"); }));
+        else
+            EmptyState = EmptyStateViewModel.CreateForEmpty("产品库存");
     }
 
     private async Task InitAsync()
@@ -35,7 +54,7 @@ public partial class InventoryViewModel : ViewModelBase
             await LoadAsync();
             await LoadWarehousesAsync();
         }
-        catch (Exception ex) { ShowError($"库存加载失败: {ex.Message}"); }
+        catch (Exception ex) { ShowBusinessException(ex, "初始化库存"); }
     }
 
     private async Task LoadWarehousesAsync()
@@ -50,10 +69,14 @@ public partial class InventoryViewModel : ViewModelBase
                 .ToListAsync();
             Warehouses = new ObservableCollection<WarehouseItem>(list.Select(w => new WarehouseItem
             {
-                Id = w.Id, Name = w.Name, Address = w.Address, Status = w.Status, CreatedAt = w.CreatedAt
+                Id = w.Id,
+                Name = w.Name,
+                Address = w.Address,
+                Status = w.Status,
+                CreatedAt = w.CreatedAt
             }));
         }
-        catch (Exception ex) { ShowError($"加载仓库失败: {ex.Message}"); }
+        catch (Exception ex) { ShowBusinessException(ex, "加载仓库"); }
     }
 
     private async Task LoadAsync()
@@ -80,25 +103,32 @@ public partial class InventoryViewModel : ViewModelBase
 
             Items = new ObservableCollection<InventoryItem>(products.Select(p => new InventoryItem
             {
-                ProductId = p.Id, ProductName = p.Name, SKU = p.SKU,
-                SystemStock = p.Stock, Unit = p.Unit,
+                ProductId = p.Id,
+                ProductName = p.Name,
+                SKU = p.SKU,
+                SystemStock = p.Stock,
+                Unit = p.Unit,
                 WarehouseName = p.WarehouseId.HasValue && warehouseMap.ContainsKey(p.WarehouseId.Value)
                     ? warehouseMap[p.WarehouseId.Value] : ""
             }));
 
+            UpdateEmptyState();
+
             var engine = new PredictionEngine(_db);
+            // 批量预测 — 消除 N+1 查询
+            var demandPreds = await engine.PredictProductDemandBatchAsync(products.Take(50).ToList());
             var replenishList = new List<ReplenishItem>();
             foreach (var p in products.Take(50))
             {
-                var pred = await engine.PredictProductDemandAsync(p.Id);
-                if (pred.PredictedSales > 0 && pred.SuggestedStock > p.Stock)
+                var pred = demandPreds.FirstOrDefault(x => x.ProductId == p.Id);
+                if (pred != null && pred.PredictedSales > 0 && pred.SuggestedStock > p.Stock)
                 {
                     replenishList.Add(new ReplenishItem { ProductId = p.Id, ProductName = p.Name, CurrentStock = p.Stock, PredictedDemand = pred.PredictedSales, SuggestedReplenish = (int)(pred.SuggestedStock - p.Stock), Confidence = pred.Confidence });
                 }
             }
             ReplenishItems = new ObservableCollection<ReplenishItem>(replenishList.OrderByDescending(r => r.SuggestedReplenish).Take(20));
         }
-        catch (Exception ex) { ShowError($"加载失败: {ex.Message}"); }
+        catch (Exception ex) { ShowBusinessException(ex, "加载库存"); ShowEmptyState = true; EmptyState = EmptyStateViewModel.CreateForLoadFailed(RefreshCommand); }
         finally { IsLoading = false; }
     }
 
@@ -136,9 +166,11 @@ public partial class InventoryViewModel : ViewModelBase
         {
             _db.Set<Warehouse>().Add(new Warehouse
             {
-                Name = NewWarehouseName, Address = NewWarehouseAddress,
+                Name = NewWarehouseName,
+                Address = NewWarehouseAddress,
                 BranchId = CurrentSession.CurrentBranchId,
-                Status = "Active", CreatedAt = DateTime.Now
+                Status = "Active",
+                CreatedAt = DateTime.Now
             });
             await _db.SaveChangesAsync();
             ShowSuccess("仓库添加成功");

@@ -27,20 +27,36 @@ public class PredictionEngine
         var overview = new PredictionOverview();
         var now = DateTime.Now;
 
-        // 今日/本周/本月预测营业额
-        var allBranchOrders = await _db.Orders
-            .Where(o => o.BranchId == branchId && o.Status != OrderStatus.Draft && o.Status != OrderStatus.Cancelled)
+        // ── 批量预加载：一次性查出所有客户及其订单，消除 N+1 ──
+        var customerIds = await _db.Customers
+            .Where(c => c.BranchId == branchId && c.Status == CustomerStatus.Active)
+            .Select(c => c.Id)
             .ToListAsync();
 
         var customers = await _db.Customers
-            .Where(c => c.BranchId == branchId && c.Status == CustomerStatus.Active)
+            .Where(c => customerIds.Contains(c.Id))
+            .AsNoTracking()
             .ToListAsync();
 
-        // 未来3天即将下单的客户
+        var allOrders = await _db.Orders
+            .Where(o => customerIds.Contains(o.CustomerId)
+                && (o.Status == OrderStatus.Completed || o.Status == OrderStatus.Pending))
+            .OrderByDescending(o => o.CreatedAt)
+            .AsNoTracking()
+            .ToListAsync();
+
+        var orderItemIds = allOrders.Select(o => o.Id).ToList();
+        var allOrderItems = await _db.OrderItems
+            .Where(i => orderItemIds.Contains(i.OrderId))
+            .Include(i => i.Product)
+            .AsNoTracking()
+            .ToListAsync();
+
+        // 未来3天即将下单的客户（批量预测）
         var upcoming = new List<CustomerOrderPrediction>();
         foreach (var c in customers)
         {
-            var pred = await PredictCustomerOrderAsync(c.Id);
+            var pred = PredictCustomerOrderBatch(c, allOrders, allOrderItems);
             if (pred.PredictedNextOrderDate.HasValue)
             {
                 var daysAway = (pred.PredictedNextOrderDate.Value.Date - now.Date).Days;
@@ -59,8 +75,8 @@ public class PredictionEngine
             overview.MonthlyNewCustomers = (await PredictNewCustomersAsync(branchId)).PredictedCount;
         }
 
-        // 流失预警
-        var churns = await GetChurnWarningsAsync(branchId);
+        // 流失预警（批量版本）
+        var churns = GetChurnWarningsBatch(branchId, customers, allOrders);
         overview.ChurnWarnings = churns;
         overview.HighRiskChurnCount = churns.Count(c => c.RiskLevel == "高");
         overview.MediumRiskChurnCount = churns.Count(c => c.RiskLevel == "中");
@@ -71,6 +87,131 @@ public class PredictionEngine
     // ================================================================
     // 2. 客户订单预测
     // ================================================================
+
+    /// <summary>批量预测 — 基于预加载的全部订单数据，零 DB 查询</summary>
+    private CustomerOrderPrediction PredictCustomerOrderBatch(
+        Customer customer, List<Order> allOrders, List<OrderItem> allOrderItems)
+    {
+        var result = new CustomerOrderPrediction
+        {
+            CustomerId = customer.Id,
+            CustomerName = customer.Name,
+            DaysSinceLastOrder = 999
+        };
+
+        var orders = allOrders.Where(o => o.CustomerId == customer.Id).ToList();
+        var lastOrder = orders.FirstOrDefault();
+        if (lastOrder != null)
+            result.DaysSinceLastOrder = (int)(DateTime.Now - lastOrder.CreatedAt).TotalDays;
+
+        var orderIds = orders.Select(o => o.Id).ToList();
+        var orderItems = allOrderItems.Where(i => orderIds.Contains(i.OrderId)).ToList();
+
+        // 预测金额（同步版本，使用内存数据）
+        var amountResult = PredictAmountBatch(orders, customer, orderItems);
+        result.PredictedAmount = amountResult.Value;
+        result.ConfidenceScore = amountResult.Confidence;
+        result.Breakdown = amountResult.Breakdown;
+        result.AmountTrend = amountResult.Trend;
+
+        // 预测下次订货日期
+        if (orders.Count >= 2)
+        {
+            var intervals = new List<double>();
+            for (int i = 0; i < orders.Count - 1; i++)
+            {
+                var diff = (orders[i].CreatedAt - orders[i + 1].CreatedAt).TotalDays;
+                if (diff > 0 && diff < 365) intervals.Add(diff);
+            }
+            if (intervals.Count > 0)
+            {
+                var avgInterval = WeightedAverage(intervals);
+                result.PredictedNextOrderDate = lastOrder!.CreatedAt.AddDays(avgInterval);
+                result.ConfidenceScore = Math.Min(100, Math.Max(15, intervals.Count * 5));
+            }
+        }
+        else if (orders.Count == 1)
+        {
+            // 只有1笔订单→用固定30天兜底（批量场景不做商圈查询避免破坏批量优势）
+            result.PredictedNextOrderDate = orders[0].CreatedAt.AddDays(30);
+            result.ConfidenceScore = 25;
+        }
+
+        // 预测产品
+        if (orderItems.Count > 0)
+        {
+            var productGroups = orderItems.GroupBy(i => i.ProductId);
+            foreach (var group in productGroups)
+            {
+                var product = group.First().Product;
+                var quantities = group.Select(i => (double)i.Quantity).ToList();
+                var avgQty = WeightedAverage(quantities);
+                result.Products.Add(new ProductPrediction
+                {
+                    ProductId = group.Key,
+                    ProductName = product?.Name ?? "",
+                    PredictedQuantity = Math.Round(avgQty, 0),
+                    PredictedAmount = Math.Round(avgQty * (double)(product?.ReferencePrice ?? 0), 2),
+                    Confidence = Math.Min(90, quantities.Count * 8)
+                });
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>批量金额预测 — 纯内存计算，不访问DB</summary>
+    private (double Value, double Confidence, List<LayerContribution> Breakdown, TrendDirection Trend)
+        PredictAmountBatch(List<Order> orders, Customer _customer, List<OrderItem> _orderItems)
+    {
+        var layers = new List<LayerContribution>();
+        var now = DateTime.Now;
+
+        // Layer 1: 去年同期自身
+        var lastYearStart = now.AddYears(-1).AddDays(-15);
+        var lastYearEnd = now.AddYears(-1).AddDays(15);
+        var lyOrders = orders.Where(o => o.CreatedAt >= lastYearStart && o.CreatedAt < lastYearEnd).ToList();
+        if (lyOrders.Count > 0)
+        {
+            var totals = lyOrders.Select(o => (double)o.TotalAmount).ToList();
+            layers.Add(new LayerContribution { Layer = 1, Description = "去年同期自身", Value = totals.Average(), Weight = 0.35, RecordCount = totals.Count });
+        }
+
+        // Layer 2: 上季度自身
+        if (layers.Count == 0)
+        {
+            var lqStart = now.AddMonths(-4).AddDays(-22);
+            var lqEnd = now.AddMonths(-3).AddDays(22);
+            var lqOrders = orders.Where(o => o.CreatedAt >= lqStart && o.CreatedAt < lqEnd).ToList();
+            if (lqOrders.Count > 0)
+            {
+                var totals = lqOrders.Select(o => (double)o.TotalAmount).ToList();
+                layers.Add(new LayerContribution { Layer = 2, Description = "上季度自身", Value = totals.Average(), Weight = 0.25, RecordCount = totals.Count });
+            }
+        }
+
+        // Layer 3: 近3月自身
+        if (layers.Count == 0)
+        {
+            var recent = orders.Where(o => o.CreatedAt >= now.AddMonths(-3)).ToList();
+            if (recent.Count > 0)
+            {
+                var totals = recent.Select(o => (double)o.TotalAmount).ToList();
+                layers.Add(new LayerContribution { Layer = 3, Description = "近3月自身", Value = WeightedAverage(totals), Weight = 0.20, RecordCount = totals.Count });
+            }
+        }
+
+        if (layers.Count > 0)
+        {
+            var sumWeight = layers.Sum(l => l.Weight);
+            var weightedValue = layers.Sum(l => l.Value * l.Weight) / sumWeight;
+            var confidence = layers.Min(l => l.Layer) switch { 1 => 85, 2 => 70, 3 => 55, _ => 30 };
+            var trend = PredictTrend(orders.Select(o => (double)o.TotalAmount).ToList());
+            return (Math.Round(weightedValue, 2), confidence, layers, trend);
+        }
+
+        return (0, 10, layers, TrendDirection.Unknown);
+    }
 
     public async Task<CustomerOrderPrediction> PredictCustomerOrderAsync(int customerId)
     {
@@ -119,7 +260,7 @@ public class PredictionEngine
                 var diff = (orders[i].CreatedAt - orders[i + 1].CreatedAt).TotalDays;
                 if (diff > 0 && diff < 365) intervals.Add(diff);
             }
-            if (intervals.Any())
+            if (intervals.Count > 0)
             {
                 var avgInterval = WeightedAverage(intervals);
                 result.PredictedNextOrderDate = lastOrder!.CreatedAt.AddDays(avgInterval);
@@ -148,7 +289,7 @@ public class PredictionEngine
         }
 
         // 预测产品
-        if (orderItems.Any())
+        if (orderItems.Count > 0)
         {
             var productGroups = orderItems.GroupBy(i => i.ProductId);
             foreach (var group in productGroups)
@@ -172,19 +313,36 @@ public class PredictionEngine
     }
 
     // ================================================================
-    // 3. 客户集合预测（批量）
+    // 3. 客户集合预测（批量） — 消除 N+1，单次往返
     // ================================================================
 
     public async Task<List<CustomerOrderPrediction>> PredictAllCustomersAsync(int branchId)
     {
         var customers = await _db.Customers
             .Where(c => c.BranchId == branchId && c.Status == CustomerStatus.Active)
+            .AsNoTracking()
+            .ToListAsync();
+
+        if (customers.Count == 0) return [];
+
+        var customerIds = customers.Select(c => c.Id).ToList();
+        var allOrders = await _db.Orders
+            .Where(o => customerIds.Contains(o.CustomerId) && o.Status == OrderStatus.Completed)
+            .OrderByDescending(o => o.CreatedAt)
+            .AsNoTracking()
+            .ToListAsync();
+
+        var orderIds = allOrders.Select(o => o.Id).ToList();
+        var allOrderItems = await _db.OrderItems
+            .Where(i => orderIds.Contains(i.OrderId))
+            .Include(i => i.Product)
+            .AsNoTracking()
             .ToListAsync();
 
         var results = new List<CustomerOrderPrediction>();
         foreach (var c in customers)
         {
-            results.Add(await PredictCustomerOrderAsync(c.Id));
+            results.Add(PredictCustomerOrderBatch(c, allOrders, allOrderItems));
         }
         return results;
     }
@@ -218,6 +376,7 @@ public class PredictionEngine
         var lastYearOrders = await _db.Orders
             .Where(o => o.BranchId == branchId && o.CreatedAt >= lastYearStart && o.CreatedAt < lastYearEnd
                 && o.Status != OrderStatus.Cancelled)
+            .AsNoTracking()
             .ToListAsync();
         double lastYearRevenue = lastYearOrders.Sum(o => (double)o.TotalAmount);
         double lastYearCount = lastYearOrders.Count;
@@ -227,6 +386,7 @@ public class PredictionEngine
         var lastQuarterOrders = await _db.Orders
             .Where(o => o.BranchId == branchId && o.CreatedAt >= lastQuarterStart && o.CreatedAt < now.Date
                 && o.Status != OrderStatus.Cancelled)
+            .AsNoTracking()
             .ToListAsync();
         double quarterCount = lastQuarterOrders.Count / 3.0;
         double quarterRevenue = lastQuarterOrders.Sum(o => (double)o.TotalAmount) / 3.0;
@@ -236,6 +396,7 @@ public class PredictionEngine
         var lastMonthOrders = await _db.Orders
             .Where(o => o.BranchId == branchId && o.CreatedAt >= lastMonthStart && o.CreatedAt < now.Date
                 && o.Status != OrderStatus.Cancelled)
+            .AsNoTracking()
             .ToListAsync();
         double monthCount = lastMonthOrders.Count;
         double monthRevenue = lastMonthOrders.Sum(o => (double)o.TotalAmount);
@@ -295,6 +456,7 @@ public class PredictionEngine
             .Where(c => c.BranchId == branchId && c.CreatedAt >= twelveMonthsAgo)
             .GroupBy(c => c.CreatedAt.Month)
             .Select(g => new { Month = g.Key, Count = g.Count() })
+            .AsNoTracking()
             .ToListAsync();
 
         if (monthlyNew.Count >= 3)
@@ -327,11 +489,49 @@ public class PredictionEngine
             .Where(i => i.ProductId == productId && i.Order!.CreatedAt >= threeMonthsAgo
                 && i.Order!.Status != OrderStatus.Cancelled)
             .Include(i => i.Order)
+            .AsNoTracking()
             .ToListAsync();
 
+        return BuildProductPrediction(product, items);
+    }
+
+    /// <summary>
+    /// 批量产品销量预测 — 一次查询所有产品的近3月订单项，消除 N+1 查询
+    /// </summary>
+    public async Task<List<ProductDemandPrediction>> PredictProductDemandBatchAsync(List<Product> products)
+    {
+        if (products.Count == 0) return [];
+
+        var threeMonthsAgo = DateTime.Now.AddMonths(-3);
+        var productIds = products.Select(p => p.Id).ToList();
+
+        // 一次性加载所有目标产品的近3月订单项
+        var allItems = await _db.OrderItems
+            .Where(i => productIds.Contains(i.ProductId)
+                && i.Order!.CreatedAt >= threeMonthsAgo
+                && i.Order!.Status != OrderStatus.Cancelled)
+            .AsNoTracking()
+            .ToListAsync();
+
+        var itemsByProduct = allItems.GroupBy(i => i.ProductId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var results = new List<ProductDemandPrediction>();
+        foreach (var product in products)
+        {
+            var items = itemsByProduct.TryGetValue(product.Id, out var list) ? list : [];
+            results.Add(BuildProductPrediction(product, items));
+        }
+
+        return results;
+    }
+
+    /// <summary>构建单产品预测结果（纯计算，无 DB 访问）</summary>
+    private static ProductDemandPrediction BuildProductPrediction(Product product, List<OrderItem> items)
+    {
         var result = new ProductDemandPrediction
         {
-            ProductId = productId,
+            ProductId = product.Id,
             ProductName = product.Name,
             Specification = product.Specification
         };
@@ -353,7 +553,6 @@ public class PredictionEngine
         }
         else
         {
-            // 无销售数据
             result.PredictedSales = 0;
             result.SuggestedStock = 10;
             result.Confidence = 10;
@@ -363,36 +562,48 @@ public class PredictionEngine
     }
 
     // ================================================================
-    // 7. 客户流失预警
+    // 7. 客户流失预警（批量版本 — 消除 N+1）
     // ================================================================
 
     public async Task<List<ChurnWarning>> GetChurnWarningsAsync(int branchId)
     {
-        var warnings = new List<ChurnWarning>();
         var customers = await _db.Customers
             .Where(c => c.BranchId == branchId && c.Status == CustomerStatus.Active)
+            .AsNoTracking()
             .ToListAsync();
+
+        if (customers.Count == 0) return [];
+
+        var customerIds = customers.Select(c => c.Id).ToList();
+        var allOrders = await _db.Orders
+            .Where(o => customerIds.Contains(o.CustomerId) && o.Status == OrderStatus.Completed)
+            .OrderByDescending(o => o.CreatedAt)
+            .AsNoTracking()
+            .ToListAsync();
+
+        return GetChurnWarningsBatch(branchId, customers, allOrders);
+    }
+
+    /// <summary>批量流失预警 — 基于已加载数据，无额外DB查询</summary>
+    private List<ChurnWarning> GetChurnWarningsBatch(int _branchId, List<Customer> customers, List<Order> allOrders)
+    {
+        var warnings = new List<ChurnWarning>();
 
         foreach (var c in customers)
         {
-            var orders = await _db.Orders
-                .Where(o => o.CustomerId == c.Id && o.Status == OrderStatus.Completed)
-                .OrderByDescending(o => o.CreatedAt)
-                .ToListAsync();
-
+            var orders = allOrders.Where(o => o.CustomerId == c.Id).ToList();
             if (orders.Count < 1) continue;
 
             var lastOrder = orders.First();
             var daysSince = (int)(DateTime.Now - lastOrder.CreatedAt).TotalDays;
 
-            // 计算平均间隔
             var intervals = new List<double>();
             for (int i = 0; i < orders.Count - 1; i++)
             {
                 var diff = (orders[i].CreatedAt - orders[i + 1].CreatedAt).TotalDays;
                 if (diff > 0) intervals.Add(diff);
             }
-            var avgInterval = intervals.Any() ? intervals.Average() : 30;
+            var avgInterval = intervals.Count > 0 ? intervals.Average() : 30;
 
             var warning = new ChurnWarning
             {
@@ -404,7 +615,6 @@ public class PredictionEngine
                 RiskLevel = "低"
             };
 
-            // 前3笔 vs 前3笔之前的3笔 金额对比
             if (orders.Count >= 6)
             {
                 warning.LastThreeOrdersTotal = (double)orders.Take(3).Sum(o => o.TotalAmount);
@@ -417,15 +627,10 @@ public class PredictionEngine
                 }
             }
 
-            // 超过平均间隔2倍
             if (daysSince > avgInterval * 2 && daysSince > 14)
-            {
                 warning.RiskLevel = warning.RiskLevel == "低" ? "中" : "高";
-            }
             else if (daysSince > avgInterval * 1.5 && daysSince > 7)
-            {
                 warning.RiskLevel = warning.RiskLevel == "低" ? "低" : warning.RiskLevel;
-            }
 
             if (warning.RiskLevel != "低")
             {
@@ -439,7 +644,8 @@ public class PredictionEngine
             }
         }
 
-        return warnings.OrderByDescending(w => w.RiskLevel).ThenByDescending(w => w.DaysSinceLastOrder).Take(20).ToList();
+        return warnings.OrderByDescending(w => w.RiskLevel)
+            .ThenByDescending(w => w.DaysSinceLastOrder).Take(20).ToList();
     }
 
     // ================================================================
@@ -457,7 +663,7 @@ public class PredictionEngine
         var lastYearStart = now.AddYears(-1).AddDays(-15);
         var lastYearEnd = now.AddYears(-1).AddDays(15);
         var lyOrders = orders.Where(o => o.CreatedAt >= lastYearStart && o.CreatedAt < lastYearEnd).ToList();
-        if (lyOrders.Any())
+        if (lyOrders.Count > 0)
         {
             var totals = lyOrders.Select(o => (double)o.TotalAmount).ToList();
             layers.Add(new LayerContribution { Layer = 1, Description = "去年同期自身", Value = totals.Average(), Weight = 0.35, RecordCount = totals.Count });
@@ -469,7 +675,7 @@ public class PredictionEngine
             var lqStart = now.AddMonths(-4).AddDays(-22);
             var lqEnd = now.AddMonths(-3).AddDays(22);
             var lqOrders = orders.Where(o => o.CreatedAt >= lqStart && o.CreatedAt < lqEnd).ToList();
-            if (lqOrders.Any())
+            if (lqOrders.Count > 0)
             {
                 var totals = lqOrders.Select(o => (double)o.TotalAmount).ToList();
                 layers.Add(new LayerContribution { Layer = 2, Description = "上季度自身", Value = totals.Average(), Weight = 0.25, RecordCount = totals.Count });
@@ -480,7 +686,7 @@ public class PredictionEngine
         if (!layers.Any(l => l.Layer <= 2))
         {
             var recent = orders.Where(o => o.CreatedAt >= now.AddMonths(-3)).ToList();
-            if (recent.Any())
+            if (recent.Count > 0)
             {
                 var totals = recent.Select(o => (double)o.TotalAmount).ToList();
                 layers.Add(new LayerContribution { Layer = 3, Description = "近3月自身", Value = WeightedAverage(totals), Weight = 0.20, RecordCount = totals.Count });
@@ -505,7 +711,7 @@ public class PredictionEngine
         }
 
         // 如果有3+层数据，重新均分权重
-        if (layers.Any())
+        if (layers.Count > 0)
         {
             var totalWeight = layers.Sum(l => l.Weight);
             if (totalWeight < 0.5)
@@ -528,7 +734,12 @@ public class PredictionEngine
             var maxLayer = layers.Min(l => l.Layer);
             var confidence = maxLayer switch
             {
-                1 => 85, 2 => 70, 3 => 55, 4 => 40, 5 => 30, _ => 20
+                1 => 85,
+                2 => 70,
+                3 => 55,
+                4 => 40,
+                5 => 30,
+                _ => 20
             };
 
             // 趋势
@@ -553,7 +764,7 @@ public class PredictionEngine
             .Where(o => o.Customer!.BusinessDistrictId == districtId)
             .ToListAsync();
 
-        if (!orders.Any()) return 0;
+        if (orders.Count == 0) return 0;
 
         return target switch
         {
@@ -573,7 +784,7 @@ public class PredictionEngine
             .Where(o => o.Customer!.CustomerType == type)
             .ToListAsync();
 
-        if (!orders.Any()) return 0;
+        if (orders.Count == 0) return 0;
 
         return target switch
         {

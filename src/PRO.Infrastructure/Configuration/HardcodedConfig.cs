@@ -51,4 +51,13 @@ public static class HardcodedConfig
     public static bool WeChatEnabled => bool.TryParse(GetValue("WeChat", "Enabled"), out var enabled) && enabled;
 
     public static bool HasWeChatConfig => !string.IsNullOrEmpty(WeChatCorpId) && !string.IsNullOrEmpty(WeChatCorpSecret);
+
+    // ========== 腾讯地图配置 ==========
+    /// <summary>腾讯地图 WebService API Key</summary>
+    public static string TencentMapApiKey =>
+        GetValue("TencentMap", "ApiKey") ?? string.Empty;
+
+    /// <summary>是否已配置腾讯地图</summary>
+    public static bool HasTencentMapConfig =>
+        !string.IsNullOrEmpty(TencentMapApiKey);
 }

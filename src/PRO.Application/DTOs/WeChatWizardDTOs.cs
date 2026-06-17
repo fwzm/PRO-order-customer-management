@@ -133,6 +133,6 @@ public class WeChatSyncResult
     public int TotalCount { get; set; }
     public int SuccessCount { get; set; }
     public int FailedCount { get; set; }
-    public List<string> Errors { get; set; } = new();
+    public List<string> Errors { get; set; } = [];
     public DateTime SyncTime { get; set; }
 }

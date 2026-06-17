@@ -1,0 +1,315 @@
+<UserControl x:Class="PRO.Desktop.Views.ErrorDashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1100"
+             Background="{StaticResource BackgroundBrush}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- 标题栏 -->
+        <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}" Padding="24,16">
+            <Grid>
+                <TextBlock Text="错误统计仪表板" Style="{StaticResource PageTitleStyle}" VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="刷新" Style="{StaticResource SecondaryButtonStyle}"
+                            Command="{Binding RefreshCommand}" Margin="0,0,8,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 筛选栏 -->
+        <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" Padding="24,10"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+            <WrapPanel>
+                <TextBlock Text="时间范围:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <DatePicker SelectedDate="{Binding DateFrom}" Width="130" Margin="0,0,8,0"
+                            materialDesign:HintAssist.Hint="起始"/>
+                <TextBlock Text="至" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <DatePicker SelectedDate="{Binding DateTo}" Width="130" Margin="0,0,12,0"
+                            materialDesign:HintAssist.Hint="结束"/>
+
+                <TextBlock Text="模块:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <ComboBox ItemsSource="{Binding AvailableModules}"
+                          SelectedItem="{Binding FilterModule}"
+                          Width="120" Margin="0,0,12,0"
+                          Style="{StaticResource AppleComboBoxStyle}"
+                          materialDesign:HintAssist.Hint="全部模块"/>
+
+                <TextBlock Text="错误码:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <ComboBox ItemsSource="{Binding AvailableErrorCodes}"
+                          SelectedItem="{Binding FilterErrorCode}"
+                          Width="140" Margin="0,0,12,0"
+                          Style="{StaticResource AppleComboBoxStyle}"
+                          materialDesign:HintAssist.Hint="全部错误码"/>
+
+                <Button Content="清除筛选" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding ClearFiltersCommand}" Margin="4,0,0,0"/>
+            </WrapPanel>
+        </Border>
+
+        <!-- 摘要卡片 -->
+        <Border Grid.Row="2" Margin="24,16,24,0" Padding="0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0,0,6,0" Padding="16,14">
+                    <StackPanel>
+                        <TextBlock Text="错误总数" Foreground="{StaticResource SecondaryLabelBrush}" FontSize="12"/>
+                        <TextBlock Text="{Binding TotalErrorCount}" FontSize="28" FontWeight="Bold"
+                                   Foreground="{StaticResource LabelBrush}" Margin="0,4,0,0"/>
+                        <TextBlock Foreground="{StaticResource SecondaryLabelBrush}" FontSize="11" Margin="0,2,0,0">
+                            <Run Text="已处理:"/><Run Text="{Binding ResolvedCount}"/>
+                            <Run Text=" / 未处理:"/><Run Text="{Binding UnresolvedCount}"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource CardStyle}" Margin="3,0" Padding="16,14">
+                    <StackPanel>
+                        <TextBlock Text="处理率" Foreground="{StaticResource SecondaryLabelBrush}" FontSize="12"/>
+                        <TextBlock FontSize="28" FontWeight="Bold" Margin="0,4,0,0">
+                            <Run Text="{Binding ResolutionRate}"/><Run Text="%"/>
+                        </TextBlock>
+                        <ProgressBar Value="{Binding ResolutionRate}" Height="4" Margin="0,6,0,0"
+                                     Foreground="#30D158" Background="#3A3A3C"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource CardStyle}" Margin="3,0" Padding="16,14">
+                    <StackPanel>
+                        <TextBlock Text="最高频错误码" Foreground="{StaticResource SecondaryLabelBrush}" FontSize="12"/>
+                        <TextBlock Text="{Binding TopErrorCode}" FontSize="18" FontWeight="SemiBold"
+                                   Foreground="#FF453A" Margin="0,4,0,0"/>
+                        <TextBlock Foreground="{StaticResource SecondaryLabelBrush}" FontSize="11">
+                            <Run Text="出现 "/><Run Text="{Binding TopErrorCount}"/><Run Text=" 次"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="3" Style="{StaticResource CardStyle}" Margin="6,0,0,0" Padding="16,14">
+                    <StackPanel>
+                        <TextBlock Text="时间跨度" Foreground="{StaticResource SecondaryLabelBrush}" FontSize="12"/>
+                        <TextBlock FontSize="14" FontWeight="SemiBold" Margin="0,4,0,0"
+                                   Foreground="{StaticResource LabelBrush}">
+                            <Run Text="{Binding DateFrom, StringFormat=yyyy-MM-dd}"/>
+                            <Run Text=" → "/>
+                            <Run Text="{Binding DateTo, StringFormat=yyyy-MM-dd}"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- 主体内容区 -->
+        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Margin="24,0,24,16">
+            <StackPanel>
+                <!-- 错误趋势图 & 错误码分布 -->
+                <Grid Margin="0,16,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.6*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- 错误趋势柱状图 -->
+                    <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0,0,6,0" Padding="20,16">
+                        <StackPanel>
+                            <TextBlock Text="错误趋势 (30天)" FontSize="15" FontWeight="SemiBold"
+                                       Margin="0,0,0,12" Foreground="{StaticResource LabelBrush}"/>
+
+                            <ItemsControl ItemsSource="{Binding TrendPoints}" Margin="0,0,0,4">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="2,0" Width="{Binding DataContext.TrendBarWidth, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                            <Border Height="{Binding BarHeight}"
+                                                    Background="{Binding BarColor}"
+                                                    VerticalAlignment="Bottom"
+                                                    CornerRadius="1,1,0,0"
+                                                    MinHeight="1"
+                                                    ToolTip="{Binding DateLabel}">
+                                                <Border.RenderTransform>
+                                                    <ScaleTransform ScaleY="1"/>
+                                                </Border.RenderTransform>
+                                            </Border>
+                                            <TextBlock Text="{Binding DateLabel}" FontSize="8"
+                                                       HorizontalAlignment="Center"
+                                                       Foreground="{StaticResource SecondaryLabelBrush}"
+                                                       Margin="0,2,0,0">
+                                                <TextBlock.LayoutTransform>
+                                                    <RotateTransform Angle="-45"/>
+                                                </TextBlock.LayoutTransform>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- 图例 -->
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                <Rectangle Width="12" Height="12" Fill="#FF453A" RadiusX="2" RadiusY="2"/>
+                                <TextBlock Text="含未处理" FontSize="11" Margin="4,0,12,0"
+                                           Foreground="{StaticResource SecondaryLabelBrush}"/>
+                                <Rectangle Width="12" Height="12" Fill="#30D158" RadiusX="2" RadiusY="2"/>
+                                <TextBlock Text="已处理" FontSize="11" Margin="4,0,0,0"
+                                           Foreground="{StaticResource SecondaryLabelBrush}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 错误码分布排行 -->
+                    <Border Grid.Column="1" Style="{StaticResource CardStyle}" Margin="6,0,0,0" Padding="20,16">
+                        <StackPanel>
+                            <TextBlock Text="错误码 Top 10" FontSize="15" FontWeight="SemiBold"
+                                       Margin="0,0,0,12" Foreground="{StaticResource LabelBrush}"/>
+
+                            <ItemsControl ItemsSource="{Binding ErrorCodeSummary}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="50"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid>
+                                                <TextBlock Text="{Binding ErrorCode}" FontSize="12" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource LabelBrush}" Margin="0,0,0,12"/>
+                                                <TextBlock Text="{Binding LastOccurredText}" FontSize="10"
+                                                           Foreground="{StaticResource SecondaryLabelBrush}"
+                                                           VerticalAlignment="Bottom"/>
+                                            </Grid>
+                                            <StackPanel Grid.Column="1">
+                                                <ProgressBar Value="{Binding Percentage}" Height="4"
+                                                             Foreground="#0A84FF" Background="#3A3A3C" Margin="0,2,0,0"/>
+                                                <TextBlock HorizontalAlignment="Right" FontSize="11" FontWeight="SemiBold">
+                                                    <Run Text="{Binding Count}"/>
+                                                    <Run Text=" ("/><Run Text="{Binding PercentageText}"/><Run Text=")"/>
+                                                </TextBlock>
+                                            </StackPanel>
+                                            <Button Content="筛选" FontSize="10" Padding="6,2"
+                                                    Command="{Binding DataContext.FilterByErrorCodeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding ErrorCode}"
+                                                    Style="{StaticResource SecondaryButtonStyle}"
+                                                    HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                    Margin="0,0,8,0" Panel.ZIndex="1"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- 模块概览 -->
+                <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0" Padding="20,16">
+                    <StackPanel>
+                        <TextBlock Text="模块错误概览" FontSize="15" FontWeight="SemiBold"
+                                   Margin="0,0,0,12" Foreground="{StaticResource LabelBrush}"/>
+
+                        <DataGrid ItemsSource="{Binding ModuleSummary}"
+                                  Style="{StaticResource DataGridStyle}"
+                                  IsReadOnly="True" AutoGenerateColumns="False"
+                                  MaxHeight="240" HeadersVisibility="Column">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="" Width="12">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Ellipse Width="8" Height="8" Fill="{Binding HealthColor}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="业务模块" Binding="{Binding Module}" Width="*"/>
+                                <DataGridTextColumn Header="错误数" Binding="{Binding Count}" Width="80"/>
+                                <DataGridTextColumn Header="未处理" Binding="{Binding UnresolvedCount}" Width="70"/>
+                                <DataGridTextColumn Header="最高频错误" Binding="{Binding TopError}" Width="*"/>
+                                <DataGridTemplateColumn Header="" Width="60">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="筛选" FontSize="11" Padding="6,3"
+                                                    Command="{Binding DataContext.FilterByModuleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding Module}"
+                                                    Style="{StaticResource SecondaryButtonStyle}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Border>
+
+                <!-- 最近错误列表 -->
+                <Border Style="{StaticResource CardStyle}" Margin="0,16,0,16" Padding="20,16">
+                    <StackPanel>
+                        <Grid>
+                            <TextBlock Text="最近错误日志 (20条)" FontSize="15" FontWeight="SemiBold"
+                                       Foreground="{StaticResource LabelBrush}"/>
+                        </Grid>
+
+                        <DataGrid ItemsSource="{Binding RecentErrors}"
+                                  Style="{StaticResource DataGridStyle}"
+                                  IsReadOnly="True" AutoGenerateColumns="False"
+                                  MaxHeight="300" Margin="0,12,0,0" HeadersVisibility="Column">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="时间" Binding="{Binding OccurredAtText}" Width="145"/>
+                                <DataGridTextColumn Header="错误码" Binding="{Binding ErrorCode}" Width="140"/>
+                                <DataGridTextColumn Header="模块" Binding="{Binding Module}" Width="80"/>
+                                <DataGridTextColumn Header="操作" Binding="{Binding Operation}" Width="100"/>
+                                <DataGridTextColumn Header="用户提示" Binding="{Binding UserMessage}" Width="*"/>
+                                <DataGridTemplateColumn Header="状态" Width="70">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="4" Padding="6,2"
+                                                    Background="{Binding ResolvedColor}">
+                                                <TextBlock Text="{Binding ResolvedBadge}" FontSize="10"
+                                                           Foreground="White"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="TraceId" Binding="{Binding TraceId}" Width="100"/>
+                                <DataGridTemplateColumn Header="" Width="70">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="标记已处理" FontSize="10" Padding="6,2"
+                                                    Command="{Binding DataContext.ResolveErrorCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding Id}"
+                                                    Style="{StaticResource SecondaryButtonStyle}"
+                                                    Visibility="{Binding IsResolved, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- 加载遮罩 -->
+        <Border Grid.RowSpan="4" Background="#80FFFFFF"
+                Visibility="{Binding IsRefreshing, Converter={StaticResource BoolToVisibilityConverter}}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ProgressBar IsIndeterminate="True" Width="200"/>
+                <TextBlock Text="加载中..." Margin="0,8,0,0" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

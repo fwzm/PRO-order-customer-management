@@ -13,7 +13,7 @@ public partial class VisitRecordViewModel : ViewModelBase
     private readonly ProDbContext _db;
     private readonly int _customerId;
 
-    [ObservableProperty] private ObservableCollection<VisitRecordItem> _records = new();
+    [ObservableProperty] private ObservableCollection<VisitRecordItem> _records = [];
     [ObservableProperty] private VisitRecordItem? _selectedRecord;
     [ObservableProperty] private string? _editVisitType = "电话";
     [ObservableProperty] private string? _editPurpose;
@@ -30,7 +30,7 @@ public partial class VisitRecordViewModel : ViewModelBase
     {
         _customerId = customerId;
         _db = App.Services.GetService(typeof(ProDbContext)) as ProDbContext ?? throw new InvalidOperationException("无法获取数据库上下文");
-        _ = LoadAsync();
+        RunInBackground(LoadAsync(), "加载拜访记录失败");
     }
 
     private async Task LoadAsync()
@@ -46,10 +46,16 @@ public partial class VisitRecordViewModel : ViewModelBase
                 .ToListAsync();
             Records = new ObservableCollection<VisitRecordItem>(list.Select(v => new VisitRecordItem
             {
-                Id = v.Id, VisitDate = v.VisitDate, VisitType = v.VisitType, Purpose = v.Purpose,
-                Content = v.Content, CustomerDemand = v.CustomerDemand,
-                CustomerProfile = v.CustomerProfile, Result = v.Result,
-                NextAction = v.NextAction, NextVisitDate = v.NextVisitDate,
+                Id = v.Id,
+                VisitDate = v.VisitDate,
+                VisitType = v.VisitType,
+                Purpose = v.Purpose,
+                Content = v.Content,
+                CustomerDemand = v.CustomerDemand,
+                CustomerProfile = v.CustomerProfile,
+                Result = v.Result,
+                NextAction = v.NextAction,
+                NextVisitDate = v.NextVisitDate,
                 VisitorName = v.Visitor?.Name
             }));
         }
@@ -74,11 +80,18 @@ public partial class VisitRecordViewModel : ViewModelBase
             {
                 _db.VisitRecords.Add(new VisitRecord
                 {
-                    CustomerId = _customerId, VisitorId = CurrentSession.CurrentEmployeeId,
-                    VisitType = EditVisitType ?? "电话", Purpose = EditPurpose, Content = EditContent,
-                    CustomerDemand = EditCustomerDemand, CustomerProfile = EditCustomerProfile,
-                    Result = EditResult, NextAction = EditNextAction, NextVisitDate = EditNextVisitDate,
-                    VisitDate = DateTime.Now, CreatedAt = DateTime.Now
+                    CustomerId = _customerId,
+                    VisitorId = CurrentSession.CurrentEmployeeId,
+                    VisitType = EditVisitType ?? "电话",
+                    Purpose = EditPurpose,
+                    Content = EditContent,
+                    CustomerDemand = EditCustomerDemand,
+                    CustomerProfile = EditCustomerProfile,
+                    Result = EditResult,
+                    NextAction = EditNextAction,
+                    NextVisitDate = EditNextVisitDate,
+                    VisitDate = DateTime.Now,
+                    CreatedAt = DateTime.Now
                 });
             }
             await _db.SaveChangesAsync();

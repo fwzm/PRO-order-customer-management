@@ -11,6 +11,34 @@ public partial class OrderEditWindow : Window
     {
         InitializeComponent();
         DataContext = viewModel;
+        Closing += OnClosing;
+    }
+
+    private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        if (DataContext is OrderEditViewModel vm)
+        {
+            vm.StopAutoSave();
+
+            if (vm.HasUnsavedChanges && DialogResult != true)
+            {
+                var result = MessageBox.Show(
+                    "有未保存的修改，是否保存？\n\n选择\"取消\"返回编辑",
+                    "确认关闭",
+                    MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Warning);
+
+                switch (result)
+                {
+                    case MessageBoxResult.Yes:
+                        vm.SaveCommand.Execute(null);
+                        break;
+                    case MessageBoxResult.Cancel:
+                        e.Cancel = true;
+                        break;
+                }
+            }
+        }
     }
 
     private void CancelButton_Click(object sender, RoutedEventArgs e)

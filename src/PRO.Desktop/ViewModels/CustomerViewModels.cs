@@ -4,12 +4,14 @@ using PRO.Application.DTOs;
 using PRO.Application.Interfaces;
 using PRO.Domain.Entities;
 using PRO.Domain.Enums;
-using PRO.Infrastructure.Persistence;
 using PRO.Infrastructure.Common;
+using PRO.Infrastructure.Persistence;
 using PRO.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Input;
 using System.Net.Http;
 using Microsoft.Win32;
 using ClosedXML.Excel;
@@ -21,9 +23,14 @@ public partial class CustomerListViewModel : PagedViewModelBase
 {
     private readonly ProDbContext _dbContext;
     private readonly ICustomerService _customerService;
+    private readonly CustomerService _customerServiceImpl;
+    private readonly DataMaskingService _maskingService;
+    private readonly AuditService _auditService;
+
+    protected override string EntityTypeName => "客户";
 
     [ObservableProperty]
-    private ObservableCollection<CustomerListItem> _customers = new();
+    private ObservableCollection<CustomerListItem> _customers = [];
 
     [ObservableProperty]
     private CustomerListItem? _selectedCustomer;
@@ -35,20 +42,58 @@ public partial class CustomerListViewModel : PagedViewModelBase
     private CustomerType? _filterCustomerType;
 
     [ObservableProperty]
-    private ObservableCollection<CustomerListItem> _duplicateCustomers = new();
+    private ObservableCollection<CustomerListItem> _duplicateCustomers = [];
 
     [ObservableProperty]
     private bool _showDuplicateWarning;
 
+    // 批量选择
+    [ObservableProperty]
+    private ObservableCollection<object> _selectableCustomers = [];
+
+    [ObservableProperty]
+    private bool _isBatchMode;
+
+    [ObservableProperty]
+    private int _selectedCustomersCount;
+
+    [ObservableProperty]
+    private bool _isSelectAll;
+
     public CustomerListViewModel()
     {
-        _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext 
+        _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext
             ?? throw new InvalidOperationException("无法获取数据库上下文");
         _customerService = App.Services.GetService(typeof(ICustomerService)) as ICustomerService
             ?? throw new InvalidOperationException("无法获取客户服务");
-        
-        _ = LoadDataAsync();
+        _customerServiceImpl = App.Services.GetService(typeof(CustomerService)) as CustomerService
+            ?? throw new InvalidOperationException("无法获取 CustomerService");
+        _maskingService = App.Services.GetService(typeof(DataMaskingService)) as DataMaskingService
+            ?? throw new InvalidOperationException("无法获取脱敏服务");
+        _auditService = App.Services.GetService(typeof(AuditService)) as AuditService
+            ?? throw new InvalidOperationException("无法获取审计服务");
+
+        RunInBackground(LoadDataAsync(), "加载客户列表失败");
     }
+
+    protected override bool HasActiveFilters() =>
+        FilterCustomerType != null || ShowMajorOnly;
+
+    [RelayCommand]
+    private void ClearAllFilters()
+    {
+        FilterCustomerType = null;
+        ShowMajorOnly = false;
+        SearchKeyword = null;
+        InvalidateCountCache();
+        RunInBackground(ResetToFirstPageAndLoadAsync(), "清除筛选失败");
+    }
+
+    private ICommand? _clearFiltersCommand;
+    protected override ICommand? ClearFiltersCommand => _clearFiltersCommand ??= new RelayCommand(ClearAllFilters);
+
+    private ICommand? _createNewCommand;
+    protected override ICommand? CreateNewCommand => _createNewCommand ??= new RelayCommand(NewCustomer);
 
     protected override async Task LoadDataAsync()
     {
@@ -71,7 +116,19 @@ public partial class CustomerListViewModel : PagedViewModelBase
             if (result.Success && result.Data != null)
             {
                 TotalCount = result.Data.TotalCount;
-                Customers = new ObservableCollection<CustomerListItem>(result.Data.Items);
+
+                // 应用数据脱敏（非管理员角色对手机号脱敏）
+                var items = result.Data.Items;
+                if (!CurrentSession.Current.IsHeadquartersAdmin)
+                {
+                    foreach (var item in items)
+                    {
+                        item.Phone = _maskingService.MaskPhone(item.Phone ?? "");
+                    }
+                }
+
+                Customers = new ObservableCollection<CustomerListItem>(items);
+                UpdateEmptyState();
             }
 
             ShowDuplicateWarning = false;
@@ -79,7 +136,9 @@ public partial class CustomerListViewModel : PagedViewModelBase
         }
         catch (Exception ex)
         {
-            ShowError($"加载数据失败: {ex.Message}");
+            Log.Error(ex, "加载客户列表数据失败");
+            ShowBusinessException(ex, "加载客户列表");
+            ShowLoadFailedState();
         }
         finally
         {
@@ -91,7 +150,7 @@ public partial class CustomerListViewModel : PagedViewModelBase
     private void Search()
     {
         PageIndex = 1;
-        _ = LoadDataAsync();
+        RunInBackground(LoadDataAsync(), "搜索客户失败");
     }
 
     [RelayCommand]
@@ -99,9 +158,9 @@ public partial class CustomerListViewModel : PagedViewModelBase
     {
         var editVm = App.Services.GetService(typeof(CustomerEditViewModel)) as CustomerEditViewModel
             ?? throw new InvalidOperationException("无法创建编辑视图模型");
-        
+
         editVm.OnSaveCompleted = async () => { await LoadDataAsync(); };
-        
+
         var dialog = new Views.CustomerEditWindow(editVm) { Owner = System.Windows.Application.Current.MainWindow };
         dialog.ShowDialog();
     }
@@ -110,13 +169,13 @@ public partial class CustomerListViewModel : PagedViewModelBase
     private void EditCustomer(CustomerListItem? customer)
     {
         if (customer == null) return;
-        
+
         var editVm = App.Services.GetService(typeof(CustomerEditViewModel)) as CustomerEditViewModel
             ?? throw new InvalidOperationException("无法创建编辑视图模型");
-        
+
         editVm.LoadCustomer(customer.Id);
         editVm.OnSaveCompleted = async () => { await LoadDataAsync(); };
-        
+
         var dialog = new Views.CustomerEditWindow(editVm) { Owner = System.Windows.Application.Current.MainWindow };
         dialog.ShowDialog();
     }
@@ -125,30 +184,31 @@ public partial class CustomerListViewModel : PagedViewModelBase
     private async Task DeleteCustomerAsync(CustomerListItem? customer)
     {
         if (customer == null) return;
+        if (!CheckCustomerPermission("Delete")) return;
 
         // 检查是否关联了企业微信 - 关联后不可删除
         var entity = await _dbContext.Customers.FindAsync(customer.Id);
         if (entity != null && !string.IsNullOrEmpty(entity.WeChatExternalUserId))
         {
-            ShowError("该客户已关联企业微信，无法删除");
+            ShowBusinessError(BusinessMessages.CustomerWeChatBound);
             return;
         }
 
-        var result = MessageBox.Show($"确定要删除客户「{customer.Name}」吗？", "确认删除", 
-            MessageBoxButton.YesNo, MessageBoxImage.Warning);
-        
-        if (result != MessageBoxResult.Yes) return;
+        if (!ConfirmDangerousAction("删除客户", $"确定要删除客户「{customer.Name}」吗？")) return;
 
-        var deleteResult = await _customerService.DeleteAsync(customer.Id);
-        if (deleteResult.Success)
+        ApiResponse<bool>? deleteResult = null;
+        var executed = await ExecuteWithRetryAsync(async () =>
         {
-            ShowSuccess("删除成功");
-            await LoadDataAsync();
-        }
-        else
-        {
-            ShowError(deleteResult.Message);
-        }
+            deleteResult = await _customerService.DeleteAsync(customer.Id);
+            if (deleteResult == null || !deleteResult.Success)
+                throw new InvalidOperationException(deleteResult?.Message ?? "删除客户失败");
+        }, "删除客户", showSuccess: false);
+
+        if (!executed || deleteResult == null) return;
+
+        await _auditService.LogCustomerDeleteAsync(CurrentSession.CurrentEmployeeId, customer.Id, customer.Name);
+        ShowSuccess("删除成功");
+        await LoadDataAsync();
     }
 
     [RelayCommand]
@@ -158,6 +218,30 @@ public partial class CustomerListViewModel : PagedViewModelBase
         var vm = new CustomerDetailViewModel(customer.Id);
         vm.OnCustomerUpdated = async () => { await LoadDataAsync(); };
         var dialog = new Views.CustomerDetailWindow(vm) { Owner = System.Windows.Application.Current.MainWindow };
+        dialog.ShowDialog();
+    }
+
+    [RelayCommand]
+    private void ViewCustomerArchive(CustomerListItem? customer)
+    {
+        if (customer == null) return;
+
+        var vm = App.Services.GetService(typeof(CustomerArchiveViewModel)) as CustomerArchiveViewModel
+            ?? throw new InvalidOperationException("无法创建客户档案视图模型");
+        vm.LoadCustomer(customer.Id);
+
+        var view = new Views.CustomerArchiveView(vm);
+        var dialog = new Window
+        {
+            Title = $"客户档案 - {customer.Name}",
+            Content = view,
+            Owner = System.Windows.Application.Current.MainWindow,
+            Width = 1100,
+            Height = 760,
+            MinWidth = 960,
+            MinHeight = 640,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
+        };
         dialog.ShowDialog();
     }
 
@@ -180,7 +264,7 @@ public partial class CustomerListViewModel : PagedViewModelBase
     [RelayCommand]
     private async Task CheckDuplicatesAsync()
     {
-        if (string.IsNullOrWhiteSpace(SearchKeyword)) 
+        if (string.IsNullOrWhiteSpace(SearchKeyword))
         {
             ShowError("请输入搜索关键词进行查重");
             return;
@@ -210,7 +294,7 @@ public partial class CustomerListViewModel : PagedViewModelBase
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"查重失败: {ex.Message}");
+            Serilog.Log.Warning(ex, "客户查重失败");
             Log.Warning("查重过程中出现错误");
         }
     }
@@ -225,30 +309,100 @@ public partial class CustomerListViewModel : PagedViewModelBase
     private async Task MergeCustomersAsync(CustomerListItem? sourceCustomer)
     {
         if (sourceCustomer == null) return;
+        if (!CheckCustomerPermission("Merge")) return;
 
         var selected = await Views.CustomerPickerWindow.ShowAsync(
             owner: System.Windows.Application.Current.MainWindow);
 
         if (selected != null && selected.Id != sourceCustomer.Id)
         {
-            var result = MessageBox.Show($"将「{sourceCustomer.Name}」合并至「{selected.Name}」？\n源客户订单将转移到目标客户。", "确认合并", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-            if (result != MessageBoxResult.Yes) return;
-            
-            var mergeResult = await _customerService.MergeCustomersAsync(new MergeCustomerRequest
+            if (!ConfirmDangerousAction("确认合并", $"将「{sourceCustomer.Name}」合并至「{selected.Name}」？\n源客户订单将转移到目标客户。")) return;
+
+            ApiResponse<bool>? mergeResult = null;
+            var executed = await ExecuteWithRetryAsync(async () =>
             {
-                MainCustomerId = selected.Id,
-                MergedCustomerIds = new List<int> { sourceCustomer.Id }
-            });
-            
-            if (mergeResult.Success)
+                mergeResult = await _customerService.MergeCustomersAsync(new MergeCustomerRequest
+                {
+                    MainCustomerId = selected.Id,
+                    MergedCustomerIds = [sourceCustomer.Id]
+                });
+
+                if (mergeResult == null || !mergeResult.Success)
+                    throw new InvalidOperationException(mergeResult?.Message ?? "合并失败");
+            }, "合并客户", showSuccess: false);
+
+            if (executed && mergeResult != null)
             {
+                await _auditService.LogCustomerMergeAsync(
+                    CurrentSession.CurrentEmployeeId,
+                    selected.Id,
+                    selected.Name,
+                    [sourceCustomer.Name]);
                 ShowSuccess("合并成功");
                 await LoadDataAsync();
             }
-            else
+        }
+    }
+
+    partial void OnIsBatchModeChanged(bool value)
+    {
+        // 退出批量模式时清除所有选择
+        if (!value)
+        {
+            foreach (var c in Customers)
+                c.IsSelected = false;
+            IsSelectAll = false;
+            UpdateSelectedCount();
+        }
+    }
+
+    partial void OnIsSelectAllChanged(bool value)
+    {
+        foreach (var c in Customers)
+            c.IsSelected = value;
+        UpdateSelectedCount();
+    }
+
+    private void UpdateSelectedCount()
+    {
+        SelectedCustomersCount = Customers.Count(c => c.IsSelected);
+    }
+
+    [RelayCommand]
+    private async Task BatchAssignAsync()
+    {
+        if (SelectedCustomersCount == 0)
+        {
+            ShowError("请先在批量模式下勾选客户");
+            return;
+        }
+
+        var selectedIds = Customers.Where(c => c.IsSelected).Select(c => c.Id).ToList();
+        var selectedNames = Customers.Where(c => c.IsSelected).Take(5).Select(c => c.Name);
+        var preview = string.Join("、", selectedNames);
+        if (SelectedCustomersCount > 5) preview += $" 等{SelectedCustomersCount}个客户";
+
+        if (!ConfirmDangerousAction("批量分配",
+            $"确定要对以下 {SelectedCustomersCount} 个客户执行批量分配？\n{preview}"))
+            return;
+
+        try
+        {
+            await _customerService.BulkAssignCustomersAsync(new BulkAssignRequest
             {
-                ShowError($"合并失败: {mergeResult.Message}");
-            }
+                CustomerIds = selectedIds,
+                BranchId = CurrentSession.CurrentBranchId
+            });
+
+            ShowSuccess($"成功分配 {SelectedCustomersCount} 个客户");
+            IsBatchMode = false;
+            UpdateSelectedCount();
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "批量分配客户失败");
+            ShowError($"批量分配失败: {ex.Message}");
         }
     }
 
@@ -268,6 +422,8 @@ public partial class CustomerListViewModel : PagedViewModelBase
     [RelayCommand]
     private async Task ExportToExcelAsync()
     {
+        if (!CheckCustomerPermission("Export")) return;
+
         try
         {
             var branchId = CurrentSession.CurrentBranchId;
@@ -342,11 +498,13 @@ public partial class CustomerListViewModel : PagedViewModelBase
 
                 worksheet.Columns().AdjustToContents();
                 workbook.SaveAs(dialog.FileName);
+                await _auditService.LogExportAsync(CurrentSession.CurrentEmployeeId, "客户Excel", customers.Count);
                 ShowSuccess($"导出成功，共 {customers.Count} 条记录");
             }
         }
         catch (Exception ex)
         {
+            Log.Error(ex, "客户列表导出失败");
             ShowError($"导出失败: {ex.Message}");
         }
     }
@@ -356,6 +514,7 @@ public partial class CustomerEditViewModel : ViewModelBase
 {
     private readonly ProDbContext _dbContext;
     private readonly ICustomerService _customerService;
+    private readonly IBranchService _branchService;
     private readonly DraftService _draftService;
     private CancellationTokenSource? _duplicateCheckCts;
     private System.Windows.Threading.DispatcherTimer? _autoSaveTimer;
@@ -363,6 +522,9 @@ public partial class CustomerEditViewModel : ViewModelBase
     private Action? _onSaveCompleted;
     private const string DraftKeyPrefix = "customer_edit";
     private bool _isDirty;
+
+    /// <summary>是否有未保存的修改</summary>
+    public bool IsDirty => _isDirty;
 
     public Action? OnSaveCompleted
     {
@@ -401,13 +563,13 @@ public partial class CustomerEditViewModel : ViewModelBase
     private ObservableCollection<string> _provinces = new(ChinaDivisionData.Provinces);
 
     [ObservableProperty]
-    private ObservableCollection<string> _cities = new();
+    private ObservableCollection<string> _cities = [];
 
     [ObservableProperty]
-    private ObservableCollection<string> _districts = new();
+    private ObservableCollection<string> _districts = [];
 
     [ObservableProperty]
-    private ObservableCollection<BusinessDistrict> _businessDistricts = new();
+    private ObservableCollection<BusinessDistrict> _businessDistricts = [];
 
     [ObservableProperty]
     private BusinessDistrict? _selectedBusinessDistrict;
@@ -440,7 +602,7 @@ public partial class CustomerEditViewModel : ViewModelBase
     private string? _remark;
 
     [ObservableProperty]
-    private ObservableCollection<CustomerListItem> _majorCustomers = new();
+    private ObservableCollection<CustomerListItem> _majorCustomers = [];
 
     [ObservableProperty]
     private CustomerListItem? _selectedMajorCustomer;
@@ -452,7 +614,7 @@ public partial class CustomerEditViewModel : ViewModelBase
     private string _windowTitle = "新增客户";
 
     [ObservableProperty]
-    private ObservableCollection<CustomerDuplicateItem> _duplicateCandidates = new();
+    private ObservableCollection<CustomerDuplicateItem> _duplicateCandidates = [];
 
     [ObservableProperty]
     private bool _showDuplicateWarning;
@@ -462,16 +624,18 @@ public partial class CustomerEditViewModel : ViewModelBase
 
     public CustomerEditViewModel()
     {
-        _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext 
+        _dbContext = App.Services.GetService(typeof(ProDbContext)) as ProDbContext
             ?? throw new InvalidOperationException("无法获取数据库上下文");
         _customerService = App.Services.GetService(typeof(ICustomerService)) as ICustomerService
             ?? throw new InvalidOperationException("无法获取客户服务");
+        _branchService = App.Services.GetService(typeof(IBranchService)) as IBranchService
+            ?? throw new InvalidOperationException("无法获取分公司服务");
         _draftService = App.Services.GetService(typeof(DraftService)) as DraftService
             ?? throw new InvalidOperationException("无法获取草稿服务");
-        
+
         BranchId = CurrentSession.CurrentBranchId;
         IsEdit = false;
-        _ = LoadInitialDataAsync();
+        RunInBackground(LoadInitialDataAsync(), "初始化客户编辑失败");
         InitializeAutoSave();
     }
 
@@ -487,12 +651,19 @@ public partial class CustomerEditViewModel : ViewModelBase
         // 监听属性变化标记为脏数据
         PropertyChanged += (s, e) =>
         {
-            if (e.PropertyName != nameof(IsLoading) && e.PropertyName != nameof(ErrorMessage) 
+            if (e.PropertyName != nameof(IsLoading) && e.PropertyName != nameof(ErrorMessage)
                 && e.PropertyName != nameof(SuccessMessage) && e.PropertyName != nameof(ShowDuplicateWarning))
             {
                 _isDirty = true;
             }
         };
+    }
+
+    /// <summary>停止自动保存定时器，防止内存泄漏</summary>
+    public void StopAutoSave()
+    {
+        _autoSaveTimer?.Stop();
+        _autoSaveTimer = null;
     }
 
     private string GetDraftKey() => $"{DraftKeyPrefix}_{CurrentSession.CurrentEmployeeId}";
@@ -542,7 +713,7 @@ public partial class CustomerEditViewModel : ViewModelBase
     {
         await LoadMajorCustomersAsync();
         await LoadBusinessDistrictsAsync();
-        
+
         // 检查是否有未保存的草稿
         if (!IsEdit)
         {
@@ -578,14 +749,14 @@ public partial class CustomerEditViewModel : ViewModelBase
                 }
             }
         }
-        
+
         // 根据分公司名称设置默认省市区
         if (BranchId > 0)
         {
-            var branch = await _dbContext.Branches.FindAsync(BranchId);
-            if (branch != null)
+            var branchResult = await _branchService.GetByIdAsync(BranchId);
+            if (branchResult.Success && branchResult.Data != null)
             {
-                var (defaultProvince, defaultCity) = ChinaDivisionData.GetDefaultProvinceCity(branch.Name);
+                var (defaultProvince, defaultCity) = ChinaDivisionData.GetDefaultProvinceCity(branchResult.Data.Name);
                 if (!string.IsNullOrEmpty(defaultProvince))
                 {
                     Province = defaultProvince;
@@ -600,7 +771,7 @@ public partial class CustomerEditViewModel : ViewModelBase
         _customerId = customerId;
         IsEdit = true;
         WindowTitle = "编辑客户";
-        _ = LoadCustomerAsync();
+        RunInBackground(LoadCustomerAsync(), "加载客户详情失败");
     }
 
     partial void OnSelectedMajorCustomerChanged(CustomerListItem? value)
@@ -642,35 +813,24 @@ public partial class CustomerEditViewModel : ViewModelBase
     {
         try
         {
-            var list = await _dbContext.BusinessDistricts
-                .AsNoTracking()
-                .Where(b => b.Status == "Active" && (b.BranchId == null || b.BranchId == BranchId))
-                .OrderBy(b => b.Name)
-                .ToListAsync();
+            var list = await _customerService.GetBusinessDistrictsAsync(BranchId);
             BusinessDistricts = new ObservableCollection<BusinessDistrict>(list);
         }
-        catch { }
+        catch (Exception ex) { Serilog.Log.Warning(ex, "加载商圈列表失败"); }
     }
 
     private async Task LoadMajorCustomersAsync()
     {
-        var customers = await _dbContext.Customers
-            .AsNoTracking()
-            .Where(c => c.BranchId == BranchId && c.CustomerType == CustomerType.Major && c.Status == CustomerStatus.Active)
-            .ToListAsync();
-
-        MajorCustomers = new ObservableCollection<CustomerListItem>(
-            customers.Select(c => new CustomerListItem { Id = c.Id, Name = c.Name }));
+        var customers = await _customerService.GetMajorCustomersAsync(BranchId);
+        MajorCustomers = new ObservableCollection<CustomerListItem>(customers);
     }
 
     private async Task LoadCustomerAsync()
     {
         if (!_customerId.HasValue) return;
 
-        var customer = await _dbContext.Customers
-            .Include(c => c.ParentCustomer)
-            .FirstOrDefaultAsync(c => c.Id == _customerId.Value);
-            
+        var customer = await _customerService.GetEntityByIdAsync(_customerId.Value);
+
         if (customer != null)
         {
             _customerId = customer.Id;
@@ -687,7 +847,6 @@ public partial class CustomerEditViewModel : ViewModelBase
             LegalPerson = customer.LegalPerson;
             RegisterAddress = customer.RegisterAddress;
             ParentCustomerId = customer.ParentCustomerId;
-            ParentCustomerName = customer.ParentCustomer?.Name;
             Remark = customer.Remark;
             BranchId = customer.BranchId;
 
@@ -767,36 +926,10 @@ public partial class CustomerEditViewModel : ViewModelBase
 
             if (_customerId.HasValue)
             {
-                var entity = await _dbContext.Customers.FindAsync(_customerId.Value);
-                if (entity != null)
+                var updateRequest = new UpdateCustomerRequest
                 {
-                    entity.Name = Name;
-                    entity.CustomerType = CustomerType;
-                    entity.Phone = Phone;
-                    entity.Province = Province;
-                    entity.City = City;
-                    entity.District = District;
-                    entity.BusinessDistrictId = BusinessDistrictId;
-                    entity.Address = Address;
-                    entity.FullAddress = $"{Province ?? ""}{City ?? ""}{District ?? ""} {Address ?? ""}".Trim();
-                    entity.Longitude = Longitude;
-                    entity.Latitude = Latitude;
-                    entity.LegalPerson = LegalPerson;
-                    entity.RegisterAddress = RegisterAddress;
-                    entity.ParentCustomerId = ParentCustomerId;
-                    entity.Remark = Remark;
-                    entity.UpdatedAt = DateTime.Now;
-                    entity.LocalTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                    entity.SyncStatus = SyncStatus.Pending;
-                }
-            }
-            else
-            {
-                var customerNo = await GenerateCustomerNoAsync(BranchId);
-                var entity = new Customer
-                {
+                    Id = _customerId.Value,
                     Name = Name,
-                    CustomerNo = customerNo,
                     CustomerType = CustomerType,
                     Phone = Phone,
                     Province = Province,
@@ -804,37 +937,61 @@ public partial class CustomerEditViewModel : ViewModelBase
                     District = District,
                     BusinessDistrictId = BusinessDistrictId,
                     Address = Address,
-                    FullAddress = $"{Province ?? ""}{City ?? ""}{District ?? ""} {Address ?? ""}".Trim(),
                     Longitude = Longitude,
                     Latitude = Latitude,
                     LegalPerson = LegalPerson,
                     RegisterAddress = RegisterAddress,
                     ParentCustomerId = ParentCustomerId,
                     BranchId = BranchId,
-                    CreatedById = CurrentSession.CurrentEmployeeId,
-                    Remark = Remark,
-                    Status = CustomerStatus.Active,
-                    CreatedAt = DateTime.Now,
-                    UpdatedAt = DateTime.Now,
-                    LocalTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                    SyncStatus = SyncStatus.Pending
+                    Remark = Remark
                 };
-                _dbContext.Customers.Add(entity);
+                var result = await _customerService.UpdateAsync(updateRequest);
+                if (!result.Success)
+                {
+                    ShowError(result.Message ?? "更新客户失败");
+                    return;
+                }
+            }
+            else
+            {
+                var createRequest = new CreateCustomerRequest
+                {
+                    Name = Name,
+                    CustomerType = CustomerType,
+                    Phone = Phone,
+                    Province = Province,
+                    City = City,
+                    District = District,
+                    BusinessDistrictId = BusinessDistrictId,
+                    Address = Address,
+                    Longitude = Longitude,
+                    Latitude = Latitude,
+                    LegalPerson = LegalPerson,
+                    RegisterAddress = RegisterAddress,
+                    ParentCustomerId = ParentCustomerId,
+                    BranchId = BranchId,
+                    Remark = Remark
+                };
+                var result = await _customerService.CreateAsync(createRequest);
+                if (!result.Success)
+                {
+                    ShowError(result.Message ?? "创建客户失败");
+                    return;
+                }
+                _customerId = result.Data;
             }
 
-            await _dbContext.SaveChangesAsync();
-            
             // 保存成功后删除草稿
             if (!IsEdit)
             {
                 await DeleteDraftAsync();
             }
-            
+
             ShowSuccess("保存成功");
             _onSaveCompleted?.Invoke();
 
             // 同步到企业微信（异步，不阻塞保存）
-            _ = SyncToWeChatAsync(_customerId);
+            RunInBackground(SyncToWeChatAsync(_customerId), "同步客户到企业微信失败");
         }
         catch (Exception ex)
         {
@@ -860,7 +1017,7 @@ public partial class CustomerEditViewModel : ViewModelBase
 
         _duplicateCheckCts = new CancellationTokenSource();
         var token = _duplicateCheckCts.Token;
-        _ = CheckDuplicatesDebouncedAsync(token);
+        RunInBackground(CheckDuplicatesDebouncedAsync(token), "检查重复客户失败");
     }
 
     private async Task CheckDuplicatesDebouncedAsync(CancellationToken cancellationToken)
@@ -954,28 +1111,7 @@ public partial class CustomerEditViewModel : ViewModelBase
     /// </summary>
     private async Task<string> GenerateCustomerNoAsync(int branchId)
     {
-        var branch = await _dbContext.Branches.AsNoTracking().FirstOrDefaultAsync(b => b.Id == branchId);
-        var branchCode = branch?.Code ?? "0000";
-        if (branchCode.Length != 4)
-            branchCode = branchCode.PadLeft(4, '0').Substring(0, 4);
-
-        var datePart = DateTime.Now.ToString("yyyyMMdd");
-        var prefix = $"K{datePart}{branchCode}";
-
-        var maxNo = await _dbContext.Customers
-            .AsNoTracking()
-            .Where(c => c.CustomerNo.StartsWith(prefix))
-            .MaxAsync(c => (string?)c.CustomerNo) ?? "";
-
-        var seq = 1;
-        if (maxNo.Length >= prefix.Length + 4)
-        {
-            var lastSeqStr = maxNo.Substring(prefix.Length, 4);
-            int.TryParse(lastSeqStr, out seq);
-            seq++;
-        }
-
-        return $"{prefix}{seq:D4}";
+        return await _customerService.GenerateCustomerNoAsync(branchId);
     }
 
     /// <summary>
@@ -987,7 +1123,7 @@ public partial class CustomerEditViewModel : ViewModelBase
         try
         {
             // 用简单方式调用企业微信同步
-            var entity = await _dbContext.Customers.FindAsync(customerId.Value);
+            var entity = await _customerService.GetEntityByIdAsync(customerId.Value);
             if (entity == null || string.IsNullOrEmpty(entity.WeChatExternalUserId)) return;
 
             // 找企业微信配置
@@ -999,7 +1135,9 @@ public partial class CustomerEditViewModel : ViewModelBase
             if (encryption == null) return;
 
             var secret = encryption.Decrypt(configEntity.AppSecret);
-            using var httpClient = new HttpClient();
+            var httpClientFactory = App.Services.GetService(typeof(System.Net.Http.IHttpClientFactory)) as System.Net.Http.IHttpClientFactory;
+            if (httpClientFactory == null) return;
+            using var httpClient = httpClientFactory.CreateClient();
 
             // 获取token
             var tokenUrl = $"https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid={configEntity.CorpId}&corpsecret={secret}";
