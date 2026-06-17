@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 用户手册
+    url: https://github.com/fwzm/PRO-order-customer-management/blob/main/docs/user-manual.md
+    about: 在使用前请先查阅用户手册
+  - name: 🔒 安全漏洞
+    url: https://github.com/fwzm/PRO-order-customer-management/blob/main/SECURITY.md
+    about: 如果是安全问题，请按安全策略报告，不要创建公开 Issue

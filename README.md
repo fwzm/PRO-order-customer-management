@@ -1,3 +1,53 @@
+| 自适应布局 | 支持 1366×768 至 4K 分辨率 |
+
+### 界面预览
+
+> 📸 **提示**：以下为应用界面截图占位。请将实际截图放置于 `docs/screenshots/` 目录。
+
+<details>
+<summary><b>📷 点击查看界面截图</b></summary>
+
+#### 主界面 - 工作台
+
+![主界面](docs/screenshots/dashboard.png)
+
+*工作台展示：今日待办、快捷入口、数据概览*
+
+#### 订单管理
+
+![订单列表](docs/screenshots/order-list.png)
+
+*订单列表：支持筛选、排序、批量操作、状态流转*
+
+#### 客户管理
+
+![客户列表](docs/screenshots/customer-list.png)
+
+*客户列表：客户层级、标签、搜索、数据质量检测*
+
+#### 库存管理
+
+![库存管理](docs/screenshots/inventory.png)
+
+*库存管理：实时库存、变动日志、盘点、预警*
+
+#### 应收款管理
+
+![应收款](docs/screenshots/receivables.png)
+
+*应收款：收款登记、核销、账龄分析*
+
+#### 系统设置
+
+![系统设置](docs/screenshots/settings.png)
+
+*系统设置：组织架构、角色权限、数据脱敏、备份管理*
+
+</details>
+
+---
+
+## 3. 环境要求与安装
 # PRO 企业管理系统
 
 > 面向多分公司企业的原生 Windows 桌面管理系统，整合客户、订单、库存、配送、财务、工作计划等核心业务流程，支持企业微信集成与 RESTful API 扩展。
