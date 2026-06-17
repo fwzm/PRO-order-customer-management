@@ -48,3 +48,4 @@ src/**/appsettings.Development.json
 *.7z
 *.rar
 docs/*.docx
+.idea/
