@@ -857,9 +857,25 @@ dotnet test PRO.sln --logger "console;verbosity=detailed"
 ### v2.1（2026-06-17）
 
 **新增功能：**
-- .NET MAUI 手机 App MVP 骨架（Android/iOS），MVVM 架构，8 页面完整导航
-- 移动端 API: Dashboard 工作台 (`GET /api/dashboard/workbench`)、用户信息 (`GET /api/user/profile`)
+- .NET MAUI 手机 App 骨架（Android/iOS），MVVM 架构，8 页面完整导航
+- 移动端 API 控制器: Dashboard 工作台 (`GET /api/dashboard/workbench`)、用户信息 (`GET /api/user/profile`)、健康检查 (`GET /health`)
 - PWA 健康检查 API 集成、Element Plus 按需加载、ECharts 动态导入
+- MAUI 移动端全功能服务层：`DashboardMobileService`、`HealthCheckService`、`ProductMobileService`、`BranchMobileService`
+- App 品牌图标 (蓝底白P) — `Resources/AppIcon/appicon.svg`
+- 值转换器：`InvertBoolConverter`、`IsNotNullConverter`、`StringToColorConverter`
+
+**构建验证：**
+- ✅ MAUI Android 编译通过: `dotnet build -f net8.0-android` — **0 错误 0 警告**
+- ✅ 完整解决方案: `dotnet build PRO.sln` — **0 错误 0 警告**
+- 安装 MAUI workload (Android/iOS SDK，包含 Java 21 + Android SDK 集成)
+
+**编译修复 (5 errors → 0)：**
+- `App.xaml.cs`：`PRO.Application` 命名空间冲突 → 使用 `Microsoft.Maui.Controls.Application`
+- `AppShell`：DI 注入 `TokenStore` 依赖 → 通过 `IServiceProvider` 解析
+- `PlatformServices.SetAsync`：void 返回赋值错误修复
+- `LoginViewModel`：添加 `ErrorMessage` 属性匹配 XAML 绑定
+- `MauiProgram`：添加 `Microsoft.Extensions.Logging.Debug` 包 + `AppShell` DI 注册
+- 消除 2 个 CS8604 nullable 警告
 
 **重构优化：**
 - `BranchForbidden` 统一提取到 `BaseApiController`，消除 8 个控制器中的重复代码
