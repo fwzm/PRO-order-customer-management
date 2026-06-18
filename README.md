@@ -372,6 +372,7 @@ npm run dev -- --host 0.0.0.0
 | [管理员配置说明](docs/admin-configuration.md) | 系统设置、业务规则、权限和配置项 |
 | [部署文档](docs/deployment.md) | WebApi、Desktop、Docker、IIS、Windows 服务部署 |
 | [移动端 PWA 部署说明](docs/mobile-pwa.md) | 手机端安装、部署、互通和限制说明 |
+| [原生移动端实施方案](docs/native-mobile-app-plan.md) | APK/App Store、Capacitor、原生能力桥接、审核和离线限制 |
 | [API 文档](docs/api-documentation.md) | 控制器、认证、请求响应和错误码 |
 | [数据库迁移说明](docs/database-migration.md) | EF Core 迁移、SQL 脚本、回滚 |
 | [冒烟测试](docs/smoke-test.md) | 发布前快速验证清单 |
