@@ -58,12 +58,19 @@ request.interceptors.response.use(
             isRefreshing = true
             config._retry = true
             try {
-              const { data } = await axios.post('/api/auth/refresh', { refreshToken })
-              localStorage.setItem('token', data.token)
-              if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken)
-              onTokenRefreshed(data.token)
+              const { data } = await axios.post('/api/auth/refresh-token', JSON.stringify(refreshToken), {
+                headers: { 'Content-Type': 'application/json' },
+              })
+              const refreshed = data?.data
+              if (!data?.success || !refreshed?.token) {
+                throw new Error(data?.message || 'Token刷新失败')
+              }
+
+              localStorage.setItem('token', refreshed.token)
+              if (refreshed.refreshToken) localStorage.setItem('refreshToken', refreshed.refreshToken)
+              onTokenRefreshed(refreshed.token)
               isRefreshing = false
-              config.headers.Authorization = `Bearer ${data.token}`
+              config.headers.Authorization = `Bearer ${refreshed.token}`
               return request(config)
             } catch {
               isRefreshing = false

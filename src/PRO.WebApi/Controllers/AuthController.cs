@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using PRO.Application.DTOs;
 using PRO.Application.Interfaces;
+using PRO.Domain.Enums;
 using PRO.WebApi.Filters;
 
 namespace PRO.WebApi.Controllers;
@@ -35,6 +36,29 @@ public class AuthController(IAuthService authService, IConfiguration configurati
             result.Data.Token = GenerateJwtToken(result.Data);
 
         return Ok(result);
+    }
+
+    /// <summary>
+    /// 当前登录用户信息
+    /// </summary>
+    [HttpGet("profile")]
+    [Authorize]
+    public IActionResult GetProfile()
+    {
+        var profile = new LoginResponse
+        {
+            EmployeeId = int.TryParse(User.FindFirst("EmployeeId")?.Value, out var employeeId) ? employeeId : 0,
+            EmployeeNo = User.FindFirst("EmployeeNo")?.Value ?? string.Empty,
+            Name = User.FindFirst(ClaimTypes.Name)?.Value ?? string.Empty,
+            BranchId = int.TryParse(User.FindFirst("BranchId")?.Value, out var branchId) ? branchId : 0,
+            RoleId = int.TryParse(User.FindFirst("RoleId")?.Value, out var roleId) ? roleId : 0,
+            RoleType = Enum.TryParse<RoleType>(User.FindFirst("RoleType")?.Value, out var roleType)
+                ? roleType
+                : RoleType.Employee,
+            Permissions = [.. User.FindAll("Permission").Select(c => c.Value).Distinct(StringComparer.OrdinalIgnoreCase)]
+        };
+
+        return Ok(ApiResponse<LoginResponse>.Ok(profile));
     }
 
     /// <summary>

@@ -37,7 +37,11 @@ const authStore = useAuthStore()
 const pwdForm = reactive({ oldPassword: '', newPassword: '' })
 
 async function handleChangePwd() {
-  const res = await authApi.changePassword(pwdForm)
+  const res = await authApi.changePassword({
+    employeeId: authStore.user?.employeeId,
+    oldPassword: pwdForm.oldPassword,
+    newPassword: pwdForm.newPassword,
+  })
   if (res.success) {
     ElMessage.success('密码修改成功')
     pwdForm.oldPassword = ''

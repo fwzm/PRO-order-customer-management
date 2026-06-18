@@ -33,7 +33,7 @@ export const orderApi = {
   update: (id, data) => request.put(`/orders/${id}`, data),
   delete: (id) => request.delete(`/orders/${id}`),
   assign: (id, data) => request.post(`/orders/${id}/assign`, data),
-  updateStatus: (id, data) => request.put(`/orders/${id}/status`, data),
+  updateStatus: (id, data) => request.post(`/orders/${id}/status`, data),
   confirmDraft: (id) => request.post(`/orders/${id}/confirm-draft`),
 }
 
@@ -68,12 +68,12 @@ export const departmentApi = {
 }
 
 export const logisticsApi = {
-  getDeliveryPersons: (params) => request.get('/logistics/delivery-persons', { params }),
-  getAvailable: (params) => request.get('/logistics/delivery-persons/available', { params }),
-  createDeliveryPerson: (data) => request.post('/logistics/delivery-persons', data),
-  getPendingOrders: (params) => request.get('/logistics/pending-orders', { params }),
-  assign: (data) => request.post('/logistics/assign', data),
-  autoAssign: (params) => request.post('/logistics/auto-assign', null, { params }),
+  getDeliveryPersons: (params) => request.get('/delivery/persons', { params }),
+  getAvailable: (params) => request.get('/delivery/persons/available', { params }),
+  createDeliveryPerson: (data) => request.post('/delivery/persons', data),
+  getPendingOrders: (params) => request.get('/orders/pending', { params }),
+  assign: (data) => request.post('/delivery/assign', data),
+  autoAssign: (params) => request.post('/orders/auto-assign', null, { params }),
 }
 
 export const settlementApi = {
